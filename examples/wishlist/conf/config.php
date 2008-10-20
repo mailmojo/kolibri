@@ -4,7 +4,7 @@
  * get by calling Config::get('key'), where key is the setting you want to return, i.e. 'mail'.
  */
 $config = array(
-		'webRoot'    => '',        // Change if not on root level. No trailing slash!
+		'webRoot'    => '',        // Change if not on root level. Prefix with slash if not empty, but no trailing!
 		'staticRoot' => '/static', // URI of static resources (can be another host as http://static.example.com)
 		'debug'      => false,
 		'locale'     => 'en_US.utf8',

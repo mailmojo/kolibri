@@ -26,13 +26,13 @@
 		<head>
 			<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 			<meta http-equiv="imagetoolbar" content="no" />
-			<title><xsl:value-of select="$title" /> ~ Whishlist Kolibri Demo App</title>
+			<title><xsl:value-of select="$title" /> ~ Wishlist Kolibri Demo App</title>
 
 			<!-- Simply an convenience for including CSS files in a "css" directory in "staticRoot". -->
 			<xsl:copy-of select="k:css('style')" />
 		</head>
 		<body>
-			<h1>My [retro] whishlist</h1>
+			<h1>My [retro] wishlist</h1>
 
 			<!-- Displays status message if present. -->
 			<xsl:if test="msg">

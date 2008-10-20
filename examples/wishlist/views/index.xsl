@@ -8,7 +8,7 @@
 	extension-element-prefixes="exsl">
 
 	<!-- Include the file containing the general layout, so a specific view file such as this need only
-	     define the page-specific content (the "content" tempalte). -->
+	     define the page-specific content (the "content" template). -->
 	<xsl:include href="layout.xsl" />
 
 	<!-- This variable is injected into the HTML title element in the layout file. -->

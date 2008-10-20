@@ -17,20 +17,20 @@ applications.
 **************
 
 Requirements:
-  * Apache with mod_rewrite support
-  * PHP 5.2 with: (PHP 5.1 should work but is currently untested)
-    - XSL extension
-    - PostgreSQL or SQLite extensions for database applications
+	* Apache with mod_rewrite support PHP 5.2 with: (PHP 5.1 should work but is
+	* currently untested)
+		- XSL extension
+		- PostgreSQL or SQLite extensions for database applications
 
 Check out our bazaar branch if not already done:
 
-  $ bzr branch lp:kolibri
+	$ bzr branch lp:kolibri
 
 The src/ directory within the checked out directory contains the framework
-itself, and can be installed where ever you want where Apache has read access (it doesn't
-need to be in your Apache document root). Copy kolibri.php and .htaccess (which
-resides in the src/ directory as well) into an Apache document root, and edit
-kolibri.php to set the install path and application directories.
+itself, and can be installed where ever you want where Apache has read access
+(it doesn't need to be in your Apache document root). Copy kolibri.php and
+.htaccess (which resides in the src/ directory as well) into an Apache document
+root, and edit kolibri.php to set the install path and application directories.
 
 
 *****************
@@ -47,9 +47,10 @@ guide is provided in the examples/wishlist directory.
 Copy the contents of examples/wishlist to an Apache document root along with
 kolibri.php and .htaccess as mentioned in the general installation instructions
 above. Modify the permissions on the db/ directory (which will hold the SQLite
-database required for this application) to give Apache write access (i.e. "chmod 777 db/"
-in a shell). As with Kolibri itself, the application files don't have to reside
-in the document root, but for simplicity's sake we'll keep it there for this example.
+database required for this application) to give Apache write access (i.e. "chmod
+777 db/" in a shell). As with Kolibri itself, the application files don't have
+to reside in the document root, but for simplicity's sake we'll keep it there
+for this example.
 
 With the exception of the db/ directory, the other directories are default
 Kolibri application directories (although again, most can be changed). Their
@@ -95,9 +96,9 @@ put into a request parameter named "id".
 
 As for the action classes themselves, their names must exactly match their file
 names. They implement either one, or both, of doGet() and doPost() methods,
-which will be executed on HTTP GET or POST calls respectively. Action classes can
-be plain old objects and need not extend ActionSupport as our example actions
-does, but more often than not they do simply because it provides some
+which will be executed on HTTP GET or POST calls respectively. Action classes
+can be plain old objects and need not extend ActionSupport as our example
+actions does, but more often than not they do simply because it provides some
 functionality commonly needed by most actions (specifically access to the
 session and status message facility).
 
@@ -114,23 +115,24 @@ classes).
 Kolibri makes use of interceptors for much of it's core functionality.
 Interceptors are like filters or plug-ins, but we like their names because they,
 well, intercept requests and can change the outcome of the execution. Everything
-from session support trough authentication to validation is implemented through
+from session support through authentication to validation is implemented through
 interceptors. This makes it easy to customize the framework however you like, by
 disabling interceptors you don't need or writing your own.
 
 Interceptors are enabled per URI similar to action mappers. See the
-documentation in config.php for information how they are setup, and conf/interceptors.php in
-Kolibri for a list of the currently supported interceptors.
+documentation in config.php for information how they are setup, and
+conf/interceptors.php in Kolibri for a list of the currently supported
+interceptors.
 
 The most interesting use of interceptors in our example application can be seen
 in the Add action. It implements ModelAware and ValidationAware and defines a
 couple of fields that are used by the ModelInterceptor and ValidatorInterceptor
 respectively. When the ModelInterceptor is invoked (which it is, as it's part of
-the defaultStack interceptor stack we have configured), it checks to see if
-the target action is ModelAware. If it is (as is the case with the Add action),
-an model instance of the class named in the $model property of the action (in
-this case Item) is created. Request parameters are traversed and the model instance is
-populated with their values before being put back into the action.
+the defaultStack interceptor stack we have configured), it checks to see if the
+target action is ModelAware. If it is (as is the case with the Add action), a
+model instance of the class named in the $model property of the action (in this
+case Item) is created. Request parameters are traversed and the model instance
+is populated with their values before being put back into the action.
 
 For the ValidatorInterceptor to have any meaning it must be invoked after the
 ModelInterceptor, which it is as dictated by their order in the defaultStack. If
@@ -140,16 +142,17 @@ to its own rules. Any errors are put into the $errors field in the action, which
 the action can look at to determine what to do during its execution.
 
 While the interceptors just described are among the most complex, more simple
-functionality such as session support and status messages are also implemented by
-interceptors. The session for instance can be access in SessionAware actions through
-$this->session['key'], while the messages we set by $this->msg->setMessage(...)
-is a facility provided to MessageAware actions by the MessageInterceptor.
+functionality such as session support and status messages are also implemented
+by interceptors. The session for instance can be access in SessionAware actions
+through $this->session['key'], while the messages we set by
+$this->msg->setMessage(...) is a facility provided to MessageAware actions by
+the MessageInterceptor.
 
 5. Models and data access objects
 ---------------------------------
 
-Models in Kolibri applications can, and will most often be, plain objects.
-You don't have to extend any specific class, in fact, there is no provided
+Models in Kolibri applications can, and will most often be, plain objects. You
+don't have to extend any specific class, in fact, there is no provided
 "super-model" class to extend. Instead Kolibri makes use of the object-oriented
 proxy pattern to transparently wrap model objects in a proxy, which among other
 things provides access to the model's corresponding data access object. Contrary
@@ -161,25 +164,24 @@ involved) of model objects.
 
 Clean separation of PHP logic and SQL queries are of course important, which is
 why the SQL should be put in a data access object (DAO). They must be put in a
-dao/ directory within the models/ directory, and each model (which cares about the
-database) should have it's own DAO. As an example, our Item model has a
+dao/ directory within the models/ directory, and each model (which cares about
+the database) should have it's own DAO. As an example, our Item model has a
 corresponding ItemDao class for its database access.
 
 Taking a step back, let's look at a model class and how it defines its
 validation rules which is used by the validation framework provided by the
 ValidatorInterceptor. Our Item model implements Validateable and a rules()
-method which defines its validation criteria. See the Item class to
-see how it's defined, and conf/validation.php in Kolibri for a list of all
-available validators.
+method which defines its validation criteria. See the Item class to see how it's
+defined, and conf/validation.php in Kolibri for a list of all available
+validators.
 
 If the validation is successful, you might want to save the model during the
-action execution. This is done
-by simply calling save() on the model. The model proxy will try to figure out if
-the model actually need saving (i.e. do we know if it was changed since it was
-retrieved from the database?), and if so calls the appropriate method in the DAO
-(either insert() or update()). Similarly you call delete() to, well, delete.
-Direct access to the DAO is provided through the objects property, as
-demonstrated in the sample actions.
+action execution. This is done by simply calling save() on the model. The model
+proxy will try to figure out if the model actually need saving (i.e. do we know
+if it was changed since it was retrieved from the database?), and if so calls
+the appropriate method in the DAO (either insert() or update()). Similarly you
+call delete() to, well, delete. Direct access to the DAO is provided through
+the objects property, as demonstrated in the sample actions.
 
 6. Results and views
 --------------------
@@ -190,22 +192,22 @@ all do (although we urge you to take a look, not least due to the simplified
 form handling in XSL), which is why Kolibri does not tie actions to views
 directly. Instead actions return a Result object, of which there could be many
 kinds. Kolibri already has XsltResult for XSL views, RedirectResult for regular
-HTTP redirects, JsonResult for JSON, and more. This makes it easy to support other view
-technologies and response data simply by providing other Result implementations, such as a
-PhpResult or SmartyResult (both of which is a TODO).
+HTTP redirects, JsonResult for JSON, and more. This makes it easy to support
+other view technologies and response data simply by providing other Result
+implementations, such as a PhpResult or SmartyResult (both of which is a TODO).
 
 As XSL is currently the only implemented view technology, it has got some extra
-love to offer you. Most importantly it provides simplified syntax to define
-HTML forms, which will automatically output validation errors and model data.
-Take a look at the form in views/index.xsl which targets the Add action (which,
-again, is ModelAware and ValidationAware). If validation fails, XSL and thus the
-form receives and presents the errors and model data from the action without any
+love to offer you. Most importantly it provides simplified syntax to define HTML
+forms, which will automatically output validation errors and model data. Take a
+look at the form in views/index.xsl which targets the Add action (which, again,
+is ModelAware and ValidationAware). If validation fails, XSL and thus the form
+receives and presents the errors and model data from the action without any
 extra code on your part.
 
 X. The end
 ----------
 
 While this guide has only scratched the surface, it has hopefully got you going.
-Any questions, feedback and least but not least contributions are most welcome:
+Any questions, feedback and last but not least contributions are most welcome:
 
-  https://launchpad.net/kolibri
+	https://launchpad.net/kolibri
