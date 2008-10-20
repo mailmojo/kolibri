@@ -1,0 +1,8 @@
+RewriteEngine On
+
+# Redirects favicon-requests to static directory and makes sure static requests
+# are not routed to the framework. If you are using a separate hostname for
+# static resources (as is recommended), this should be modified.
+RewriteRule ^favicon.ico$ static/favicon.ico [L]
+RewriteCond %{REQUEST_URI} !^/static
+RewriteRule ^(.*)$ kolibri.php

@@ -1,0 +1,74 @@
+body {
+	font-family: Courier;
+	margin: 2em;
+}
+
+h1, h2 {
+	color: blue;
+}
+
+h3 {
+	color: #000;
+	margin-bottom: 0;
+}
+
+a {
+	color: #000;
+}
+	a:hover {
+		text-decoration: none;
+	}
+
+div#message {
+	border-width: 2px;
+	border-style: dashed;
+}
+	div#message.success {
+		border-color: green;
+	}
+	div#message.error {
+		border-color: red;
+	}
+	div#message p {
+		padding: 0 1em;
+	}
+
+div#want h2 {
+	color: red;
+}
+
+div#have h2 {
+	color: green;
+}
+
+div#want p, div#have p {
+	margin-top: 0;
+}
+
+div#list {
+	float: left;
+}
+
+div#footer {
+	color: #ccc;
+	font-size: 75%;
+	border-top: 1px dashed;
+	clear: both;
+}
+
+div#form {
+	width: 300px;
+	float: right;
+}
+
+	div#form div {
+		padding-bottom: 0.4em;
+	}
+
+	div#form div.error {
+		color: red;
+	}
+
+input, textarea {
+	display: block;
+}
