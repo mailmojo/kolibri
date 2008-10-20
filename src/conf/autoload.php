@@ -39,6 +39,7 @@ $autoloadClasses = array(
 		'NotFoundResult'         => '/results/NotFoundResult.php',
 		'RedirectResult'         => '/results/RedirectResult.php',
 		'Result'                 => '/results/Result.php',
+		'SmartyResult'           => '/results/SmartyResult.php',
 		'TextResult'             => '/results/TextResult.php',
 		'XsltResult'             => '/results/XsltResult.php',
 		'Validator'              => '/validation/Validator.php',
