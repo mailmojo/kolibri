@@ -37,6 +37,7 @@ $autoloadClasses = array(
 		'ForwardResult'          => '/results/ForwardResult.php',
 		'JsonResult'             => '/results/JsonResult.php',
 		'NotFoundResult'         => '/results/NotFoundResult.php',
+		'PhpResult'              => '/results/PhpResult.php',
 		'RedirectResult'         => '/results/RedirectResult.php',
 		'Result'                 => '/results/Result.php',
 		'TextResult'             => '/results/TextResult.php',
