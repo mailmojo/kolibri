@@ -36,30 +36,19 @@ class PhpResult extends AbstractResult {
 		$action = $this->getAction();
 		if ($action instanceof Exposable) {
 			if (method_exists($action, 'expose')) {
-				$data = array_merge($data, $action->expose());
+				$data = $action->expose();
 			}
 			else {
-				$data = array_merge($data, get_object_vars($action));
+				$data = get_object_vars($action);
 			}
 		}
-		// Extract data from the current request
-		$data = array_merge($data, $request->expose());
 		
 		/**
 		 * Create a sandbox function which extracts all data to it's local scope,
-		 * hiding this result object and the raw request object from the view.
+		 * instead of letting the view template run inside the PhpResult object scope.
 		 */
-		$sandbox = create_function('$_t, $_d', <<<FUNC
-			extract(\$_d);
-			if (ob_start()) {
-				@include(\$_t);
-				return ob_get_clean();
-			}
-			return '';
-FUNC
-		);
-		
-		echo $sandbox($this->phpTemplate, $data);
+		$sandbox = create_function('$request, $_d, $_t', 'extract($_d); @include($_t);');
+		$sandbox($request, $data, $this->phpTemplate);
 	}
 }
 ?>
