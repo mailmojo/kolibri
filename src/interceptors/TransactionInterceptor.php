@@ -14,25 +14,20 @@ class TransactionInterceptor extends AbstractInterceptor {
 	 */
 	public function intercept ($dispatcher) {
 		$db = DatabaseFactory::getConnection();
-		$db->begin();
 
 		// Invoke next command in chain
 		$result = $dispatcher->invoke();
 
-		if (!$db->isAborted()) {
-			$db->commit();
-		}
-		else {
-			$db->rollback();
-
+		if ($db->commit() === false) {
 			$action = $dispatcher->getAction();
 			if ($action instanceof MessageAware) {
 				$action->msg->setMessage('En feil oppstod under behandlingen av din forespørsel.', false);
 
-				if (Config::get('debug')) {
+				// TODO: Re-implement error reporting
+				/*if (Config::get('debug')) {
 					$action->msg->addDetail($db->getLastError());
 					$action->msg->addDetail('QUERY: ' . $db->getLastQuery());
-				}
+				}*/
 			}
 		}
 

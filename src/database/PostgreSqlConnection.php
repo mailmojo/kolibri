@@ -10,12 +10,7 @@ class PostgreSqlConnection extends DatabaseConnection {
 	private $username;
 	private $password;
 	private $database;
-
-	protected $query_func			= 'pg_query';
-	protected $error_func			= 'pg_last_error';
-	protected $fetch_all_func		= 'pg_fetch_all';
-	protected $fetch_row_func		= 'pg_fetch_row';
-	protected $affected_rows_func	= 'pg_affected_rows';
+	private $persistent;
 
 	/**
 	 * Creates a new instance of this class.
@@ -29,10 +24,11 @@ class PostgreSqlConnection extends DatabaseConnection {
 	 * @return DatabaseConnection
 	 */
 	public function __construct ($conf) {
-		$this->host     = $conf['host'];
-		$this->username = $conf['username'];
-		$this->password = $conf['password'];
-		$this->database = $conf['database'];
+		$this->host       = $conf['host'];
+		$this->username   = $conf['username'];
+		$this->password   = $conf['password'];
+		$this->database   = $conf['database'];
+		$this->persistent = isset($conf['persistent']) ? $conf['persistent'] : false;
 	}
 
 	/**
@@ -43,14 +39,81 @@ class PostgreSqlConnection extends DatabaseConnection {
 	 * 				<code>FALSE</code> if not.
 	 */
 	public function connect () {
-		$connectionString = "host={$this->host} dbname={$this->database} user={$this->username} password={$this->password}";
-		$this->connection = pg_pconnect($connectionString);
+		$connectionString = "host={$this->host} dbname={$this->database} user={$this->username} "
+				. "password={$this->password}";
+		$this->connection = $this->persistent ? pg_pconnect($connectionString) : pg_connect($connectionString);
 
 		if (!$this->connection) {
-			trigger_error("Could not connect to database!", E_USER_ERROR);
-			return false;
+			throw new Exception('Could not connect to database!');
 		}
 		return true;
+	}
+
+	/**
+	 * Begins a new transaction.
+	 */
+	public function begin () {
+		if (pg_transaction_status($this->connection) !== PGSQL_TRANSACTION_INERROR) {
+			pg_query($this->connection, 'BEGIN');
+		}
+	}
+
+	/**
+	 * Commits or rolls back the active transaction, if any. The transaction is rolled back if in an
+	 * invalid state, else it is commited.
+	 *
+	 * @return bool <code>TRUE</code> if transaction was commited, <code>FALSE</code> if rolled back.
+	 */
+	public function commit () {
+		$status = pg_transaction_status($this->connection);
+		if ($status === PGSQL_TRANSACTION_UNKNOWN || $status === PGSQL_TRANSACTION_IDLE) return;
+
+		if ($status === PGSQL_TRANSACTION_INERROR) {
+			pg_query($this->connection, 'ROLLBACK');
+			return false;
+		}
+
+		pg_query($this->connection, 'COMMIT');
+		return true;
+	}
+
+	/**
+	 * Rolls back the active transaction.
+	 */
+	public function rollback () {
+		pg_query($this->connection, 'ROLLBACK');
+	}
+
+	// query == select? execute == insert/update/del?
+	public function query ($query, $params = null) {
+		if (!$this->connection) {
+			$this->connect();
+		}
+
+		$status = pg_transaction_status($this->connection);
+		if ($status === PGSQL_TRANSACTION_UNKNOWN || $status === PGSQL_TRANSACTION_INERROR) {
+			return false;
+		}
+		else if ($status === PGSQL_TRANSACTION_IDLE) {
+			$this->begin();
+		}
+
+		// Interpolate any parameters into query
+		$preparedQuery = $this->prepareQuery($query, $params);
+
+		if (pg_send_query($this->connection, $preparedQuery)) {
+			$resultResource = pg_get_result($this->connection);
+			$resultStatus = pg_result_status($resultResource);
+			if ($resultStatus !== PGSQL_FATAL_ERROR) {
+				$this->resultSet = new PostgreSqlResultSet($resultResource);
+				return $this->resultSet;
+			}
+			// TODO: Implement custom exception
+			throw new Exception(pg_result_error($resultResource),
+				(int) pg_result_error_field($resultResource, PGSQL_DIAG_SQLSTATE));
+		}
+
+		return false;
 	}
 
 	/**
@@ -71,7 +134,7 @@ class PostgreSqlConnection extends DatabaseConnection {
 	 * @param mixed $value	Data value to escape.
 	 * @return string	A safe data value for use in SQL queries.
 	 */
-	public function escapeValue ($value) {
+	protected function escapeValue ($value) {
 		if ($value === NULL) {
 			return 'NULL';
 		}

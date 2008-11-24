@@ -1,21 +1,23 @@
 <?php
 final class DatabaseFactory {
-	private static $connection;
+	private static $connections;
 
-	public static function getConnection () {
-		if (!isset(self::$connection)) {
-			$dbConf = Config::get('db');
+	public static function getConnection ($confName = 'db') {
+		if (!isset(self::$connections)) {
+			$dbConf = Config::get($confName);
 			
 			if (!empty($dbConf)) {		
-				$type = $dbConf['type'] . 'Connection';
-				$file = ROOT . "/database/$type.php";
+				$connectionFile = ROOT . "/database/{$dbConf['type']}Connection.php";
+				$resultSetFile = ROOT . "/database/{$dbConf['type']}ResultSet.php";
 
-				if (file_exists($file)) {
-					require(ROOT . "/database/$type.php");
-					self::$connection = new $type($dbConf);
+				if (file_exists($connectionFile) && file_exists($resultSetFile)) {
+					require($connectionFile);
+					require($resultSetFile);
+					$type = $dbConf['type'] . 'Connection';
+					self::$connections[$confName] = new $type($dbConf);
 				}
 				else {
-					throw new Exception("Database implementation $type not found");
+					throw new Exception("Database implementation for $type not found");
 				}
 			}
 			else {
@@ -23,7 +25,7 @@ final class DatabaseFactory {
 			}
 		}
 
-		return self::$connection;
+		return self::$connections[$confName];
 	}
 }
 ?>
