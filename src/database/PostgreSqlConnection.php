@@ -1,7 +1,9 @@
 <?php
 /**
- * This class extends the DatabaseConnection class to support connections to a PostgreSQL database.
- * This class may also implement PostgreSQL-specific features.
+ * This class extends the <code>DatabaseConnection</code> class to support connections to a
+ * PostgreSQL database. This class may also implement PostgreSQL-specific features.
+ *
+ * See the class documentation in <code>DatabaseConnection</code> for details.
  * 
  * @version 	$Id: PostgreSqlConnection.php 1547 2008-09-03 05:39:28Z anders $
  */
@@ -10,52 +12,47 @@ class PostgreSqlConnection extends DatabaseConnection {
 	private $username;
 	private $password;
 	private $database;
-	private $persistent;
 
 	/**
-	 * Creates a new instance of this class.
-	 * 
-	 * If the optional <code>$lazy</code> parameter is set to <code>FALSE</code>, a connection to
-	 * the database is established. The default is <code>TRUE</code>, in which case a connection
-	 * will be established on the first call to <code>execute()</code> or <code>query()</code>.
+	 * Creates a new instance of this class. No connection to the database will be established before
+	 * calling <code>connect()</code> or executing the first query.
 	 *
-	 * @param bool $lazy	<code>TRUE</code> to hold off establishing a connection to the database
-	 * 						(default), <code>FALSE</code> to connect immediately.
-	 * @return DatabaseConnection
+	 * @param array $conf Database configuration.
 	 */
 	public function __construct ($conf) {
 		$this->host       = $conf['host'];
 		$this->username   = $conf['username'];
 		$this->password   = $conf['password'];
 		$this->database   = $conf['database'];
-		$this->persistent = isset($conf['persistent']) ? $conf['persistent'] : false;
 	}
 
 	/**
-	 * Connects to the PostgreSQL database described in this object. If any error occurs, a user
-	 * error is triggered.
-	 * 
-	 * @return bool	<code>TRUE</code> if a connection was successfully established,
-	 * 				<code>FALSE</code> if not.
+	 * Connects to the PostgreSQL database.
+	 * XXX: Do we want to support pg_pconnect()?
 	 */
 	public function connect () {
 		$connectionString = "host={$this->host} dbname={$this->database} user={$this->username} "
 				. "password={$this->password}";
-		$this->connection = $this->persistent ? pg_pconnect($connectionString) : pg_connect($connectionString);
+		$this->connection = pg_connect($connectionString);
 
 		if (!$this->connection) {
-			throw new Exception('Could not connect to database!');
+			throw new Exception('Could not connect to the database');
 		}
 		return true;
 	}
 
 	/**
 	 * Begins a new transaction.
+	 *
+	 * @return bool <code>TRUE</code> if a transaction was started, <code>FALSE</code> if not (i.e.
+	 *              the connection is in an error state.
 	 */
 	public function begin () {
 		if (pg_transaction_status($this->connection) !== PGSQL_TRANSACTION_INERROR) {
 			pg_query($this->connection, 'BEGIN');
+			return true;
 		}
+		return false;
 	}
 
 	/**
@@ -84,7 +81,19 @@ class PostgreSqlConnection extends DatabaseConnection {
 		pg_query($this->connection, 'ROLLBACK');
 	}
 
-	// query == select? execute == insert/update/del?
+	/**
+	 * Sends a query to the database after escaping and interpolating the supplied parameters, and
+	 * returns the result set.
+	 *
+	 * If a connection to the database is not yet established, <code>connect()</code> is called
+	 * implicitly. The same is true of transactions; if a transaction has not yet been started on the
+	 * connection, <code>begin()</code> is called.
+	 *
+	 * @param string $query The query to execute.
+	 * @param mixed $params Parameters to interpolate into query.
+	 * @throws Exception    Upon an error when executing the query.
+	 * @return ResultSet    Representing the query results. Implementation-specific.
+	 */
 	public function query ($query, $params = null) {
 		if (!$this->connection) {
 			$this->connect();
@@ -92,9 +101,11 @@ class PostgreSqlConnection extends DatabaseConnection {
 
 		$status = pg_transaction_status($this->connection);
 		if ($status === PGSQL_TRANSACTION_UNKNOWN || $status === PGSQL_TRANSACTION_INERROR) {
+			// We can't query when the connection status is bad
 			return false;
 		}
 		else if ($status === PGSQL_TRANSACTION_IDLE) {
+			// No transaction yet started, let's begin one
 			$this->begin();
 		}
 
@@ -104,10 +115,13 @@ class PostgreSqlConnection extends DatabaseConnection {
 		if (pg_send_query($this->connection, $preparedQuery)) {
 			$resultResource = pg_get_result($this->connection);
 			$resultStatus = pg_result_status($resultResource);
+
 			if ($resultStatus !== PGSQL_FATAL_ERROR) {
 				$this->resultSet = new PostgreSqlResultSet($resultResource);
 				return $this->resultSet;
 			}
+
+			// XXX: We might not want to throw an exception in all cases?
 			// TODO: Implement custom exception
 			throw new Exception(pg_result_error($resultResource),
 				(int) pg_result_error_field($resultResource, PGSQL_DIAG_SQLSTATE));
@@ -119,10 +133,10 @@ class PostgreSqlConnection extends DatabaseConnection {
 	/**
 	 * Returns the value of the last sequence in the row created by the last INSERT.
 	 *
-	 * @return int	The value of the new ID generated by a sequence.
+	 * @return int The value of the new ID generated by a sequence.
 	 */
 	public function lastInsertId () {
-		return $this->getOne("SELECT LASTVAL()");
+		return $this->getColumn("SELECT LASTVAL()");
 	}
 
 	/**
@@ -131,8 +145,8 @@ class PostgreSqlConnection extends DatabaseConnection {
 	 * Converts null to SQL NULL string, boolean values to accepted string representations, and
 	 * escapes necessary characters in strings. Pure numeric values are simply returned as is.
 	 *
-	 * @param mixed $value	Data value to escape.
-	 * @return string	A safe data value for use in SQL queries.
+	 * @param mixed $value Data value to escape and/or convert.
+	 * @return string      The value prepared for insertion into a SQL query.
 	 */
 	protected function escapeValue ($value) {
 		if ($value === NULL) {
@@ -161,22 +175,22 @@ class PostgreSqlConnection extends DatabaseConnection {
 		if (!is_numeric($value)) {
 			return false;
 		}
-		
+
 		// If the value is an actual int or float type variable it's a pure number
 		if (is_int($value) || is_float($value)) {
 			return true;
 		}
-		
+
 		// If it contains a decimal point, it's considered a pure number
 		if (strpos($value, '.') !== false) {
 			return true;
 		}
-		
+
 		// If an integer cast does not change the number length, it's considered pure (ie. no leading zeroes)
 		if (strlen((int) $value) == strlen($value)) {
 			return true;
 		}
-		
+
 		return false;
 	}
 }

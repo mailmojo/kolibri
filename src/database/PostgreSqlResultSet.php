@@ -1,73 +1,69 @@
 <?php
-class PostgreSqlResultSet implements ArrayAccess, Iterator, Countable {
-	private $position;
-	private $resource;
+/**
+ * This class implements result sets from a PostgreSQL database.
+ */
+class PostgreSqlResultSet extends ResultSet {
+	/**
+	 * Caches the number of rows in this result set, after the first call to <code>count()</code>.
+	 * @var int
+	 */
+	private $numRows;
 
+	/**
+	 * Creates a new result set backed by the supplied PostgreSQL result resource.
+	 * 
+	 * @param resource $resource Result resource.
+	 */
 	public function __construct ($resource) {
 		$this->position = 0;
 		$this->resource = $resource;
 	}
 
-	public function offsetExists ($offset) {
-		return $offset > -1 && $offset < $this->count() ? true : false;
-	}
-
+	/**
+	 * Returns the row at the specified offset as an associative array.
+	 *
+	 * @param int $offset Row to retrieve.
+	 * @return array      The row found.
+	 */
 	public function offsetGet ($offset) {
 		return pg_fetch_assoc($this->resource, $offset);
 	}
 
-	public function offsetSet ($offset, $value) {
-		throw new Exception('This result set is read-only.');
-	}
-
-	public function offsetUnset ($offset) {
-		throw new Exception('This result set is read-only.');
-	}
-
+	/**
+	 * Returns the number of rows in this result set.
+	 *
+	 * @throws Exception If an error occured while retrieving the row count.
+	 * @return int       Number of rows.
+	 */
 	public function count () {
-		if (($numRows = pg_num_rows($this->resource)) != -1) {
-			return $numRows;
+		if (!isset($this->numRows)) {
+			if (($this->numRows = pg_num_rows($this->resource)) == -1) {
+				throw new Exception('Error while trying to get number of rows in result set');
+			}
 		}
-		throw new Exception('Error while trying to get number of rows in result set.');
+		return $this->numRows;
 	}
 
-	public function current () {
-		return $this->offsetGet($this->position);
-	}
-
-	public function key () {
-		return $this->position;
-	}
-
-	public function next () {
-		$this->position++;
-	}
-
-	public function rewind () {
-		$this->position = 0;
-	}
-
-	public function valid () {
-		return $this->offsetExists($this->position);
-	}
-
+	/**
+	 * Returns the number of rows affected by the query which produced this result. Only relevant
+	 * after INSERT, UPDATE or DELETE queries.
+	 *
+	 * @return int Number of affected rows.
+	 */
 	public function numAffectedRows () {
 		return pg_affected_rows($this->resource);
 	}
 
 	/**
-	 * Converts a value retrieved from the database into a more meaningfull type (i.e. textual
-	 * boolean values into true boolean values).
+	 * Converts the supplied value, as returned from the database, to a PHP data type. Specifically,
+	 * textual boolean values are converted to true PHP boolean values.
 	 * 
-	 * @param string $value		The value to check/convert the type of.
-	 * @return mixed	The value converted.
+	 * @param mixed $value Value as returned from the database.
+	 * @return mixed       The value converted.
 	 */
 	public function convertType ($value) {
 		if ($value == 't' || $value == 'f') {
 			return $value == 't' ? true : false;
-		}
-		else if ($value == 'NULL') {
-			return null;
 		}
 		return $value;
 	}

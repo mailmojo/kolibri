@@ -55,7 +55,7 @@ class ObjectBuilder {
 	 */
 	public function build ($classes) {
 		if (empty($classes)) {
-			throw new Exception('No class names to build objects of were supplied.');
+			throw new Exception('No class names to build objects of were supplied');
 		}
 		if (count($this->resultSet) == 0) {
 			return array();
@@ -84,8 +84,11 @@ class ObjectBuilder {
 	 * @return bool             <code>TRUE</code> if the object has been populated by any values,
 	 *                          <code>FALSE</code> if not.
 	 */
-	public function fetchInto ($object, $classes = null, $isRecursing = false) {
-		$row = $this->resultSet->current();
+	public function fetchInto ($object, $classes = null, $isRecursing = false, $row = null) {
+		if ($row === null) {
+			$row = $this->resultSet->current();
+		}
+
 		$isPopulated = $this->populateObject($object, $row);
 
 		if (is_array($classes) && !empty($classes)) {
@@ -106,15 +109,22 @@ class ObjectBuilder {
 					 * Fetch object from current row with any inner objects it may have, and put object into
 					 * the outer object.
 					 */
-					if ($this->fetchInto($innerObj, $innerClasses, true)) {
+					if ($this->fetchInto($innerObj, $innerClasses, true, $row)) {
 						if ($this->putIntoProperty($object, $innerObj, $property, $innerClasses)) {
 							$isPopulated = true;
 						}
 					}
 				}
 
-				$this->resultSet->next(); // Move the result set row position forward
-			} while (!$isRecursing && $this->resultSet->valid()); // Don't loop in recursive executions
+				// We only loop and move the result set forward when not in a recursive execution
+				if (!$isRecursing) {
+					$this->resultSet->next(); // Move the result set row position forward
+					if (!$this->resultSet->valid()) {
+						break;
+					}
+					$row = $this->resultSet->current();
+				}
+			} while (!$isRecursing);
 		}
 		
 		return $isPopulated;
@@ -143,15 +153,8 @@ class ObjectBuilder {
 	 */
 	private function putIntoProperty ($outerObj, $innerObj, $property, $innerClasses = null) {
 		if (isset($outerObj->$property)) { // Property has already been set
-			$innerObjClass = get_class($innerObj);
-			$pkVar = $this->primaryKeys[$innerObjClass];
+			$pkVar = $this->primaryKeys[get_class($innerObj)];
 			$innerPk = $innerObj->$pkVar;
-
-			// Make sure primary key value is not empty, as it's used to "compare" objects
-			if ($innerPk === null || $innerPk == '') {
-				throw new Exception('No primary key value in object of type ' . $innerObjClass
-							. '. HINT: Primary key not selected in query?');
-			}
 
 			if (!is_array($outerObj->$property)) {
 				$propertyPkVar = $this->primaryKeys[get_class($outerObj->$property)];
@@ -260,19 +263,15 @@ class ObjectBuilder {
 			$this->primaryKeys[$objClass] = $reflection->getConstant('PK');
 		}
 
-		/*
-		 * We don't populate object when PK is empty, as we can then assume the object is "empty" for all
-		 * we care.
-		 */
-		if (empty($row[$this->primaryKeys[$objClass]])) {
+		// Don't populate object when PK is empty, as we use PK to compare objects
+		if (!isset($row[$this->primaryKeys[$objClass]])) {
 			return false;
 		}
 
-		$properties = array_keys(get_object_vars($object));
 		$isPopulated = false;
 
 		foreach ($row as $column => $value) {
-			if ($value !== null && in_array($column, $properties)) {
+			if ($value !== null && property_exists($object, $column)) {
 				// Convert the data type as needed
 				$object->$column = $this->resultSet->convertType($value);
 				$isPopulated = true;
