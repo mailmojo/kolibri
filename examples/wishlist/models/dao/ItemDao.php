@@ -39,7 +39,7 @@ SQL;
 		$query = <<<SQL
 			INSERT INTO items (name, description, price, added) VALUES (%s, %s, %s, date('now'))
 SQL;
-		return $db->exec($query, array($item->name, $item->description, $item->price));
+		return $db->query($query, array($item->name, $item->description, $item->price));
 	}
 
 	/**
@@ -50,7 +50,7 @@ SQL;
 		$query = <<<SQL
 			UPDATE items SET received = %s WHERE name = %s
 SQL;
-		return $db->exec($query, array($item->received, $item->name));
+		return $db->query($query, array($item->received, $item->name));
 	}
 
 	/**
@@ -61,7 +61,7 @@ SQL;
 		$query = <<<SQL
 			DELETE FROM items WHERE name = %s
 SQL;
-		return $db->exec($query, array($item->name));
+		return $db->query($query, array($item->name));
 	}
 }
 ?>

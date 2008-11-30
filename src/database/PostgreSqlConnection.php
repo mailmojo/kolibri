@@ -45,9 +45,13 @@ class PostgreSqlConnection extends DatabaseConnection {
 	 * Begins a new transaction.
 	 *
 	 * @return bool <code>TRUE</code> if a transaction was started, <code>FALSE</code> if not (i.e.
-	 *              the connection is in an error state.
+	 *              the connection is in an error state).
 	 */
 	public function begin () {
+		if (!$this->connection) {
+			$this->connect();
+		}
+
 		if (pg_transaction_status($this->connection) !== PGSQL_TRANSACTION_INERROR) {
 			pg_query($this->connection, 'BEGIN');
 			return true;
@@ -117,7 +121,7 @@ class PostgreSqlConnection extends DatabaseConnection {
 			$resultStatus = pg_result_status($resultResource);
 
 			if ($resultStatus !== PGSQL_FATAL_ERROR) {
-				$this->resultSet = new PostgreSqlResultSet($resultResource);
+				$this->resultSet = new PostgreSqlResultSet($this, $resultResource);
 				return $this->resultSet;
 			}
 

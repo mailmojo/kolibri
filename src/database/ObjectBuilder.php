@@ -29,7 +29,7 @@ class ObjectBuilder {
 	private $resultSet;
 
 	/**
-	 * Holds primary keys for objects as they are encountered. Saves using reflection every time we
+	 * Caches primary keys for objects as they are encountered. Saves using reflection every time we
 	 * need to look up the primary key of an object.
 	 * @var array
 	 */
@@ -42,7 +42,8 @@ class ObjectBuilder {
 	 * @return ObjectBuilder
 	 */
 	public function __construct ($resultSet) {
-		$this->resultSet = $resultSet;
+		$this->resultSet   = $resultSet;
+		$this->primaryKeys = array();
 	}
 
 	/**
@@ -57,7 +58,7 @@ class ObjectBuilder {
 		if (empty($classes)) {
 			throw new Exception('No class names to build objects of were supplied');
 		}
-		if (count($this->resultSet) == 0) {
+		if (!$this->resultSet->valid()) {
 			return array();
 		}
 
@@ -72,11 +73,10 @@ class ObjectBuilder {
 	/**
 	 * Populates an object with values in this result set.
 	 * 
-	 * Each object (the main object as well as any inner objects defined by the class specifications)
-	 * is populated by values from columns with the same name as the properties of the object. Be
-	 * aware that all columns will attempt to populate every object. This means that if two objects
-	 * share the same property name as a single column, that column value will be set in both
-	 * objects.
+	 * Each object (the main object as well as any inner objects defined by the class nesting
+	 * specifications) is attempted populated by all values from each row in the result set. Column
+	 * names must match the object properties they are to be set in. If an object's primary key
+	 * property is not populated, the object is considered empty and we do not keep it.
 	 *
 	 * @param object $object    Main object to populate.
 	 * @param mixed $classes    Specifies the hierarchy of objects to create.
@@ -94,15 +94,20 @@ class ObjectBuilder {
 		if (is_array($classes) && !empty($classes)) {
 			do {
 				foreach ($classes as $property => $innerClasses) { // Loop through class specifications
+					/*
+					 * Instantiate the current class to attempt to populate in our next recursive call.
+					 * XXX: We might consider postponing instantiation until after we know PK is present.
+					 * PK-check is currently done in populateObject() which requires an instance. This would
+					 * probably speed up some cases with left joins with no/few matches, but requires some
+					 * refactoring to be made clean.
+					 */
 					if (!is_array($innerClasses)) {
-						// Specification is a pure string
 						$innerObj = new $innerClasses();
 						$innerClasses = null;
 					}
 					else {
-						// Specification is an array, use first element as class name and rest as new classes
-						$innerObj = new $innerClasses[0]();
-						$innerClasses = count($innerClasses) > 1 ? array_slice($innerClasses, 1) : null;
+						$class = array_shift($innerClasses);
+						$innerObj = new $class();
 					}
 
 					/*
@@ -152,7 +157,11 @@ class ObjectBuilder {
 	 *                            not exist in <code>$outerObj</code>.
 	 */
 	private function putIntoProperty ($outerObj, $innerObj, $property, $innerClasses = null) {
-		if (isset($outerObj->$property)) { // Property has already been set
+		/*
+		 * First we just make sure "something" is already set on the property, otherwise we can simply
+		 * set the inner object without any special consideration.
+		 */
+		if (isset($outerObj->$property)) {
 			$pkVar = $this->primaryKeys[get_class($innerObj)];
 			$innerPk = $innerObj->$pkVar;
 
@@ -225,8 +234,8 @@ class ObjectBuilder {
 				}
 			}
 		}
-		else { // Property is not yet set
-			// Property must be a valid property in outer obj for inner obj to be set
+		else {
+			// Nothing is yet set, so if the property exists we can simply set the inner object 
 			if (property_exists($outerObj, $property)) {
 				$outerObj->$property = $innerObj;
 			}
@@ -252,7 +261,7 @@ class ObjectBuilder {
 	private function populateObject ($object, $row) {
 		$objClass = get_class($object);
 
-		// If we have not yet collected the primary key of this object type, we do so here
+		// If we have not yet cached the primary key of this object type, we do so here
 		if (!isset($this->primaryKeys[$objClass])) {
 			$reflection = new ReflectionObject($object);
 			if (!$reflection->hasConstant('PK')) {

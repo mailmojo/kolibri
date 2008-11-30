@@ -7,7 +7,7 @@ require(ROOT . '/database/ObjectBuilder.php');
  *
  * Clients will usually use one of the <code>getObject()</code>, <code>getObjects()</code> and
  * <code>getColumn()</code> methods, although <code>query()</code> is availible for direct
- * access to the result set object.
+ * access to the result set object (which can be iterated as if it was an array).
  *
  * Every method which accepts a query string and parameters works in the same way. If the
  * parameters is an array, the query must use ? as placeholders. If however the parameters is an
@@ -17,8 +17,6 @@ require(ROOT . '/database/ObjectBuilder.php');
  * 
  * Methods accepting class names to specify object nesting conforms to the rules of
  * <code>ObjectBuilder</code>. See its class documentation for details and examples.
- *
- * @version 	$Id: DatabaseConnection.php 1534 2008-08-01 14:18:52Z frode $
  */
 abstract class DatabaseConnection {
 	/**
@@ -145,7 +143,7 @@ abstract class DatabaseConnection {
 		$result = $this->query($query, $params);
 		if ($result) {
 			$sofa = new ObjectBuilder($result);
-			return $sofa->fetchInfo($object, $classes);
+			return $sofa->fetchInto($object, $classes);
 		}
 		return false;
 	}
@@ -198,14 +196,14 @@ abstract class DatabaseConnection {
 				$preparedQuery = vsprintf($transformedQuery, $escapedParams);
 
 				if (!$preparedQuery) {
-					throw new Exception('Number of replacement chars and parameter values does not match.');
+					throw new Exception('Number of replacement chars and parameter values does not match');
 				}
 				return $preparedQuery;
 			}
 			else if (is_object($params)) {
 				/*
 				 * Regexp to match placeholders according to the rules of PHP variables, and excluding
-				 * double colons :: which indicates a cast in SQL and thus not a placeholder.
+				 * double colons :: which indicates a cast in SQL and is thus not a placeholder.
 				 */
 				$allowedChars = '/[^:]:([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)/';
 				$matches = array();
@@ -218,7 +216,7 @@ abstract class DatabaseConnection {
 						$replace[] = $this->escapeValue($params->$match);
 					}
 					else {
-						throw new Exception("No property in parameter object matches the named parameter $match.");
+						throw new Exception("No property in parameter object matches the named parameter $match");
 					}
 				}
 

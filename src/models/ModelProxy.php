@@ -39,35 +39,26 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Exposable
 	protected $models;
 
 	/**
-	 * Tracks which models are dirty. Only dirty models are persited upon save().
-	 * @var array
-	 */
-	//protected $dirty;
-
-	/**
 	 * Current model.
 	 * @var object
 	 */
 	protected $current;
-
-	//private $childrenDirty;
 
 	/**
 	 * Creates a <code>ModelProxy</code> instance for the model supplied.
 	 *
 	 * @param object $model		Model to proxy.
 	 */
-	public function __construct ($model/*, $dirty*/) {
+	public function __construct ($model) {
 		if (is_object($model)) {
-			$this->setModel($model/*, $dirty*/);
+			$this->setModel($model);
 		}
 		else { // Is array
-			$this->setModels($model/*, $dirty*/);
+			$this->setModels($model);
 			// Set $model to one of the contained models so we can find out about its type below
 			$model = current($this->models);
 		}
 
-		//$this->childrenDirty = $dirty;
 		$this->initDaoProxy($model);
 	}
 
@@ -99,7 +90,6 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Exposable
 				}
 
 				// Loop through model properties and save any inner models
-				$pk = $model->pk();
 				foreach ($model as $property => &$innerModel) {
 					/*
 					 * If $innerModel is an array or object, we try to proxy it. If it succeeds, it is
@@ -107,14 +97,14 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Exposable
 					 * into the model object.
 					 */
 					if (is_array($innerModel) || is_object($innerModel)) {
-						$proxy = Models::getModel($innerModel/*, $this->childrenDirty*/);
+						$proxy = Models::getModel($innerModel);
 						if ($proxy !== null) {
 							$innerModel = $proxy;
 						}
 					}
 
 					if ($innerModel instanceof ModelProxy) {
-						$this->propagateKey($innerModel, $pk, $model->$pk);
+						$this->propagateKey($innerModel, $model);
 						$innerModel->save();
 					}
 				}
@@ -147,18 +137,20 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Exposable
 	}
 
 	/**
-	 * Checks every model object in a ModelProxy for the existance of a foreign key and updates it's
-	 * value if it's empty.
+	 * Checks every model object in a ModelProxy for the existance of a foreign key to the supplied model
+	 * and updates it's value if it's empty.
 	 *
 	 * @param ModelProxy $proxy	The ModelProxy with model objects to update.
-	 * @param string $keyName	The name of the primary key to check if any model objects uses as foreign key.
-	 * @param mixed $keyValue	The value of the primary key, which any empty foreign keys will be updated to.
+	 * @param object $model     The model whose primary key defines the foreign key to look for.
 	 */
-	private function propagateKey ($proxy, $keyName, $keyValue) {
-		foreach ($proxy as $model) {
-			if (property_exists($model, $keyName) && empty($model->$keyName)) {
+	private function propagateKey ($proxy, $model) {//$keyName, $keyValue) {
+		$reflection = new ReflectionObject($model);
+		$pk = $reflection->getConstant('PK');
+
+		foreach ($proxy as $innerModel) {
+			if (property_exists($innerModel, $pk) && empty($innerModel->$pk)) {
 				// Inner model has an empty foreign key to the main model, initialize before saving
-				$model->$keyName = $keyValue;
+				$innerModel->$pk = $model->$pk;
 			}
 		}
 	}
@@ -319,7 +311,6 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Exposable
 		if (is_array($models)) {
 			$this->models = $models;
 			$this->current = null;
-			//$this->dirty = array_combine(array_keys($models), array_fill(0, count($models), $dirty));
 		}
 	}
 

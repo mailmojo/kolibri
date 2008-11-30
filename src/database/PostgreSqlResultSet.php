@@ -1,8 +1,9 @@
 <?php
 /**
- * This class implements result sets from a PostgreSQL database.
+ * This class is the PostgreSQL implementation of a result set. This implementation allows access to
+ * the rows either through iteration or direct array access.
  */
-class PostgreSqlResultSet extends ResultSet {
+class PostgreSqlResultSet extends ResultSetArray {
 	/**
 	 * Caches the number of rows in this result set, after the first call to <code>count()</code>.
 	 * @var int
@@ -12,11 +13,12 @@ class PostgreSqlResultSet extends ResultSet {
 	/**
 	 * Creates a new result set backed by the supplied PostgreSQL result resource.
 	 * 
-	 * @param resource $resource Result resource.
+	 * @param result $result Result resource.
 	 */
-	public function __construct ($resource) {
+	public function __construct ($conn, $result) {
+		$this->conn     = $conn;
+		$this->result   = $result;
 		$this->position = 0;
-		$this->resource = $resource;
 	}
 
 	/**
@@ -26,7 +28,7 @@ class PostgreSqlResultSet extends ResultSet {
 	 * @return array      The row found.
 	 */
 	public function offsetGet ($offset) {
-		return pg_fetch_assoc($this->resource, $offset);
+		return pg_fetch_assoc($this->result, $offset);
 	}
 
 	/**
@@ -37,7 +39,7 @@ class PostgreSqlResultSet extends ResultSet {
 	 */
 	public function count () {
 		if (!isset($this->numRows)) {
-			if (($this->numRows = pg_num_rows($this->resource)) == -1) {
+			if (($this->numRows = pg_num_rows($this->result)) == -1) {
 				throw new Exception('Error while trying to get number of rows in result set');
 			}
 		}
@@ -51,7 +53,7 @@ class PostgreSqlResultSet extends ResultSet {
 	 * @return int Number of affected rows.
 	 */
 	public function numAffectedRows () {
-		return pg_affected_rows($this->resource);
+		return pg_affected_rows($this->result);
 	}
 
 	/**

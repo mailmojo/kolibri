@@ -14,7 +14,7 @@ class DatabaseSetup {
 					type = 'table'
 					AND name = %s
 SQL;
-		return $db->getOne($dbCheck, array('items'));
+		return $db->getColumn($dbCheck, array('items'));
 	}
 
 	/**
@@ -31,7 +31,7 @@ SQL;
 				received DATE DEFAULT NULL
 			)
 SQL;
-		$db->exec($create);
+		$db->query($create);
 	}
 }
 ?>

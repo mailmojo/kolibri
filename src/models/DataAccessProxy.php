@@ -81,7 +81,10 @@ class DataAccessProxy {
 
 	public function insert ($model) {
 		$result = $this->invokeCall($model, 'insert');
-		$pk = $model->pk();
+
+		// TODO: Cache PK in the ModelProxy? It always contains identical objects, so should simplify.
+		$reflection = new ReflectionObject($model);
+		$pk = $reflection->getConstant('PK');
 
 		if (!is_bool($result) && is_scalar($result)) {
 			$model->$pk = $result;
@@ -92,7 +95,9 @@ class DataAccessProxy {
 	}
 
 	public function update ($model) {
-		$pk = $model->pk();
+		$reflection = new ReflectionObject($model);
+		$pk = $reflection->getConstant('PK');
+
 		if (empty($model->$pk)) {
 			/*
 			 * Actual PK property is empty, meaning that the PK is not being modified and we can thus
@@ -106,7 +111,8 @@ class DataAccessProxy {
 	}
 	
 	public function delete ($model) {
-		$pk = $model->pk();
+		$reflection = new ReflectionObject($model);
+		$pk = $reflection->getConstant('PK');
 		if (empty($model->$pk)) {
 			$model->$pk = $model->original;
 		}
