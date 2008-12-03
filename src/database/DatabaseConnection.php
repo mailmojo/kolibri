@@ -204,19 +204,24 @@ abstract class DatabaseConnection {
 				$matches = array();
 				preg_match_all($allowedChars, $query, $matches);
 
-				// Loop through each match, and remember those that actually exists among the parameters
-				foreach ($matches[1] as $match) {
-					if (property_exists($params, $match)) {
-						$patterns[] = "/([^:]):$match/";
-						$replace[] = '$1' . $this->escapeValue($params->$match);
+				/**
+				 * Loop through placeholder matches and create search/replace strings for those that
+				 * actually exists as parameters.
+				 */
+				foreach ($matches[0] as $idx => $match) {
+					$propertyName = $matches[1][$idx];
+					if (property_exists($params, $propertyName)) {
+						$search[] = $match;
+						// The first character in the regexp match should not be replaced, so we prepend it
+						$replace[] = $match{0} . $this->escapeValue($params->$propertyName);
 					}
 					else {
-						throw new Exception("No property in parameter object matches the named parameter $match");
+						throw new Exception("No property in parameter object matches the named parameter $match.");
 					}
 				}
 
-				// Do the actual interpolation
-				return preg_replace($patterns, $replace, $query);
+				// Do the actual string interpolation
+				return str_replace($search, $replace, $query);
 			}
 		}
 
