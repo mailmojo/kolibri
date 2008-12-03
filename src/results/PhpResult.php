@@ -1,8 +1,6 @@
 <?php
 /**
- * Provides the implementation of using a plain PHP template file for creating the result.
- * 
- * @version		$Id$
+ * Provides the implementation for using a plain PHP file as a template when creating the result.
  */	
 class PhpResult extends AbstractResult {
 	private $phpTemplate;
@@ -10,24 +8,25 @@ class PhpResult extends AbstractResult {
 	/**
 	 * Constructor.
 	 *
-	 * @param Object $action		The action processing the request.
-	 * @param string $phpTemplate	Path to the template, relative to the VIEW_PATH, and excluding the extension.
+	 * @param Object $action      The action processing the request.
+	 * @param string $phpTemplate Path to the template, relative to the VIEW_PATH, and excluding the extension.
 	 */
 	public function __construct ($action, $phpTemplate) {
 		parent::__construct($action);
 		
-		$this->phpTemplate = VIEW_PATH . "/$phpTemplate.php";
+		$this->phpTemplate = VIEW_PATH . "$phpTemplate.php";
 		if (!file_exists($this->phpTemplate)) {
 			trigger_error("PHP template ({$this->phpTemplate}) does not exist.", E_USER_ERROR);
 		}
 	}
 	
 	/**
-	 * Extracts data from the current action and/or request into a sandboxed function scope.
+	 * Extracts data from the current action into a sandboxed function scope, while providing
+	 * direct access to the request object.
 	 * This sandboxed scope is made available to the PHP template file by including it directly, and
 	 * collecting it's output which is thus used as the results output.
 	 *
-	 * @param Request $request	Request object representing the current request.
+	 * @param Request $request Request object representing the current request.
 	 */
 	public function render ($request) {
 		$data = array();
