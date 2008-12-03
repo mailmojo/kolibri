@@ -12,7 +12,7 @@ class DatabaseSetup {
 			SELECT 1 FROM sqlite_master 
 				WHERE
 					type = 'table'
-					AND name = %s
+					AND name = ?
 SQL;
 		return $db->getColumn($dbCheck, array('items'));
 	}

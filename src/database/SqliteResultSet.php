@@ -90,6 +90,15 @@ class SqliteResultSet implements ResultSet {
 	}
 
 	/**
+	 * Returns the row id of the last inserted row.
+	 *
+	 * @return int The value of the last auto-incremented row id.
+	 */
+	public function lastInsertId () {
+		return $this->conn->getNativeConnection()->lastInsertRowid();
+	}
+
+	/**
 	 * Converts the supplied value, as returned from the database, to a PHP data type. Specifically,
 	 * textual boolean values are converted to true PHP boolean values.
 	 * TODO: Do some research on this as it relates to SQLite. Currently this is a copy from Pg.

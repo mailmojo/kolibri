@@ -2,26 +2,27 @@
 require(ROOT . '/models/DataAccessProxy.php');
 
 /**
- * This class is a proxy for model objects, which adds functionality that makes it easier to work with
- * models.
+ * This class is a proxy for model objects, which adds functionality that makes it easier to work
+ * with models.
  *
- * If the model we are proxying is <code>DataProvided</code> a <code>DataAccessProxy</code> is instantiated
- * and made available through the <code>objects</code> property. This makes it easy to access the model's
- * data access object through a consistent interface. This also adds additional functionality such as
- * automatic handling of <code>save()</code>-ing og <code>delete()</code>-ing regardless of how many
- * instances of the model is contained in this proxy.
+ * If the model we are proxying is <code>DataProvided</code> a <code>DataAccessProxy</code> is
+ * instantiated and made available through the <code>objects</code> property. This makes it easy to
+ * access the model's data access object through a consistent interface. This also adds additional
+ * functionality such as automatic handling of <code>save()</code>-ing og <code>delete()</code>-ing
+ * regardless of how many instances of the model is contained in this proxy.
  
- * For instance, you can <code>$model->objects->all()</code>, do some processing on one or more of the
- * instances before calling <code>$model->save()</code> to persist the changes to the underlying store.
+ * For instance, you can <code>$model->objects->all()</code>, do some processing on one or more of
+ * the instances before calling <code>$model->save()</code> to persist the changes to the
+ * underlying storage.
  *
- * As a proxy can contain any number of model instances, a concept of <em>current model</em> is used. This
- * indicates the model at the position of the internal array pointer, which you should not rely on for
- * access to a specific model unless you know only one model instance is held. What this means is that
- * any methods that works on the <em>current model</em> should only be called when you have only
- * instantiated or retrieved a single model instance.
+ * As a proxy can contain any number of model instances, a concept of <em>current model</em> is
+ * used. This indicates the model at the position of the internal array pointer, which you should
+ * not rely on for access to a specific model unless you know only one model instance is held. What
+ * this means is that any methods that works on the <em>current model</em> should only be called
+ * when you have only instantiated or retrieved a single model instance.
  * 
- * This class also implements <code>ArrayAccess</code> and <code>IteratorAggregates</code> which makes it
- * possible to treat a collection of models in the proxy as if it was a regular array.
+ * This class also implements <code>ArrayAccess</code> and <code>IteratorAggregates</code> which
+ * makes it possible to treat the collection of models in the proxy as if it was a regular array.
  *
  * @version		$Id: ModelProxy.php 1555 2008-09-26 14:51:36Z anders $
  */
@@ -55,7 +56,7 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Exposable
 		}
 		else { // Is array
 			$this->setModels($model);
-			// Set $model to one of the contained models so we can find out about its type below
+			// Set $model to one of the contained models so we can init the correct DAO proxy
 			$model = current($this->models);
 		}
 
@@ -154,11 +155,15 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Exposable
 			}
 		}
 	}
-	
+
+	/**
+	 * Initializes a proxy to the data access object of the model, if it is <code>DataProvided</code>.
+	 *
+	 * @param object $model A model we are proxying.
+	 */
 	private function initDaoProxy ($model) {
 		if ($model instanceof DataProvided) {
-			$daoClass = get_class($model) . 'Dao';
-			$this->objects = new DataAccessProxy($this, $daoClass);
+			$this->objects = new DataAccessProxy($this, get_class($model));
 		}
 	}
 

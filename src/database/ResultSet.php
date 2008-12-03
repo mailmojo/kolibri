@@ -21,6 +21,15 @@ interface ResultSet extends Iterator {
 	public function numAffectedRows ();
 
 	/**
+	 * Returns the last auto-incremented ID generated from an INSERT. Note that this is not always
+	 * directly related to the result set. Depending on the implementation, this could return the
+	 * last ID generated at this result set, or the last generated through the connection.
+	 *
+	 * @return int Last inserted auto-ID.
+	 */
+	public function lastInsertId ();
+
+	/**
 	 * Converts the supplied value, as returned from the database, to a PHP data type.
 	 *
 	 * @param mixed $value Value as returned from the database.

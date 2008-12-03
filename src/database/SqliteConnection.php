@@ -101,6 +101,11 @@ class SqliteConnection extends DatabaseConnection {
 			$this->connect();
 		}
 
+		// We must discard any previous results to free up any locks still held
+		if ($this->resultSet !== null) {
+			$this->resultSet = null;
+		}
+
 		if ($this->transactionInError) {
 			return false;
 		}
@@ -118,17 +123,8 @@ class SqliteConnection extends DatabaseConnection {
 			return $this->resultSet;
 		}
 
-		// TODO: Implement custom exception
-		throw new Exception($error);
-	}
-
-	/**
-	 * Returns the row id of the last inserted row.
-	 *
-	 * @return int The value of the last auto-incremented row id.
-	 */
-	public function lastInsertId () {
-		return $this->connection->lastInsertRowid();
+		// XXX: Should perhaps pass some kind of SQL error state as code
+		throw new SqlException($error, $preparedQuery);
 	}
 
 	/**

@@ -60,7 +60,7 @@ $actionMappers = array(
  * exclude-mapping would not have any effect.
  */
 $interceptorMappings = array(
-		'*' => array('defaultStack')
+		'*' => array('defaultStack', '!error')
 );
 
 /*

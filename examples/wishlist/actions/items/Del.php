@@ -11,7 +11,7 @@ class Del extends ActionSupport {
 		$itemName = $this->request['id']; // We could also do $this->request->get('id'), whatever you prefer
 		$item = Models::init('Item');
 
-		// Tries to load the item (notice that this calls one() in the ItemDao class)
+		// Tries to load the item (notice that this calls load() in the ItemDao class)
 		if ($item->objects->load($itemName)) {
 			// Item was successfully found, delete
 			if ($item->delete()) {

@@ -16,6 +16,7 @@ $autoloadClasses = array(
 		'DatabaseFactory'        => '/database/DatabaseFactory.php',
 		'ResultSet'              => '/database/ResultSet.php',
 		'ResultSetArray'         => '/database/ResultSetArray.php',
+		'SqlException'           => '/database/SqlException.php',
 		'AbstractInterceptor'    => '/interceptors/AbstractInterceptor.php',
 		'AuthInterceptor'        => '/interceptors/AuthInterceptor.php',
 		'ErrorInterceptor'       => '/interceptors/ErrorInterceptor.php',

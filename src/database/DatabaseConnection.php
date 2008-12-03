@@ -84,13 +84,6 @@ abstract class DatabaseConnection {
 	abstract public function query ($query, $params = null);
 
 	/**
-	 * Returns the last auto-incremented ID generated from this connection.
-	 *
-	 * @return int Last inserted auto-ID.
-	 */
-	abstract public function lastInsertId ();
-
-	/**
 	 * Escapes a value to make it safe for use in SQL queries. Only used internally.
 	 * 
 	 * Specific implementations can choose to convert types as needed as well, such as booleans for
@@ -143,7 +136,9 @@ abstract class DatabaseConnection {
 		$result = $this->query($query, $params);
 		if ($result) {
 			$sofa = new ObjectBuilder($result);
-			return $sofa->fetchInto($object, $classes);
+			if ($sofa->fetchInto($object, $classes)) {
+				return $object;
+			}
 		}
 		return false;
 	}
@@ -212,8 +207,8 @@ abstract class DatabaseConnection {
 				// Loop through each match, and remember those that actually exists among the parameters
 				foreach ($matches[1] as $match) {
 					if (property_exists($params, $match)) {
-						$patterns[] = "/[^:]:$match/";
-						$replace[] = $this->escapeValue($params->$match);
+						$patterns[] = "/([^:]):$match/";
+						$replace[] = '$1' . $this->escapeValue($params->$match);
 					}
 					else {
 						throw new Exception("No property in parameter object matches the named parameter $match");
