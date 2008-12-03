@@ -22,7 +22,7 @@ class PhpResult extends AbstractResult {
 	
 	/**
 	 * Extracts data from the current action into a sandboxed function scope, while providing
-	 * direct access to the request object.
+	 * direct access to the request object and the application configuration.
 	 * This sandboxed scope is made available to the PHP template file by including it directly, and
 	 * collecting it's output which is thus used as the results output.
 	 *
@@ -46,8 +46,8 @@ class PhpResult extends AbstractResult {
 		 * Create a sandbox function which extracts all data to it's local scope,
 		 * instead of letting the view template run inside the PhpResult object scope.
 		 */
-		$sandbox = create_function('$request, $_d, $_t', 'extract($_d); @include($_t);');
-		$sandbox($request, $data, $this->phpTemplate);
+		$sandbox = create_function('$request, $config, $_d, $_t', 'extract($_d); @include($_t);');
+		$sandbox($request, Config::get(), $data, $this->phpTemplate);
 	}
 }
 ?>
