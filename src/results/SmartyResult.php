@@ -1,4 +1,6 @@
 <?php
+require('Smarty/Smarty.class.php');
+
 /**
  * Provides the implementation of a result using the Smarty template engine to render the data as (X)HTML.
  * To use this result engine you'll need to have Smarty installed in a directory where PHP searches for
@@ -42,8 +44,6 @@ class SmartyResult extends AbstractResult {
 	 * @param Request $request Request object representing the current request.
 	 */
 	public function render ($request) {
-		require('Smarty/Smarty.class.php');
-		
 		$conf = Config::get('smarty');
 		if ($conf === null) {
 			trigger_error('Smarty settings missing from application configuration.', E_USER_ERROR);
