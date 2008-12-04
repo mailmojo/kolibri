@@ -30,6 +30,14 @@ class Email {
 	}
 
 	/**
+	 * Clears the list of recipients for the message. Ie. for sending the same e-mail with slight
+	 * modifications to separate recipients.
+	 */
+	public function clearRecipients () {
+		$this->recipients = array();
+	}
+
+	/**
 	 * Adds a recipient of the message.
 	 */
 	public function addRecipient ($email, $name = null) {
