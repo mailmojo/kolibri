@@ -163,15 +163,6 @@ abstract class DatabaseConnection {
 	}
 
 	/**
-	 * Returns the number of rows affected by the last INSERT, UPDATE or DELETE queries.
-	 *
-	 * @return int Number of affected rows.
-	 */
-	public function numAffectedRows () {
-		return $this->resultSet->numAffectedRows();
-	}
-
-	/**
 	 * Prepares and returns the query by escaping and interpolating any parameters into the query.
 	 *
 	 * @param string $query The query to prepare.

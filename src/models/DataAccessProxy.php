@@ -79,13 +79,13 @@ class DataAccessProxy {
 	 * after the DAO has been called.
 	 *
 	 * @param object $model The model to pass to the DAO method.
-	 * @return mixed        The results as returned from the DAO method.
+	 * @return int          Number of rows actually inserted.
 	 */
 	public function insert ($model) {
 		$result = $this->invokeCall($model, 'insert');
 		$this->setPrimaryKey($model, $result->lastInsertId());
 		$model->original = $model->{$this->modelPk};
-		return $result;
+		return $result->numAffectedRows();
 	}
 
 	/**
@@ -93,11 +93,12 @@ class DataAccessProxy {
 	 * if not already set, before calling the DAO.
 	 *
 	 * @param object $model The model to pass to the DAO method.
-	 * @return mixed        The results as returned from the DAO method.
+	 * @return int          Number of rows actually updated.
 	 */
 	public function update ($model) {
 		$this->setPrimaryKey($model, $model->original);
-		return $this->invokeCall($model, 'update');
+		$result = $this->invokeCall($model, 'update');
+		return $result->numAffectedRows();
 	}
 	
 	/**
@@ -105,11 +106,12 @@ class DataAccessProxy {
 	 * if not already set, before calling the DAO.
 	 *
 	 * @param object $model The model to pass to the DAO method.
-	 * @return mixed        The results as returned from the DAO method.
+	 * @return int          Number of rows actually deleted.
 	 */
 	public function delete ($model) {
 		$this->setPrimaryKey($model, $model->original);
-		return $this->invokeCall($model, 'delete');
+		$result = $this->invokeCall($model, 'delete');
+		return $result->numAffectedRows();
 	}
 
 	/**

@@ -129,7 +129,8 @@ class SqliteConnection extends DatabaseConnection {
 	}
 
 	/**
-	 * Returns the native database connection.
+	 * Returns the native database connection. Used internally by <code>SqlResultSet</code> which
+	 * required the connection for some of its functionality.
 	 *
 	 * @return SQLiteDatabase
 	 */
