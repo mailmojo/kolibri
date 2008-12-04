@@ -67,7 +67,7 @@ class SqliteResultSet implements ResultSet {
 	 * @throws Exception Always, as this is unsupported.
 	 */
 	public function rewind () {
-		throw new Exception('Rewinding a SqliteResultSet is not supported');
+		throw new DatabaseException('Rewinding a SqliteResultSet is not supported');
 	}
 
 	/**

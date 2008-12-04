@@ -28,7 +28,7 @@ class SqliteConnection extends DatabaseConnection {
 		$this->connection = sqlite_factory($this->database);
 
 		if (!$this->connection) {
-			throw new Exception('Could not connect to the database');
+			throw new DatabaseException('Could not connect to the database');
 		}
 		return true;
 	}
@@ -123,6 +123,7 @@ class SqliteConnection extends DatabaseConnection {
 			return $this->resultSet;
 		}
 
+		$this->rollback();
 		// XXX: Should perhaps pass some kind of SQL error state as code
 		throw new SqlException($error, $preparedQuery);
 	}

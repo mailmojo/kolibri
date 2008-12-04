@@ -36,7 +36,7 @@ class PostgreSqlConnection extends DatabaseConnection {
 		$this->connection = pg_connect($connectionString);
 
 		if (!$this->connection) {
-			throw new Exception('Could not connect to the database');
+			throw new DatabaseException('Could not connect to the database');
 		}
 		return true;
 	}
@@ -125,12 +125,12 @@ class PostgreSqlConnection extends DatabaseConnection {
 				return $this->resultSet;
 			}
 
-			// XXX: We might not want to throw an exception in all cases?
+			$this->rollback();
 			throw new SqlException(pg_result_error($resultResource), $preparedQuery,
 				(int) pg_result_error_field($resultResource, PGSQL_DIAG_SQLSTATE));
 		}
 
-		return false;
+		throw new DatabaseException('Query could not be sent to the database. Connection lost?');
 	}
 
 	/**

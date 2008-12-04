@@ -175,27 +175,12 @@ abstract class DatabaseConnection {
 	 * Prepares and returns the query by escaping and interpolating any parameters into the query.
 	 *
 	 * @param string $query The query to prepare.
-	 * @param array $params Parameters to escape and interpolate into query.
+	 * @param mixed $params Parameters to escape and interpolate into query.
 	 * @return string       The query prepared to be executed.
 	 */
 	protected function prepareQuery ($query, $params) {
 		if (!empty($params)) {
-			if (is_array($params)) {
-				$escapedParams = array_map(array($this, 'escapeValue'), $params);
-				
-				/*
-				 * When params is a simple array, we expect ?-placeholders. Convert them to %s in order
-				 * to simply use vsprintf().
-				 */
-				$transformedQuery = str_replace('?', '%s', $query);
-				$preparedQuery = vsprintf($transformedQuery, $escapedParams);
-
-				if (!$preparedQuery) {
-					throw new Exception('Number of replacement chars and parameter values does not match');
-				}
-				return $preparedQuery;
-			}
-			else if (is_object($params)) {
+			if (is_object($params)) {
 				/*
 				 * Regexp to match placeholders according to the rules of PHP variables, and excluding
 				 * double colons :: which indicates a cast in SQL and is thus not a placeholder.
@@ -204,20 +189,45 @@ abstract class DatabaseConnection {
 				$matches = array();
 				preg_match_all($allowedChars, $query, $matches);
 
-				// Loop through each match, and remember those that actually exists among the parameters
-				foreach ($matches[1] as $match) {
-					if (property_exists($params, $match)) {
-						$patterns[] = "/([^:]):$match/";
-						$replace[] = '$1' . $this->escapeValue($params->$match);
+				/**
+				 * Loop through placeholder matches and create search/replace strings for those that
+				 * actually exists as parameters.
+				 */
+				foreach ($matches[0] as $idx => $match) {
+					$propertyName = $matches[1][$idx];
+					if (property_exists($params, $propertyName)) {
+						$search[] = $match;
+						// The first character in the regexp match should not be replaced, so we prepend it
+						$replace[] = $match{0} . $this->escapeValue($params->$propertyName);
 					}
 					else {
-						throw new Exception("No property in parameter object matches the named parameter $match");
+						throw new DatabaseException('No property in parameter object ' . get_class($params)
+							. " matches the named parameter $match");
 					}
 				}
 
-				// Do the actual interpolation
-				return preg_replace($patterns, $replace, $query);
+				// Do the actual string interpolation
+				return str_replace($search, $replace, $query);
 			}
+			else if (!is_array($params)) {
+				// $params is a scalar value, wrap in array
+				$params = array($params);
+			}
+
+			$escapedParams = array_map(array($this, 'escapeValue'), $params);
+
+			/*
+			 * When params is a simple array, we expect ?-placeholders. Convert them to %s in order
+			 * to simply use vsprintf().
+			 */
+			$transformedQuery = str_replace('?', '%s', $query);
+			$preparedQuery = vsprintf($transformedQuery, $escapedParams);
+
+			if (!$preparedQuery) {
+				throw new DatabaseException('Number of replacement chars and parameter values ('
+					. count($params) . ') does not match');
+			}
+			return $preparedQuery;
 		}
 
 		return $query;

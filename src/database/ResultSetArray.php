@@ -36,14 +36,14 @@ abstract class ResultSetArray implements ResultSet, ArrayAccess, Countable {
 	 * Denies access to set rows into this result set.
 	 */
 	public function offsetSet ($offset, $value) {
-		throw new Exception('This result set is read-only.');
+		throw new DatabaseException('This result set is read-only.');
 	}
 
 	/**
 	 * Denies access to unset rows in this result set.
 	 */
 	public function offsetUnset ($offset) {
-		throw new Exception('This result set is read-only.');
+		throw new DatabaseException('This result set is read-only.');
 	}
 
 	/**

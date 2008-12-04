@@ -13,6 +13,7 @@ $autoloadClasses = array(
 		'SessionAware'           => '/actions/SessionAware.php',
 		'UploadAware'            => '/actions/UploadAware.php',
 		'ValidationAware'        => '/actions/ValidationAware.php',
+		'DatabaseException'      => '/database/DatabaseException.php',
 		'DatabaseFactory'        => '/database/DatabaseFactory.php',
 		'ResultSet'              => '/database/ResultSet.php',
 		'ResultSetArray'         => '/database/ResultSetArray.php',

@@ -14,7 +14,7 @@ class DatabaseSetup {
 					type = 'table'
 					AND name = ?
 SQL;
-		return $db->getColumn($dbCheck, array('items'));
+		return $db->getColumn($dbCheck, 'items');
 	}
 
 	/**

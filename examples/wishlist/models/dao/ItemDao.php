@@ -16,7 +16,7 @@ class ItemDao {
 				FROM items
 				WHERE name = ?
 SQL;
-		return $db->getObject('Item', $query, array($id)); // Gets one object of type Item
+		return $db->getObject('Item', $query, $id); // Gets one object of type Item
 	}
 
 	/**
