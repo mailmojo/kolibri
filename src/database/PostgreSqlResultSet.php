@@ -40,7 +40,7 @@ class PostgreSqlResultSet extends ResultSetArray {
 	public function count () {
 		if (!isset($this->numRows)) {
 			if (($this->numRows = pg_num_rows($this->result)) == -1) {
-				throw new Exception('Error while trying to get number of rows in result set');
+				throw new DatabaseException('Error while trying to get number of rows in result set');
 			}
 		}
 		return $this->numRows;

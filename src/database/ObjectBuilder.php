@@ -18,8 +18,6 @@
  * has a 'orders'-property which may contain Order objects which in turn has a 'products'-property
  * to hold Product objects. Whether or not orders and/or products will actually contain objects
  * depends on the query issued and its results.
- *
- * @version 	$Id: ResultSet.php 1523 2008-07-09 23:32:14Z anders $
  */
 class ObjectBuilder {
 	/**
@@ -56,7 +54,7 @@ class ObjectBuilder {
 	 */
 	public function build ($classes) {
 		if (empty($classes)) {
-			throw new Exception('No class names to build objects of were supplied');
+			throw new DatabaseException('No class names to build objects of were supplied');
 		}
 		if (!$this->resultSet->valid()) {
 			return array();
@@ -265,7 +263,7 @@ class ObjectBuilder {
 		if (!isset($this->primaryKeys[$objClass])) {
 			$reflection = new ReflectionObject($object);
 			if (!$reflection->hasConstant('PK')) {
-				throw new Exception('No primary key defined for model of type ' . $objClass
+				throw new DatabaseException('No primary key defined for model of type ' . $objClass
 					. '. HINT: You must define a PK constant.');
 			}
 

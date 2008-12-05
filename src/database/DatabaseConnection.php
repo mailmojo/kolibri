@@ -3,11 +3,13 @@ require(ROOT . '/database/ObjectBuilder.php');
 
 /**
  * This abstract class defines the methods used to communicate with a database, and with it the
- * contract specific database connection implementations must follow.
+ * contract specific database connection implementations must follow. See specific database
+ * connection implementations for details on configuration.
  *
  * Clients will usually use one of the <code>getObject()</code>, <code>getObjects()</code> and
- * <code>getColumn()</code> methods, although <code>query()</code> is availible for direct
- * access to the result set object (which can be iterated as if it was an array).
+ * <code>getColumn()</code> methods for SELECTs, although <code>query()</code> is availible for
+ * direct access to the result set object (which can be iterated as if it was an array).
+ * <code>query()</code> should always be used when issuing INSERT, UPDATE and DELETE queries.
  *
  * Every method which accepts a query string and parameters works in the same way. If the
  * parameters is an array, the query must use ? as placeholders. If however the parameters is an
@@ -106,7 +108,7 @@ abstract class DatabaseConnection {
 	 */
 	public function getColumn ($query, $params = null, $column = null) {
 		$result = $this->query($query, $params);
-		if ($result && $result->valid()) {
+		if ($result->valid()) {
 			$row = $result->current();
 			return !$column ? current($row) : $row[$column];
 		}
@@ -134,11 +136,9 @@ abstract class DatabaseConnection {
 		}
 
 		$result = $this->query($query, $params);
-		if ($result) {
-			$sofa = new ObjectBuilder($result);
-			if ($sofa->fetchInto($object, $classes)) {
-				return $object;
-			}
+		$sofa = new ObjectBuilder($result);
+		if ($sofa->fetchInto($object, $classes)) {
+			return $object;
 		}
 		return false;
 	}
@@ -155,11 +155,8 @@ abstract class DatabaseConnection {
 	 */
 	public function getObjects ($classes, $query, $params = null) {
 		$result = $this->query($query, $params);
-		if ($result) {
-			$sofa = new ObjectBuilder($result);
-			return $sofa->build($classes);
-		}
-		return false;
+		$sofa = new ObjectBuilder($result);
+		return $sofa->build($classes);
 	}
 
 	/**
@@ -200,9 +197,9 @@ abstract class DatabaseConnection {
 				// Do the actual string interpolation
 				return str_replace($search, $replace, $query);
 			}
-			else if (!is_array($params)) {
-				// $params is a scalar value, wrap in array
-				$params = array($params);
+
+			if (!is_array($params)) {
+				$params = array($params); // Wrap in array as code below expects an array
 			}
 
 			$escapedParams = array_map(array($this, 'escapeValue'), $params);

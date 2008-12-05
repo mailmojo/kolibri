@@ -28,26 +28,28 @@ final class DatabaseFactory {
 	 * @return DatabaseConnection
 	 */
 	public static function getConnection ($confName = 'db') {
-		if (!isset(self::$connections)) {
+		if (!isset(self::$connections[$confName])) {
 			$dbConf = Config::get($confName);
 
 			if (!empty($dbConf)) {
-				$connectionFile = ROOT . "/database/{$dbConf['type']}Connection.php";
-				$resultSetFile = ROOT . "/database/{$dbConf['type']}ResultSet.php";
+				$dbConnClass = $dbConf['type'] . 'Connection';
 
-				// Require the implementation-specific files or throw error if not exists
-				if (file_exists($connectionFile) && file_exists($resultSetFile)) {
-					require($connectionFile);
-					require($resultSetFile);
-					$type = $dbConf['type'] . 'Connection';
-					self::$connections[$confName] = new $type($dbConf);
+				// If this implementation has not yet been required, do so here
+				if (!class_exists($dbConnClass, false)) {
+					$connectionFile = ROOT . "/database/$dbConnClass.php";
+
+					if (file_exists($connectionFile)) {
+						require($connectionFile);
+					}
+					else {
+						throw new DatabaseException("Database implementation $dbConnClass not found");
+					}
 				}
-				else {
-					throw new Exception("Database implementation for $type not found.");
-				}
+
+				self::$connections[$confName] = new $dbConnClass($dbConf);
 			}
 			else {
-				throw new Exception('No database configured.');
+				throw new DatabaseException('No database configured');
 			}
 		}
 

@@ -1,11 +1,25 @@
 <?php
+require(ROOT . '/database/PostgreSqlResultSet.php');
+
 /**
  * This class extends the <code>DatabaseConnection</code> class to support connections to a
- * PostgreSQL database. This class may also implement PostgreSQL-specific features.
+ * PostgreSQL database. This class may also implement PostgreSQL-specific features. This
+ * implementation relies on a configuration element in conf/config.php like the following:
  *
- * See the class documentation in <code>DatabaseConnection</code> for details.
- * 
- * @version 	$Id: PostgreSqlConnection.php 1547 2008-09-03 05:39:28Z anders $
+ *   'db' => array('
+ *     'type'     = 'PostgreSql',
+ *     'host'     = '', // Hostname of database server
+ *     'username' = '', // PostgreSQL username
+ *     'password' = '', // Password of PostgreSQL user
+ *     'database' = ''  // Name of database to connect to
+ *   );
+ *
+ * A configuration element 'db' as shown specified the default database. Others can be configured
+ * with any other name, for instance 'slave1', in which a connection can be obtained by calling:
+ * $conn = DatabaseFactory::getConnection('slave1');
+ *
+ * See the class documentation in <code>DatabaseConnection</code> for general documentation of
+ * using database connection classes.
  */
 class PostgreSqlConnection extends DatabaseConnection {
 	private $host;

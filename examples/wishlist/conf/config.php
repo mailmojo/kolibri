@@ -9,14 +9,11 @@ $config = array(
 		'debug'      => false,
 		'locale'     => 'en_US.utf8',
 		/*
-		 * Database configuration. 'type' is mandatory, while implementations can define other settings.
+		 * Database configuration. 'type' is mandatory, while implementations define other settings.
 		 */
 		'db'        => array(
-			'type'          => 'Sqlite',     // We also support PostgreSql, but not for this demo app
-			'database'      => APP_PATH . '/db/wishlist.db', // Filename for SQLite (writable by Apache), database name for Postgresql
-			'host'          => 'localhost',  // Only relevant for PostgreSQL
-			'username'      => '',           // --"--
-			'password'      => ''            // --"--
+			'type'          => 'Sqlite', // We also support PostgreSql, but not for this demo app
+			'database'      => APP_PATH . '/db/wishlist.db' // Filename for SQLite (writable by Apache)
 		),
 		/*
 		 * Configure your e-mail details for the MailService library used to send e-mails.
