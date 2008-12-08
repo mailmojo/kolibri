@@ -5,20 +5,19 @@ require(ROOT . '/lib/phpmailer/class.phpmailer.php');
  * <code>MailService</code> provides an interface to send e-mail messages over a SMTP connection.
  * <code>turbo-conf.php</code> must contain the following configuration settings for this service to work:
  *
- * 'mail'			=> array(
- *		'from'			=> '',		// E-mail address of the sender
- *		'from_name'		=> '',		// Name of the sender
- *		'smtp_auth'		=> true,	// A boolean indicating if the SMTP connection is authenticated
- *		'smtp_host'		=> '',		// Host of the SMTP server
- *		'smtp_username'	=> '',		// Username, if SMTP authentication is in use
- *		'smtp_password'	=> ''		// Password, if SMTP authentication is in use
+ *   'mail' => array(
+ *     'from'          => '',		// E-mail address of the sender
+ *     'from_name'     => '',		// Name of the sender
+ *     'smtp_auth'     => true,	// A boolean indicating if the SMTP connection is authenticated
+ *     'smtp_host'     => '',		// Host of the SMTP server
+ *     'smtp_port'     => '',   // Port to the SMTP server, if different from default 25
+ *     'smtp_username' => '',		// Username, if SMTP authentication is in use
+ *     'smtp_password' => ''		// Password, if SMTP authentication is in use
  *	)
  *
  * This service is designed to be used in conjunction with the <code>Mail</code> class. An instance of that
  * class represents a complete e-mail message, which can then be sent by passing it to this class'
  * <code>send()</code> method.
- *
- * @version		$Id: MailService.php 1549 2008-09-05 13:53:28Z frode $
  */
 class MailService extends PHPMailer {
 
@@ -30,18 +29,22 @@ class MailService extends PHPMailer {
 		$conf = Config::get('mail');
 
 		$this->IsSmtp();
-		$this->PluginDir	= ROOT . '/lib/phpmailer/';
-		$this->Host			= $conf['smtp_host'];
-		$this->SMTPAuth 	= $conf['smtp_auth'];
+		$this->PluginDir = ROOT . '/lib/phpmailer/';
+		$this->Host      = $conf['smtp_host'];
+		$this->SMTPAuth  = $conf['smtp_auth'];
+
+		if (isset($conf['smtp_port'])) {
+			$this->Port = $conf['smtp_port'];
+		}
 
 		if ($this->SMTPAuth) {
 			$this->Username = $conf['smtp_username'];
 			$this->Password = $conf['smtp_password'];
 		}
 
-		$this->CharSet		= 'utf-8';
-		$this->Encoding		= 'quoted-printable';
-		$this->WordWrap		= 76;
+		$this->CharSet  = 'utf-8';
+		$this->Encoding = 'quoted-printable';
+		$this->WordWrap = 76;
 
 		// Set whether the SMTP connection should be persistent or closed after one mail is sent
 		$this->SMTPKeepAlive = $persistent;
@@ -74,17 +77,17 @@ class MailService extends PHPMailer {
 	 * (Return-Path) address configured for this mail service is used.
 	 *
 	 * @param Email $mail	The e-mail message to send.
-	 * @return bool			TRUE if the e-mail was sent successfully, FALSE if not.
+	 * @return bool <code>TRUE</code> if the e-mail was sent successfully, <code>FALSE</code> if not.
 	 */
 	public function send ($mail) {
 		if (empty($mail->from)) {
 			$conf = Config::get('mail');
-			$mail->from		= $conf['from'];
-			$mail->fromName	= $conf['from_name'];
+			$mail->from     = $conf['from'];
+			$mail->fromName = $conf['from_name'];
 		}
 
-		$this->From		= $mail->from;
-		$this->FromName	= $mail->fromName;
+		$this->From     = $mail->from;
+		$this->FromName = $mail->fromName;
 
 		if (!empty($mail->sender)) {
 			$this->Sender = $mail->sender;
