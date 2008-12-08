@@ -2,8 +2,6 @@
 /**
  * This class represents an e-mail message. When a complete e-mail message object has been constructed,
  * the object should be passed to the <code>send()</code> method of a <code>MailService</code> instance.
- *
- * @version		$Id: Email.php 1549 2008-09-05 13:53:28Z frode $
  */
 class Email {
 	public $from;
@@ -23,10 +21,10 @@ class Email {
 	 * Initialize.
 	 */
 	public function __construct ($from = null, $fromName = null, $sender = null, $senderName = null) {
-		$this->from			= $from;
-		$this->fromName		= $fromName;
-		$this->sender		= $sender;
-		$this->senderName	= $senderName;
+		$this->from       = $from;
+		$this->fromName   = $fromName;
+		$this->sender     = $sender;
+		$this->senderName = $senderName;
 	}
 
 	/**
@@ -69,8 +67,8 @@ class Email {
 	 * Sets the body of the message. $body can either be the actual body content, or a path to a file
 	 * with the content if $isFile is TRUE.
 	 *
-	 * @param string $body		Body content or path to file.
-	 * @param bool $isFile		TRUE of $body is a file path, FALSE if not. Defaults to FALSE.
+	 * @param string $body Body content or path to file.
+	 * @param bool $isFile <code>TRUE</code> of $body is a file path, <code>FALSE</code> if not (default).
 	 */
 	public function setBody ($body, $isFile = false) {
 		if ($isFile) {
@@ -87,8 +85,8 @@ class Email {
 	 *
 	 * Setting an alternate body implicetly sets the content type of the message to text/html.
 	 *
-	 * @param string $body		Alternate body content or path to file.
-	 * @param bool $isFile		TRUE of $body is a file path, FALSE if not. Defaults to FALSE.
+	 * @param string $body Alternate body content or path to file.
+	 * @param bool $isFile <code>TRUE</code> of $body is a file path, <code>FALSE</code> if not (default).
 	 */
 	public function setAltBody ($body, $isFile = false) {
 		if ($isFile) {
@@ -102,7 +100,7 @@ class Email {
 	/**
 	 * Performs string translation of the body text using the replacement pairs supplied.
 	 *
-	 * @param mixed $replacePairs	Replacement pairs as an array or object.
+	 * @param mixed $replacePairs Replacement pairs as an array or object.
 	 */
 	public function strtrBody ($replacePairs) {
 		if (is_object($replacePairs)) {
@@ -116,6 +114,12 @@ class Email {
 		$this->altBody = strtr($this->altBody, $replacePairs);
 	}
 	
+	/**
+	 * Adds an attachment to this email.
+	 *
+	 * @param string $file File name.
+	 * @param string $name Name to give the file for the email.
+	 */
 	public function addAttachment ($file, $name = '') {
 		if (file_exists($file)) {
 			$this->attachments[] = array('file' => $file, 'name' => $name);
