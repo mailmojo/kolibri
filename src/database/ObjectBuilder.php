@@ -84,6 +84,7 @@ class ObjectBuilder {
 	 */
 	public function fetchInto ($object, $classes = null, $isRecursing = false, $row = null) {
 		if ($row === null) {
+			if (!$this->resultSet->valid()) return false;
 			$row = $this->resultSet->current();
 		}
 

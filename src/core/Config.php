@@ -3,8 +3,6 @@
  * This class represents the configuration of the Kolibri framework.
  *
  * All configuration variables are easily availible through the static methods of this class.
- * 
- * @version		$Id: Config.php 1518 2008-06-30 23:43:38Z anders $
  */
 class Config {
 	/**
@@ -44,7 +42,8 @@ class Config {
 	private static $instance;
 
 	/**
-	 * Private constructor which initializes the configuration.
+	 * Private constructor which initializes the configuration. It is defined private as all
+	 * interaction with this class goes through static methods.
 	 */
 	private function __construct () {
 		require(ROOT . '/conf/interceptors.php');
@@ -78,17 +77,21 @@ class Config {
 		}
 		ini_set('include_path', ini_get('include_path') . PATH_SEPARATOR . $incPath);
 
-		// Sets the current locale for date formatting et cetera
+		/*
+		 * Sets the current locale for date formatting et cetera
+		 * XXX: We leave LC_NUMERIC at default, as locales with comma as decimal seperator will
+		 * cause SQL queries with floating point values to fail. We should find a better solution...
+		 */
+		$envLocale = setlocale(LC_NUMERIC, 0);
 		setlocale(LC_ALL, $this->config['locale']);
+		setlocale(LC_NUMERIC, $envLocale);
 	}
 
 	/**
-	 * Returns an instance of this class. It is defined private as all interaction with this class goes
-	 * through static methods.
-	 *
-	 * An existing instance is returned if one exists, else a new instance is created.
+	 * Returns an instance of this class. An existing instance is returned if one exists, else a new
+	 * instance is created.
 	 * 
-	 * @return TurboContext
+	 * @return Config
 	 */
 	public static function getInstance () {
 		if (!isset(self::$instance)) {

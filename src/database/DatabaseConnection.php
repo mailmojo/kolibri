@@ -104,7 +104,7 @@ abstract class DatabaseConnection {
 	 * @param mixed $params  Parameters to interpolate into query.
 	 * @param string $column Name of column to retrieve values from. Defaults to first column if
 	 *                       not specified.
-	 * @return mixed         The data found, or <code>FALSE</code> if no rows were returned.
+	 * @return mixed         The data found, or <code>NULL</code> if no rows were found.
 	 */
 	public function getColumn ($query, $params = null, $column = null) {
 		$result = $this->query($query, $params);
@@ -112,7 +112,7 @@ abstract class DatabaseConnection {
 			$row = $result->current();
 			return !$column ? current($row) : $row[$column];
 		}
-		return false;
+		return null;
 	}
 
 	/**
@@ -122,7 +122,7 @@ abstract class DatabaseConnection {
 	 *                       object hierarchy to create. See <code>ObjectBuilder</code> for details.
 	 * @param string $query  The query to execute.
 	 * @param mixed $params  Parameters to interpolate into query.
-	 * @return object        The populated object, or <code>FALSE</code> if no rows were returned.
+	 * @return object        The populated object, or <code>NULL</code> if no rows were found.
 	 */
 	public function getObject ($classes, $query, $params = null) {
 		if (is_array($classes)) {
@@ -140,7 +140,7 @@ abstract class DatabaseConnection {
 		if ($sofa->fetchInto($object, $classes)) {
 			return $object;
 		}
-		return false;
+		return null;
 	}
 
 	/**
@@ -172,8 +172,9 @@ abstract class DatabaseConnection {
 				/*
 				 * Regexp to match placeholders according to the rules of PHP variables, and excluding
 				 * double colons :: which indicates a cast in SQL and is thus not a placeholder.
+				 * We also include the first character after the placeholder, 
 				 */
-				$allowedChars = '/[^:]:([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)/';
+				$allowedChars = '/[^:]:([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)(.?)/';
 				$matches = array();
 				preg_match_all($allowedChars, $query, $matches);
 
@@ -186,7 +187,7 @@ abstract class DatabaseConnection {
 					if (property_exists($params, $propertyName)) {
 						$search[] = $match;
 						// The first character in the regexp match should not be replaced, so we prepend it
-						$replace[] = $match{0} . $this->escapeValue($params->$propertyName);
+						$replace[] = $match{0} . $this->escapeValue($params->$propertyName) . $matches[2][$idx];
 					}
 					else {
 						throw new DatabaseException('No property in parameter object ' . get_class($params)
@@ -219,5 +220,37 @@ abstract class DatabaseConnection {
 		}
 
 		return $query;
+	}
+
+	/**
+	 * Stricter type check on numbers used when escaping values. Solves one specific problem where the
+	 * string value contains prefixing zeroes, which most likely means it shouldn't be treated as a
+	 * number but a string of digits. Ie. telephone numbers, hexadecimal strings, postal codes etc.
+	 *
+	 * @param string $value The value to check.
+	 * @return bool         <code>TRUE</code> if the value is a pure number.
+	 */
+	protected function isPureNumber ($value) {
+		// Only values considered numeric by PHP are pure numbers
+		if (!is_numeric($value)) {
+			return false;
+		}
+
+		// If the value is an actual int or float type variable it's a pure number
+		if (is_int($value) || is_float($value)) {
+			return true;
+		}
+
+		// If it contains a decimal point, it's considered a pure number
+		if (strpos($value, '.') !== false) {
+			return true;
+		}
+
+		// If an integer cast does not change the number length, it's considered pure (ie. no leading zeroes)
+		if (strlen((int) $value) == strlen($value)) {
+			return true;
+		}
+
+		return false;
 	}
 }

@@ -6,9 +6,9 @@ require(ROOT . '/database/SqliteResultSet.php');
  * SQLite database. This class may also implement SQLite-specific features. This
  * implementations relies on a configuration element in conf/config.php like the following:
  *
- *   'db' => array('
- *     'type'     = 'Sqlite',
- *     'database' = '' // Absolute path to SQLite database file, writable by the PHP process
+ *   'db' => array(
+ *     'type'     => 'Sqlite',
+ *     'database' => '' // Absolute path to SQLite database file, writable by the PHP process
  *   );
  *
  * A configuration element 'db' as shown specified the default database. Others can be configured
@@ -177,35 +177,6 @@ class SqliteConnection extends DatabaseConnection {
 			$value = stripslashes($value);
 		}
 		return "'" . sqlite_escape_string($value) . "'";
-	}
-
-	/**
-	 * Stricter type check on numbers. Solves one specific problem where the string value contains
-	 * prefixing zeroes, which most likely means it shouldn't be treated as a number but a string of
-	 * digits. Ie. telephone numbers, hexadecimal strings, postal codes etc.
-	 */
-	private function isPureNumber ($value) {
-		// Only values considered numeric by PHP are pure numbers
-		if (!is_numeric($value)) {
-			return false;
-		}
-
-		// If the value is an actual int or float type variable it's a pure number
-		if (is_int($value) || is_float($value)) {
-			return true;
-		}
-
-		// If it contains a decimal point, it's considered a pure number
-		if (strpos($value, '.') !== false) {
-			return true;
-		}
-
-		// If an integer cast does not change the number length, it's considered pure (ie. no leading zeroes)
-		if (strlen((int) $value) == strlen($value)) {
-			return true;
-		}
-
-		return false;
 	}
 }
 ?>
