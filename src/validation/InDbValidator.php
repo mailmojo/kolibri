@@ -14,8 +14,8 @@ class InDbValidator {
 				$db = DatabaseFactory::getConnection();
 				$dbCast = (isset($rules['type']) ? '::' . $rules['type'] : '');
 
-				$query = "SELECT 1 FROM $dbRelation WHERE $property = %s{$dbCast}";
-				if (!$db->getOne($query, array($this->model->$property))) {
+				$query = "SELECT 1 FROM $dbRelation WHERE $property = ?{$dbCast}";
+				if (!$db->getColumn($query, $this->model->$property)) {
 					return array('in_db' => array($rules['name'], $this->model->$property));
 				}
 			}

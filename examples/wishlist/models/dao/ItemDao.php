@@ -1,34 +1,35 @@
 <?php
 /**
- * Data access object for the item model. DAOs must be named <model>Dao and be places in a "dao"-directory in
- * the models directory. Notice that placeholder for values in queries use the standard sprintf()
- * placeholders. Escaping of values to protect from SQL injection is automatically done for you.
+ * Data access object for the item model. DAOs must be named <model>Dao and be places in a
+ * "dao"-directory within the models directory. Notice that placeholder for values in queries use 
+ * ? placeholders when you supply an array of parameters, or :propertyName when supplying an
+ * object. Escaping of values to protect from SQL injection is automatically done for you.
  */
 class ItemDao {
 	/**
-	 * one() should be used to retrieve a single object.
+	 * load() should be used to retrieve a single object.
 	 */
-	public static function one ($id) {
+	public static function load ($id) {
 		$db = DatabaseFactory::getConnection();
 		$query = <<<SQL
 			SELECT name, description, price, added, received
 				FROM items
-				WHERE name = %s
+				WHERE name = ?
 SQL;
-		return $db->getObject('Item', $query, array($id)); // Gets one object of type Item
+		return $db->getObject('Item', $query, $id); // Gets one object of type Item
 	}
 
 	/**
-	 * all() should be used to retrieve, well, all [relevant] objects.
+	 * findAll() is here used to retrieve, well, all [relevant] objects.
 	 */
-	public static function all () {
+	public static function findAll () {
 		$db = DatabaseFactory::getConnection();
 		$query = <<<SQL
 			SELECT name, description, price, added, received
 				FROM items
 				ORDER BY added DESC
 SQL;
-		return $db->getObjects('Item', $query); // Gets objectS of type Item in an array (empty if none)
+		return $db->getObjects('Item', $query); // Gets objects of type Item in an array (empty if none)
 	}
 
 	/**
@@ -37,9 +38,10 @@ SQL;
 	public static function insert ($item) {
 		$db = DatabaseFactory::getConnection();
 		$query = <<<SQL
-			INSERT INTO items (name, description, price, added) VALUES (%s, %s, %s, date('now'))
+			INSERT INTO items (name, description, price, added)
+				VALUES (:name, :description, :price, date('now'))
 SQL;
-		return $db->exec($query, array($item->name, $item->description, $item->price));
+		return $db->query($query, $item);
 	}
 
 	/**
@@ -48,9 +50,9 @@ SQL;
 	public static function update ($item) {
 		$db = DatabaseFactory::getConnection();
 		$query = <<<SQL
-			UPDATE items SET received = %s WHERE name = %s
+			UPDATE items SET received = :received WHERE name = :name
 SQL;
-		return $db->exec($query, array($item->received, $item->name));
+		return $db->query($query, $item);
 	}
 
 	/**
@@ -59,9 +61,9 @@ SQL;
 	public static function delete ($item) {
 		$db = DatabaseFactory::getConnection();
 		$query = <<<SQL
-			DELETE FROM items WHERE name = %s
+			DELETE FROM items WHERE name = :name
 SQL;
-		return $db->exec($query, array($item->name));
+		return $db->query($query, $item);
 	}
 }
 ?>

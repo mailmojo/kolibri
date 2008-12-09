@@ -18,7 +18,7 @@ class Index extends ActionSupport {
 		}
 
 		$items = Models::init('Item');
-		$this->items = $items->objects->all(); // Notice that this calls all() in the ItemDao class
+		$this->items = $items->objects->findAll(); // Notice that this calls findAll() in the ItemDao class
 		return new XsltResult($this, '/index'); // Path relative to views directory, extension omitted
 	}
 }
