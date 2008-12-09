@@ -159,8 +159,8 @@ things provides access to the model's corresponding data access object. Contrary
 to many other frameworks, Kolibri doesn't include an Object-Relational Mapper
 (ORM). Instead we prefer to write more complex SQL queries ourselves (as ORMs
 rarely manage), and provide a SQL-to-Object-Framework (acronyms are fun, let's
-call it SOFA) which automatically maps the result of SQL to trees (if joins are
-involved) of model objects.
+call it SOFA) which automatically maps the result of SQL to a nested structure
+of model objects according to their relationships (if joins were involved).
 
 Clean separation of PHP logic and SQL queries are of course important, which is
 why the SQL should be put in a data access object (DAO). They must be put in a
@@ -180,8 +180,8 @@ action execution. This is done by simply calling save() on the model. The model
 proxy will try to figure out if the model actually need saving (i.e. do we know
 if it was changed since it was retrieved from the database?), and if so calls
 the appropriate method in the DAO (either insert() or update()). Similarly you
-call delete() to, well, delete. Direct access to the DAO is provided through
-the objects property, as demonstrated in the sample actions.
+call delete() to, well, delete. Direct access to the DAO is provided through the
+objects property, as demonstrated in the sample actions.
 
 6. Results and views
 --------------------
@@ -189,20 +189,20 @@ the objects property, as demonstrated in the sample actions.
 One of the cornerstones of Kolibri is the fact that it is not tied to any
 specific view technology. While we prefer XSL for our views, we realize that not
 all do (although we urge you to take a look, not least due to the simplified
-form handling in XSL), which is why Kolibri does not tie actions to views
+form handling in XSL). This is why Kolibri does not tie actions to views
 directly. Instead actions return a Result object, of which there could be many
-kinds. Kolibri already has XsltResult for XSL views, RedirectResult for regular
-HTTP redirects, JsonResult for JSON, and more. This makes it easy to support
-other view technologies and response data simply by providing other Result
-implementations, such as a PhpResult or SmartyResult (both of which is a TODO).
+kinds. Kolibri already has XsltResult for XSL views, SmartyResult for Smarty
+templates, PhpResult for regular PHP files, RedirectResult for HTTP redirects,
+JsonResult for JSON, and more. This makes it easy to support other view
+technologies and response data simply by providing other Result implementations.
 
-As XSL is currently the only implemented view technology, it has got some extra
-love to offer you. Most importantly it provides simplified syntax to define HTML
-forms, which will automatically output validation errors and model data. Take a
-look at the form in views/index.xsl which targets the Add action (which, again,
-is ModelAware and ValidationAware). If validation fails, XSL and thus the form
-receives and presents the errors and model data from the action without any
-extra code on your part.
+As XSL is the view technology with most widespread use in current Kolibri
+applications, it has got some extra love to offer you. Most importantly it
+provides simplified syntax to define HTML forms, which will automatically output
+validation errors and model data. Take a look at the form in views/index.xsl
+which targets the Add action (which, again, is ModelAware and ValidationAware).
+If validation fails, XSL and thus the form receives and presents the errors and
+model data from the action without any extra code on your part.
 
 X. The end
 ----------

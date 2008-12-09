@@ -8,8 +8,8 @@ abstract class Models {
 	/**
 	 * Initializes a model proxy of the specified model class.
 	 *
-	 * @param string $name		Model class.
-	 * @return ModelProxy		A proxy instance of the model.
+	 * @param string $name Model class.
+	 * @return ModelProxy  A proxy instance of the model.
 	 */
 	public static function init ($name) {
 		return Models::getModel(new $name());
@@ -18,10 +18,10 @@ abstract class Models {
 	/**
 	 * Wraps the supplied model instance or array of models in a model proxy and returns it.
 	 *
-	 * @param mixed $model		Model instance or array of model instances.
-	 * @return object			The model(s) proxied.
+	 * @param mixed $model Model instance or array of model instances.
+	 * @return object      The model(s) proxied.
 	 */
-	public static function getModel ($model/*, $dirty = false*/) {
+	public static function getModel ($model) {
 		// If the model is already proxied, we can simply return it
 		if ($model instanceof ModelProxy) {
 			return $model;
@@ -36,10 +36,10 @@ abstract class Models {
 		$check = (is_array($model) ? current($model) : $model);
 
 		if ($check instanceof Validateable) {
-			return new ValidateableModelProxy($model/*, $dirty*/);
+			return new ValidateableModelProxy($model);
 		}
 		else if ($check instanceof DataProvided) {
-			return new ModelProxy($model/*, $dirty*/);
+			return new ModelProxy($model);
 		}
 
 		// Unsupported object type, simply return it

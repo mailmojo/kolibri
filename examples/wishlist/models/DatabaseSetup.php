@@ -12,9 +12,9 @@ class DatabaseSetup {
 			SELECT 1 FROM sqlite_master 
 				WHERE
 					type = 'table'
-					AND name = %s
+					AND name = ?
 SQL;
-		return $db->getOne($dbCheck, array('items'));
+		return $db->getColumn($dbCheck, 'items');
 	}
 
 	/**
@@ -31,7 +31,7 @@ SQL;
 				received DATE DEFAULT NULL
 			)
 SQL;
-		$db->exec($create);
+		$db->query($create);
 	}
 }
 ?>

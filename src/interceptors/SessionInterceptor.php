@@ -17,8 +17,6 @@ class SessionInterceptor extends AbstractInterceptor {
 	public function intercept ($dispatcher) {
 		$action = $dispatcher->getAction();
 
-//		$dispatcher->getRequest()->setSession($session);
-
 		if ($action instanceof SessionAware) {
 			$session = new Session();
 			$action->session = $session;

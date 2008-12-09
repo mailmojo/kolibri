@@ -3,7 +3,7 @@
  * Action for marking items as received.
  */
 class Have extends ActionSupport {
-	// TODO: Should really be doPost...
+	// TODO: We should really POST instead...
 	public function doGet () {
 		$item = Models::init('Item');
 		if ($item->objects->load($this->request['id'])) {
