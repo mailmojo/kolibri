@@ -25,7 +25,7 @@ require(ROOT . '/models/DataAccessProxy.php');
  *
  * @version		$Id: ModelProxy.php 1555 2008-09-26 14:51:36Z anders $
  */
-class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Exposable {
+class ModelProxy implements ArrayAccess, IteratorAggregate, Countable {
 	/**
 	 * Provides access to the data access object of the model.
 	 * @var DataAccessProxy

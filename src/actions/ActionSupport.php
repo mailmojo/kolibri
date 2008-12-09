@@ -5,10 +5,8 @@ require(ROOT . '/actions/MessageAware.php');
 /**
  * This class provides support-functionality needed by most actions. It is entirely optional for
  * actions to extend this class, but most will.
- *
- * @version		$Id: ActionSupport.php 1518 2008-06-30 23:43:38Z anders $
  */
-class ActionSupport implements SessionAware, MessageAware, Exposable {
+class ActionSupport implements SessionAware, MessageAware {
 	/**
 	 * The processing request.
 	 * @var Request

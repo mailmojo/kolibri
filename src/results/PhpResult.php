@@ -29,19 +29,8 @@ class PhpResult extends AbstractResult {
 	 * @param Request $request Request object representing the current request.
 	 */
 	public function render ($request) {
-		$data = array();
-		
-		// Extract data from the current action if it is exposable
-		$action = $this->getAction();
-		if ($action instanceof Exposable) {
-			if (method_exists($action, 'expose')) {
-				$data = $action->expose();
-			}
-			else {
-				$data = get_object_vars($action);
-			}
-		}
-		
+		$data = $this->getActionData();
+
 		/**
 		 * Create a sandbox function which extracts all data to it's local scope,
 		 * instead of letting the view template run inside the PhpResult object scope.

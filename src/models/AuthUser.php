@@ -1,5 +1,5 @@
 <?php
-class AuthUser implements Exposable {
+class AuthUser {
 	public $username;
 	public $roles = array();
 

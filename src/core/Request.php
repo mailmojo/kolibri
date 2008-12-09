@@ -3,10 +3,8 @@
  * This class encapsulates information about a specific request. GET and POST parameters are
  * made available through convenience methods, as well as the complete URI and method of the
  * request.
- * 
- * @version		$Id: Request.php 1518 2008-06-30 23:43:38Z anders $
  */
-class Request implements ArrayAccess, IteratorAggregate, Exposable {
+class Request implements ArrayAccess, IteratorAggregate {
 	/**
 	 * Request URI.
 	 * @var string
@@ -18,12 +16,6 @@ class Request implements ArrayAccess, IteratorAggregate, Exposable {
 	 * @var array
 	 */
 	private $params;
-
-	/**
-	 * Session associated with this request (if any). Set by a <code>SessionInterceptor</code> if configured.
-	 * @var Session
-	 */
-	//private $session;
 	
 	/**
 	 * HTTP method for this request.
@@ -137,24 +129,6 @@ class Request implements ArrayAccess, IteratorAggregate, Exposable {
 	public function getMethod () {
 		return $this->method;
 	}
-
-	/**
-	 * Sets the session into the request. Performed by a <code>SessionInterceptor</code>.
-	 *
-	 * @param Session	Session object.
-	 */
-	//public function setSession ($session) {
-	//	$this->session = $session;
-	//}
-
-	/**
-	 * Returns the session object if set, else <code>NULL</code> is returned.
-	 *
-	 * @return Session
-	 */
-	//public function getSession () {
-	//	return $this->session;
-	//}
 	
 	/**
 	 * Puts all the supplied parameters into the parameters for this request. Should only be used internally
@@ -167,11 +141,9 @@ class Request implements ArrayAccess, IteratorAggregate, Exposable {
 	}
 
 	/**
-	 * Defines our custom hierarchy when exposing this object. The reason we want a different structure is
-	 * to provide easy access to request parameters and session data in views. Instead of accessing
-	 * request/session/foo, users can more simply use session/foo. Likewise for parameters, which instead
-	 * of request/params/foo resides under params/foo. Request-specific meta-data resides under the
-	 * request/ element.
+	 * Defines our custom hierarchy when exposing this object. The reason we want a different structure
+	 * is to provide easy access to request parameters in views. Instead of accessing request/params/foo,
+	 * users can more simply use params/foo. Request-specific meta-data resides under the request/ element.
 	 *
 	 * @return array	Exposed structure of this object.
 	 */
@@ -182,7 +154,6 @@ class Request implements ArrayAccess, IteratorAggregate, Exposable {
 						'method'	=> $this->method
 					),
 				'params'	=> $this->params
-				//'session'	=> $this->session
 		);
 	}
 }

@@ -2,8 +2,6 @@
 /**
  * Abstract class providing the basic implementation of a result. A result represents the outcome of the
  * request performed, and a response will usually be rendered to the client over HTTP.
- * 
- * @version		$Id: AbstractResult.php 1495 2008-05-16 18:00:13Z anders $
  */
 abstract class AbstractResult implements Result {
 	private $action;
@@ -28,6 +26,19 @@ abstract class AbstractResult implements Result {
 
 	public function getAction () {
 		return $this->action;
-	}	
+	}
+
+	public function getActionData () {
+		if (method_exists($this->action, 'expose')) {
+			return $action->expose();
+		}
+
+		$data = array();
+		foreach ($this->action as $key => $value) {
+			$data[$key] = $value;
+		}
+
+		return $data;
+	}
 }
 ?>

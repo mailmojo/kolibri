@@ -3,7 +3,7 @@
  * Model class for a wishlist item. Implemented interfaces tells the model framework that this model can be 
  * validated, is database backed and can be exposed to views.
  */
-class Item implements Validateable, DataProvided, Exposable {
+class Item implements Validateable, DataProvided {
 	public $name;
 	public $description;
 	public $price;
