@@ -3,7 +3,7 @@
  * Model class for a wishlist item. Implemented interfaces tells the model framework that this model can be 
  * validated, is database backed and can be exposed to views.
  */
-class Item implements Validateable, DataProvided, Exposable {
+class Item implements Validateable, DataProvided {
 	const PK       = 'name';  // The primary key for this model
 	const RELATION = 'items'; // The database relation for this model
 

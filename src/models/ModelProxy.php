@@ -24,7 +24,7 @@ require(ROOT . '/models/DataAccessProxy.php');
  * This class also implements <code>ArrayAccess</code> and <code>IteratorAggregates</code> which
  * makes it possible to treat the collection of models in the proxy as if it was a regular array.
  */
-class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Exposable {
+class ModelProxy implements ArrayAccess, IteratorAggregate, Countable {
 	/**
 	 * Provides access to the data access object of the model.
 	 * @var DataAccessProxy

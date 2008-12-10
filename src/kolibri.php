@@ -20,7 +20,6 @@ define('VIEW_PATH', APP_PATH . '/views');
 
 // Require essential files. Others are loaded as needed.
 require(ROOT . '/core/Config.php');
-require(ROOT . '/core/Exposable.php');
 require(ROOT . '/core/RequestProcessor.php');
 require(ROOT . '/core/Dispatcher.php');
 require(ROOT . '/core/InterceptorFactory.php');

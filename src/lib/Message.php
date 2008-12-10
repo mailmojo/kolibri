@@ -2,10 +2,8 @@
 /**
  * This class represents a message to display to the user. The message indicates a successful or
  * failed operation, and a list of specific details can be used to further explain the message.
- * 
- * @version 	$Id: Message.php 1510 2008-06-17 05:45:50Z anders $
  */
-class Message implements Exposable {
+class Message {
 	/**
 	 * The message to display.
 	 * @var string

@@ -55,24 +55,12 @@ class SmartyResult extends AbstractResult {
 		$smarty->compile_dir = (isset($conf['compileDir']) ? $conf['compileDir'] : '');
 		$smarty->cache_dir = (isset($conf['cacheDir']) ? $conf['cacheDir'] : '');
 		$smarty->config_dir = (isset($conf['configDir']) ? $conf['configDir'] : '');
-		
-		// Assign action data only if it is exposable
-		$action = $this->getAction();
-		if ($action instanceof Exposable) {
-			if (method_exists($action, 'expose')) {
-				$smarty->assign($action->expose());
-			}
-			else {
-				$smarty->assign(get_object_vars($action));
-			}
-		}
-		
-		// Assign request data
+
+		// Assign data we want to expose to Smarty
+		$smarty->assign($this->getActionData());
 		$smarty->assign('request', $request);
-		
-		// Assign application configuration
 		$smarty->assign('config', Config::get());
-		
+
 		// Output processed template
 		$smarty->display($this->smartyTemplate);
 	}

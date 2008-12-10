@@ -39,12 +39,17 @@ class XmlGenerator {
 	 */
 	public function append ($data, $index = null, $collapse = false) {
 		if ($collapse) {
-			if (is_object($data) && $data instanceof Exposable) {
+			if (is_object($data)) {
 				if (method_exists($data, 'expose')) {
 					$data = $data->expose();
 				}
 				else {
-					$data = get_object_vars($data);
+					$objData = array();
+					foreach ($data as $key => $value) {
+						$objData[$key] = $value;
+					}
+
+					$data = $objData;
 				}
 			}
 		}
@@ -140,10 +145,6 @@ class XmlGenerator {
 	 * @return DOMNode			An XML node representing the object for appending in a DOM tree.
 	 */
 	private function buildObject ($object, $container = null) {
-		if (!$object instanceof Exposable) {
-			return null;
-		}
-
 		// Default element name for the containing element is the objects class.
 		if ($container === null) {
 			$container = get_class($object);
@@ -155,7 +156,17 @@ class XmlGenerator {
 		}
 		else {
 			// Fetch all of the object's attributes
-			$vars = get_object_vars($object);
+			$objData = array();
+			foreach ($object as $key => $value) {
+				$objData[$key] = $value;
+			}
+
+			$vars = $objData;
+		}
+
+		// If object was empty, don't build XML representation
+		if (empty($vars)) {
+			return null;
 		}
 
 		// Now we have a simple array to build

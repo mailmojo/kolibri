@@ -5,10 +5,8 @@
  * 
  * The <code>SessionInterceptor</code> should generally be used when using sessions, as it takes care of
  * instantiating this class and injecting it into the action.
- * 
- * @version		$Id: Session.php 1518 2008-06-30 23:43:38Z anders $
  */
-class Session implements ArrayAccess, IteratorAggregate, Exposable {
+class Session implements ArrayAccess, IteratorAggregate {
 	// TODO: Add session settings etc. here
 	
 	/**
@@ -120,15 +118,6 @@ class Session implements ArrayAccess, IteratorAggregate, Exposable {
 	 */
 	public function write () {
 		session_write_close();
-	}
-
-	/**
-	 * Exposes session data.
-	 *
-	 * @returns array	Session data exposed.
-	 */
-	public function expose () {
-		return $_SESSION;
 	}
 }
 ?>
