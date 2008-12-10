@@ -13,11 +13,7 @@ class PhpResult extends AbstractResult {
 	 */
 	public function __construct ($action, $phpTemplate) {
 		parent::__construct($action);
-		
 		$this->phpTemplate = VIEW_PATH . "$phpTemplate.php";
-		if (!file_exists($this->phpTemplate)) {
-			trigger_error("PHP template ({$this->phpTemplate}) does not exist.", E_USER_ERROR);
-		}
 	}
 	
 	/**
@@ -29,13 +25,17 @@ class PhpResult extends AbstractResult {
 	 * @param Request $request Request object representing the current request.
 	 */
 	public function render ($request) {
+		if (!file_exists($this->phpTemplate)) {
+			throw new Exception("PHP template ({$this->phpTemplate}) does not exist");
+		}
+
 		$data = $this->getActionData();
 
 		/**
 		 * Create a sandbox function which extracts all data to it's local scope,
 		 * instead of letting the view template run inside the PhpResult object scope.
 		 */
-		$sandbox = create_function('$request, $config, $_d, $_t', 'extract($_d); @include($_t);');
+		$sandbox = create_function('$request, $config, $_d, $_t', 'extract($_d); include($_t);');
 		$sandbox($request, Config::get(), $data, $this->phpTemplate);
 	}
 }

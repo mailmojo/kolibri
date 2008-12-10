@@ -5,25 +5,31 @@ require(ROOT . '/lib/ErrorHandler.php');
  * Interceptor which prepares and sets an error handler. Any errors triggered or exceptions thrown after
  * this interceptor is invoked will be handled by the error handler defined by this interceptor, unless
  * otherwised catched (for exceptions).
- * 
- * @version		$Id: ErrorInterceptor.php 1531 2008-07-30 13:31:28Z frode $
  */
 class ErrorInterceptor extends AbstractInterceptor {
 	/**
-	 * Filename of the error view.
+	 * Type of Result (class name) to display error.
 	 * @var string
 	 */
-	protected $errorView;
+	protected $result;
 
 	/**
-	 * Intercepts the request to add an error handler.
-	 * 
-	 * The error handler we set is implemented by the <code>ErrorHandler</code> class, and will be
-	 * used for all errors triggered from this point on.
+	 * File name of the error view, relative to <code>VIEW_PATH</code>, excluding extension.
+	 * @var string
+	 */
+	protected $view;
+
+	/**
+	 * Intercepts the request to add an error handler. The error handler we set is implemented by
+	 * the <code>ErrorHandler</code> class.
 	 */
 	public function intercept ($dispatcher) {
-		$errorHandler = new ErrorHandler($dispatcher->getAction(), $this->errorView);
+		$errorHandler = new ErrorHandler($dispatcher->getAction(), $dispatcher->getRequest(),
+				$this->result, $this->view);
+		// It seems we must set the exception handler before the error handler
+		set_exception_handler(array($errorHandler, 'handleException'));
 		set_error_handler(array($errorHandler, 'handleError'));
+
 		return $dispatcher->invoke();
 	}
 }

@@ -6,7 +6,7 @@
 $config = array(
 		'webRoot'    => '',        // Change if not on root level. Prefix with slash if not empty, but no trailing!
 		'staticRoot' => '/static', // URI of static resources (can be another host as http://static.example.com)
-		'debug'      => false,
+		'debug'      => true,
 		'locale'     => 'en_US.utf8',
 		/*
 		 * Database configuration. 'type' is mandatory, while implementations define other settings.
@@ -57,7 +57,7 @@ $actionMappers = array(
  * exclude-mapping would not have any effect.
  */
 $interceptorMappings = array(
-		'*' => array('defaultStack', '!error')
+		'*' => array('defaultStack')
 );
 
 /*
