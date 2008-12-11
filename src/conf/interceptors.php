@@ -8,7 +8,7 @@ $interceptors = array(
 		'message'     => 'MessageInterceptor',
 		'validation'  => 'ValidatorInterceptor',
 		'error'       => array(
-				'ErrorInterceptor' => array('result' => 'PhpResult', 'view' => '/eror')
+				'ErrorInterceptor' => array('result' => 'PhpResult', 'view' => '/error')
 		),
 		'session'     => 'SessionInterceptor',
 		'auth'        => array(

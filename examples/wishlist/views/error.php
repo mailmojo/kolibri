@@ -22,14 +22,14 @@
 	<body>
 		<div id="error">
 			<h1>An error occurred while processing your request</h1>
-			<p id="message">
-				<?php echo $exception->getMessage() ?>
-			</p>
-			<h2>Location</h2>
-			<p>
-				<?php echo $exception->getFile() . ':' . $exception->getLine() ?>
-			</p>
 			<?php if ($config['debug']): ?>
+				<p id="message">
+<?php echo $exception->getMessage() ?>
+				</p>
+				<h2>Location</h2>
+				<p>
+<?php echo $exception->getFile() . ':' . $exception->getLine() ?>
+				</p>
 				<h2>Stacktrace</h2>
 				<pre>
 <?php echo $exception->getTraceAsString() ?>
@@ -38,11 +38,15 @@
 				<pre>
 <?php print_vars($request->expose()) ?>
 				</pre>
-				
 				<h2>Action Variables</h2>
 				<pre>
 <?php print_vars($action) ?>
 				</pre>
+			<?php else: ?>
+				<p id="message">
+					The error has been logged and we will resolve the problem as soon as possible. Please try
+					again in a little while. We apologize for the inconvenience.
+				</p>
 			<?php endif; ?>
 		</div>
 	</body>

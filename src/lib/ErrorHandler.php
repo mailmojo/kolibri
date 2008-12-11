@@ -2,16 +2,13 @@
 /**
  * This class defines a <code>handle_error()</code> method designed to be set as the error handler
  * for PHP- and user-triggered errors.
- *
- * TODO: Currently the error view must be XSL. Change to PHP? Or user-choosable?
- * 
- * @version		$Id: ErrorHandler.php 1531 2008-07-30 13:31:28Z frode $
  */
 class ErrorHandler {
 	private $action;
 	private $request;
 	private $result;
 	private $view;
+	private $handlingError;
 	
 	/**
 	 * Creates an instance of this class.
@@ -26,6 +23,7 @@ class ErrorHandler {
 		$this->request = $request;
 		$this->result  = $result;
 		$this->view    = $view;
+		$this->handlingError = false;
 	}
 	
 	/**
@@ -38,29 +36,87 @@ class ErrorHandler {
 	 * @param string $errline Line number where the occured.
 	 */
 	public function handleError ($errno, $errstr, $errfile, $errline) {
-		// Rethrows the error as an exception
-		throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+		$reportLevel = error_reporting();
+		if ($reportLevel == 0 || $this->handlingError) return;
+
+		if ((Config::get('debug') && ($reportLevel & $errno)) || $errno == E_USER_ERROR) {
+			// Rethrows the error as an exception
+			throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+		}
+		else {
+			error_log($errstr . " ($errfile:$errline)");
+		}
 	}
 
 	/**
 	 * Handles uncaught exceptions.
 	 */
 	public function handleException ($exception) {
-		// XXX: Following is supposed to work around bug with backtrace of ErrorException in 5.2
-		//if ($exception instanceof ErrorException) {
-		//	for ($i = count($backtrace) - 1; $i > 0; --$i) {
-		//		$backtrace[$i]['args'] = $backtrace[$i - 1]['args'];
-		//	}
-		//}
+		$this->handlingError = true;
 		$data = array('exception' => $exception, 'action' => $this->action);
-		$result = new $this->result($data, $this->view);
 
+		$admin = Config::get('admin');
+		if (!Config::get('debug') && isset($admin)) {
+			error_log($exception->getMessage() . " ({$exception->getFile()}:{$exception->getLine()})");
+
+			$email = $this->generateMail($exception);
+			$email->addRecipient($admin);
+			$mailer = new MailService();
+			$mailer->send($email);
+		}
+
+		// Try/catch this to avoid infinite loop in case the view doesn't exist
 		try {
+			$result = new $this->result($data, $this->view);
 			$result->render($this->request);
 		} catch (Exception $e) {
 			echo '<strong>' . $e->getMessage() . '</strong><br />';
 			echo 'Please configure the ErrorInterceptor to use an existing template';
 		}
+	}
+
+	/**
+	 * Prepares an email to an admin for the supplied exception.
+	 *
+	 * @param Exception $exception The exception.
+	 * @return Email
+	 */
+	private function generateMail ($exception) {
+		$email = new Email();
+		$email->subject = 'Exception caught';
+		$email->setBody(<<<TXT
+{$exception->getMessage()}
+
+Location:
+{$exception->getFile()}:{$exception->getLine()}
+
+Stacktrace:
+{$exception->getTraceAsString()}
+
+Request:
+{$this->getVars($this->request->expose())}
+
+Action Variables:
+{$this->getVars($this->action)}
+TXT
+		);
+		return $email;
+	}
+
+	/**
+	 * Returns textual representation of the values in the passed array/object.
+	 *
+	 * @param mixed $vars Array or object to return values of.
+	 * @return string
+	 */
+	private function getVars ($vars) {
+		$txt = '';
+		foreach ($vars as $var => $value) {
+			$txt .= $var . ': ';
+			$txt .= print_r($value, true);
+			if (!isset($value)) $txt .= "\n";
+		}
+		return $txt;
 	}
 }
 ?>
