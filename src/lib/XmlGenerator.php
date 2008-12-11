@@ -1,85 +1,106 @@
 <?php
 /**
- * Generates XML from PHP data structures.
- * 
- * @version		$Id: XmlGenerator.php 1552 2008-09-19 12:49:04Z frode $
+ * Generates XML from PHP data structures. Everything is automatically wrapped in a root element, named
+ * 'result' by default. After creating an instance of the XmlGenerator, you add all the data you want
+ * through the append() method. Everything from objects to arrays and pure scalar values are supported.
+ * The only PHP data type that is not supported, and probably won't be, is the abstract 'resource' data type.
+ * Finally you call getXml() to get a string representation of the XML version of your data.
  */
 class XmlGenerator {
 	private $document;
-	private $data;
 	
 	/**
-	 * Creates a new XML generator and creates a new DOM tree with the correct
-	 * DOM interface for the running PHP version.
+	 * Creates a new XML generator. An XML document is immediately created with a root element, named
+	 * 'result' by default.
 	 *
-	 * @param mixed $data	Optional data to generate XML from. See XmlGenerator::append().
+	 * @param string $rootElement Name of the document's root element, defaults to 'result'.
 	 */
-	public function __construct ($data = null) {
+	public function __construct ($rootElement = 'result') {
 		$this->document	= new DOMDocument('1.0', 'utf-8');
-		$this->data		= array();
 		
-		if ($data !== null) {
-			$this->append($data);
+		try {
+			$root = $this->document->createElement($rootElement);
+			$this->document->appendChild($root);
+		}
+		catch (Exception $e) {
+			throw new Exception("Invalid name of XML document's root element: $rootElement");
 		}
 	}
 	
 	/**
-	 * Appends data to the list of data for which the generator should build XML from.
+	 * Adds more data to the XML document. If you specify a container name, the data will be wrapped
+	 * in an XML element of that name. Otherwise the element name for the data will be inferred from
+	 * the type of data. An object will get it's element name from it's class name. An array will be
+	 * wrapped in a <data> element, and scalar values will be wrapped in elements named after the scalar
+	 * type, ie. <boolean> or <number>.
 	 *
-	 * @param mixed $data		The new data to append. If index is specified, the data is stored
-	 *							under the same index internally to represent a specific child element
-	 *							name. Otherwise, if the data is an array, it is merged with the
-	 *							internal data array, if not it is appended sequentially.
-	 *							The internal data array represents the children of the XML document's
-	 *							root element.
-	 * @param string $index		An optional index to store the data in, which will be used as the
-	 *							element name for the data's containing element in the XML tree.
-	 * @param bool $collapse	<code>TRUE</code> if the <code>data</code> should be flattened if it
-	 *							is an object, <code>FALSE</<code> if not.
+	 * If the data is an object you can also choose to have it be collapsed, meaning it will be converted
+	 * to an array of which each value will be directly added to the XML document as individual data items.
+	 * The conversion to an array follows Kolibri's way of exposing object data, either through a custom
+	 * expose() method or by PHPs object iteration.
+	 *
+	 * @param mixed $data       The data to add. Any PHP data type can be added except for the abstract
+	 *                          resource data type.
+	 * @param string $container An optional name of the containing element for the data value. Defaults
+	 *                          to a name inferred from the data type.
+	 * @param bool $collapse    Only relevant for object data. When <code>TRUE</code> the object will
+	 *                          be flattened to a array of individual data items to be appended.
 	 */
-	public function append ($data, $index = null, $collapse = false) {
-		if ($collapse) {
-			if (is_object($data)) {
-				if (method_exists($data, 'expose')) {
-					$data = $data->expose();
-				}
-				else {
-					$objData = array();
-					foreach ($data as $key => $value) {
-						$objData[$key] = $value;
-					}
-
-					$data = $objData;
-				}
+	public function append ($data, $container = null, $collapse = false) {
+		/**
+		 * Objects are always flattened, but will normally be wrapped in a containing element with
+		 * the name of it's class (unless manually set to something else).
+		 * If on the other hand the object should be collapsed completely it won't be wrapped,
+		 * instead being appended as a normal array would - each exposed property as separate elements.
+		 */
+		if (is_object($data)) {
+			if ($collapse === true) {
+				// Invalidate any container element if the object should be collapsed
+				$container = null;
 			}
+			else if ($container === null) {
+				$container = get_class($data);
+			}
+			
+			$data = $this->flattenObject($data);
 		}
 
-		if ($index !== null) {
-			$this->data[$index] = $data;
+		// If there's no container element, use the root element
+		if ($container === null) {
+			$container = $this->document->documentElement;
+		}
+
+		// Since objects are flattened, we only need to build arrays and scalar values
+		if (is_array($data)) {
+			$resultNode = $this->buildArray($data, $container, true);
 		}
 		else {
-			if (is_array($data)) {
-				$this->data = array_merge($this->data, $data);
-			}
-			else {
-				$this->data[] = $data;
-			}
+			$resultNode = $this->buildAtomic($data, $container);
+		}
+		
+		// When there's a separate container element we need to append it after it's created
+		if ($resultNode !== null && $resultNode !== $container) {
+			$this->document->documentElement->appendChild($resultNode);
 		}
 	}
 
 	/**
-	 * Builds the DOM tree and returns an XML representation of the data.
+	 * Returns the DOM tree as an XML string.
 	 *
-	 * @param mixed $data			The PHP data variables to generate XML from.
-	 * @param string $rootElement	The name of the generated documents root element.
-	 *								If not supplied, the generator will make an educated guess
-	 *								from the data variables, or use a default name.
+	 * @return string The DOM tree with data represented as an XML string.
+	 */
+	public function getXml () {
+		return $this->document->saveXML();
+	}
+	
+	/**
+	 * Deprecated. XmlGenerator now builds the DOM tree incrementally, each time new data is added.
+	 *
+	 * @see getXml
+	 * @deprecated
 	 * @return string				An XML representation of the PHP data variables, as a string.
 	 */
-	public function build ($rootElement = 'result') {
-		$root = $this->buildArray($this->data, $rootElement, true);
-		$this->document->appendChild($root);
-
+	public function build () {
 		return $this->document->saveXML();
 	}
 	
@@ -93,12 +114,11 @@ class XmlGenerator {
 	 * @return DOMNode				An XML node representing the array for appending in a DOM tree.
 	 */
 	private function buildArray ($array, $container = null, $keepIndices = false) {
-		if ($container === null) {
-			$container = 'data';
+		if ($container === null || is_string($container)) {
+			$name = (empty($container) ? 'data' : $container);
+			$container = $this->document->createElement($name);
 		}
-
-		$node = $this->document->createElement($container);//strtolower($container));
-
+		
 		foreach ($array as $key => $value) {
 			// Skip empty elements.
 			if (!is_object($value) && !is_array($value) && !is_bool($value)
@@ -109,7 +129,7 @@ class XmlGenerator {
 				$elementName = null;
 			}
 			else {
-				$elementName = str_replace('::', '-', $key);//strtolower($key);
+				$elementName = str_replace('::', '-', $key);
 			}
 
 			if (is_scalar($value)) {
@@ -129,12 +149,12 @@ class XmlGenerator {
 				$child = null;
 			}
 
-			if (!empty($child))	{
-				$node->appendChild($child);
+			if ($child !== null) {
+				$container->appendChild($child);
 			}
 		}
 
-		return ($node->hasChildNodes() ? $node : null);
+		return ($container->hasChildNodes() ? $container : null);
 	}
 	
 	/**
@@ -150,27 +170,25 @@ class XmlGenerator {
 			$container = get_class($object);
 		}
 
+		// Flatten object into a simple array of data values
+		$vars = $this->flattenObject($object);
+		
+		return (!empty($vars) ? $this->buildArray($vars, $container, true) : null);
+	}
+	
+	private function flattenObject ($object) {
 		if (method_exists($object, 'expose')) {
 			// Object prefers to decide its own DOM structure
-			$vars = $object->expose();
+			return $object->expose();
 		}
-		else {
-			// Fetch all of the object's attributes
-			$objData = array();
-			foreach ($object as $key => $value) {
-				$objData[$key] = $value;
-			}
-
-			$vars = $objData;
+		
+		// Fetch all of the object's attributes
+		$objData = array();
+		foreach ($object as $key => $value) {
+			$objData[$key] = $value;
 		}
 
-		// If object was empty, don't build XML representation
-		if (empty($vars)) {
-			return null;
-		}
-
-		// Now we have a simple array to build
-		return $this->buildArray($vars, $container, true);
+		return $objData;
 	}
 	
 	/**
@@ -194,7 +212,7 @@ class XmlGenerator {
 			}
 		}
 		else {
-			$name = str_replace('::', '-', $name);//$name;//strtolower($name);
+			$name = str_replace('::', '-', $name);
 		}
 
 		$element = $this->document->createElement($name);
