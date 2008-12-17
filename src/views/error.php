@@ -21,20 +21,62 @@
 	</head>
 	<body>
 		<div id="error">
-			<h1>An error occurred while processing your request</h1>
-			<p id="message">
-				<?php echo $exception->getMessage() ?>
-			</p>
-			<h2>Location</h2>
-			<p>
-				<?php echo $exception->getFile() . ':' . $exception->getLine() ?>
-			</p>
-			<?php if ($config['debug']): ?>
+<?php
+/*
+ * If debug is enabled, we display detailed error.
+ */
+if ($config['debug']):
+?>
+				<h1><?php echo get_class($exception) ?></h1>
+				<p id="message">
+<?php echo $exception->getMessage() ?>
+				</p>
+<?php
+/*
+ * Display SQL query if exception is SQL-related.
+ */
+if ($exception instanceof SqlException) {
+echo <<<HTML
+				<h2>Query</h2>
+{$exception->getQuery()}
+HTML;
+} ?>
+				<h2>Location</h2>
+				<p>
+<?php echo $exception->getFile() . ':' . $exception->getLine() ?>
+				</p>
 				<h2>Stacktrace</h2>
 				<pre>
-					<?php echo $exception->getTraceAsString() ?>
+<?php echo $exception->getTraceAsString() ?>
 				</pre>
-			<?php endif; ?>
+				<h2>Request</h2>
+				<pre>
+<?php echo print_vars($request->expose()) ?>
+				</pre>
+				<h2>Action Variables</h2>
+				<pre>
+<?php echo print_vars($action) ?>
+				</pre>
+<?php else: ?>
+				<h1>An error occurred while processing your request</h1>
+				<p id="message">
+					The error has been logged and we will resolve the problem as soon as possible. Please try
+					again in a little while. We apologize for the inconvenience.
+				</p>
+<?php endif; ?>
 		</div>
 	</body>
 </html>
+
+<?php
+/*
+ * Convenience function to print variable names and their values.
+ */
+function print_vars ($vars) {
+	foreach ($vars as $var => $value) {
+		echo "<strong>$var</strong>: ";
+		print_r($value);
+		if (!isset($value)) echo "\n";
+	}
+}
+?>

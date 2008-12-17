@@ -20,13 +20,23 @@ class SqlException extends DatabaseException {
 	}
 
 	/**
+	 * Returns the query that caused this exception.
+	 *
+	 * @return string
+	 */
+	public function getQuery () {
+		return $this->query;
+	}
+
+	/**
 	 * Returns a string representation of this exception.
 	 *
 	 * @return string
 	 */
 	public function __toString () {
-		return "exception '" . __CLASS__ . "' with message '" . $this->getMessage() . "' while "
-			. "executing query '" . $this->query . "'";
+		return "exception '" . __CLASS__ . "' with message '{$this->getMessage()}' while "
+			. "executing query:\n{$this->getQuery()}\n in {$this->getFile()}:{$this->getLine()}\n"
+			. "Stack trace:\n" . $this->getTraceAsString();
 	}
 }
 ?>

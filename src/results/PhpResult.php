@@ -14,6 +14,10 @@ class PhpResult extends AbstractResult {
 	public function __construct ($action, $phpTemplate) {
 		parent::__construct($action);
 		$this->phpTemplate = VIEW_PATH . "$phpTemplate.php";
+		
+		if (!file_exists($this->phpTemplate)) {
+			throw new Exception("PHP template ({$this->phpTemplate}) does not exist");
+		}
 	}
 	
 	/**
@@ -25,10 +29,6 @@ class PhpResult extends AbstractResult {
 	 * @param Request $request Request object representing the current request.
 	 */
 	public function render ($request) {
-		if (!file_exists($this->phpTemplate)) {
-			throw new Exception("PHP template ({$this->phpTemplate}) does not exist");
-		}
-
 		$data = $this->getActionData();
 
 		/**

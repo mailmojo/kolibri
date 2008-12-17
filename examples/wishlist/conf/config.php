@@ -7,6 +7,7 @@ $config = array(
 		'webRoot'    => '',        // Change if not on root level. Prefix with slash if not empty, but no trailing!
 		'staticRoot' => '/static', // URI of static resources (can be another host as http://static.example.com)
 		'debug'      => true,
+		'admin'      => '',        // Mail is sent here if errors occur when debug is false
 		'locale'     => 'en_US.utf8',
 		/*
 		 * Database configuration. 'type' is mandatory, while implementations define other settings.

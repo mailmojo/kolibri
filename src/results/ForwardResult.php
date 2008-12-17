@@ -4,8 +4,8 @@
  * invoked, a final result is rendered. What final result to render can be specified when
  * instantiating this class. If no result was specified in the instantiation of this class, the
  * result of the action invoked will be rendered.
- * 
- * @version		$Id: ForwardResult.php 334 2006-05-21 20:42:54Z anders $
+ *
+ * FIXME: This is currently NOT rewritten for Kolibri. Do we really want this at all?
  */
 class ForwardResult extends BaseResult {
 	/** Result to render after action invocation, or NULL if the action result is to be rendered. */

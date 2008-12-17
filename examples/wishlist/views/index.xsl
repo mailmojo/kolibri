@@ -3,9 +3,7 @@
 	version="1.0"
 	xmlns="http://www.w3.org/1999/xhtml"
 	xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-	xmlns:exsl="http://exslt.org/common"
-	xmlns:k="http://kolibriproject.com/xml"
-	extension-element-prefixes="exsl">
+	xmlns:k="http://kolibriproject.com/xml">
 
 	<!-- Include the file containing the general layout, so a specific view file such as this need only
 	     define the page-specific content (the "content" template). -->
