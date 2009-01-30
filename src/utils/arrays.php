@@ -11,6 +11,14 @@ function object_array_walk (&$array, $methodName) {
     }
 }
 
+function object_array_map ($methodName, $array) {
+	$newArray = array();
+	foreach ($array as $key => $obj) {
+		$newArray[$key] = $obj->$methodName();
+	}
+	return $newArray;
+}
+
 /**
  * BETA
  * Converts a multi-dimensional array into a one-dimensional array. Items which are objects are
