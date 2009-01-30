@@ -174,7 +174,7 @@ abstract class DatabaseConnection {
 				 * double colons :: which indicates a cast in SQL and is thus not a placeholder.
 				 * We also include the first character after the placeholder, 
 				 */
-				$allowedChars = '/[^:]:([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)(.?)/';
+				$allowedChars = '/[^:]:([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)(\W?)/';
 				$matches = array();
 				preg_match_all($allowedChars, $query, $matches);
 
