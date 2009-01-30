@@ -170,6 +170,11 @@ class PostgreSqlConnection extends DatabaseConnection {
 		if ($this->isPureNumber($value)) {
 			return $value;
 		}
+		if (is_array($value)) {
+			return 'ARRAY['
+				. implode(', ', array_map(array($this, 'escapeValue'), $value))
+				. ']';
+		}
 
 		if (get_magic_quotes_gpc()) {
 			$value = stripslashes($value);
