@@ -28,7 +28,7 @@ class DateFormat {
 	 * @param string $date_style	Style of the date part of a date.
 	 * @param string $time_style	Style of the time part of a date.
 	 */
-	private function __construct ($formatString) {
+	protected function __construct ($formatString) {
 		$this->formatString = $formatString;
 	}
 
@@ -125,7 +125,7 @@ class TransientDateFormat extends DateFormat {
 	 * @param string $time_style	Style of the time part of a date.
 	 */
 	public function __construct ($formatString) {
-		parent::DateFormat($formatString);
+		parent::__construct($formatString);
 	}
 
 	/**

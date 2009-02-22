@@ -11,9 +11,10 @@ define('IS_TEXT', 16);
 define('IS_ALPHANUM', 32);
 define('IS_EMAIL', 64);
 define('IS_DATE', 128);
-define('IS_HEX', 256);
-define('IS_FILE', 512);
-define('IN_DB', 1024);
+define('IS_DATETIME', 256);
+define('IS_HEX', 512);
+define('IS_FILE', 1024);
+define('IN_DB', 2048);
 
 /*
  * Maps validation rules to validator classes used to perform the validation.
@@ -27,6 +28,7 @@ $validators = array(
 	IS_ALPHANUM => 'AlphaNumValidator',
 	IS_EMAIL    => 'EmailValidator',
 	IS_DATE     => 'DateValidator',
+	IS_DATETIME	=> 'DateTimeValidator',
 	IS_HEX      => 'HexValidator',
 	IS_FILE     => 'FileValidator',
 	IN_DB       => 'InDbValidator'
