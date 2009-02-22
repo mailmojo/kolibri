@@ -42,15 +42,7 @@ class ErrorHandler {
 
 		// Only handle error if not already handling, is not silenced (@) and error level is enabled
 		if (!$this->handlingError && $reportLevel != 0 && ($reportLevel & $errno)) {
-			if (Config::get('debug') || $errno == E_USER_ERROR) {
-				// Rethrows the error as an exception
-				throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
-			}
-			else {
-				// We currently only log
-				// XXX: Should we email as well?
-				error_log($errstr . " ($errfile:$errline)");
-			}
+			throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
 		}
 	}
 
@@ -62,15 +54,24 @@ class ErrorHandler {
 	public function handleException ($exception) {
 		$this->handlingError = true;
 		$data = array('exception' => $exception, 'action' => $this->action);
-		$admin = Config::get('admin');
+		$logging = Config::get('logging');
 
-		if (!Config::get('debug') && isset($admin)) {
-			// Log exception and send email to admin
-			error_log($exception->getMessage() . " ({$exception->getFile()}:{$exception->getLine()})");
-			$email = $this->generateMail($exception);
-			$email->addRecipient($admin);
-			$mailer = new MailService();
-			$mailer->send($email);
+		if (!empty($logging) && isset($logging['enabled']) && $logging['enabled']) {
+			if (!empty($logging['logFile']) && is_writable($logging['logFile'])) {
+				error_log($exception->getMessage() . " ({$exception->getFile()}:{$exception->getLine()})",
+					3, $logging['logFile']);
+			}
+			else {
+				error_log($exception->getMessage() . " ({$exception->getFile()}:{$exception->getLine()})");
+			}
+
+			if (!empty($logging['logEmail'])) {
+				// Send email to admin
+				$email = $this->generateMail($exception);
+				$email->addRecipient($logging['logEmail']);
+				$mailer = new MailService();
+				$mailer->send($email);
+			}
 		}
 
 		// Try/catch this to avoid infinite loop in case the view doesn't exist
@@ -91,7 +92,7 @@ class ErrorHandler {
 	 */
 	private function generateMail ($exception) {
 		$email = new Email();
-		$email->subject = 'Exception caught';
+		$email->subject = $_SERVER['SERVER_NAME'] . ': Exception caught';
 		$email->setBody(<<<TXT
 {$exception}
 
@@ -116,7 +117,7 @@ TXT
 		foreach ($vars as $var => $value) {
 			$txt .= $var . ': ';
 			$txt .= print_r($value, true);
-			if (!isset($value)) $txt .= "\n";
+			if (!isset($value) || is_scalar($value)) $txt .= "\n";
 		}
 		return $txt;
 	}

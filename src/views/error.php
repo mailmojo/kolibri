@@ -23,9 +23,9 @@
 		<div id="error">
 <?php
 /*
- * If debug is enabled, we display detailed error.
+ * If logging is disable, we display detailed error.
  */
-if ($config['debug']):
+if (!isset($config['logging']['enabled']) || !$config['logging']['enabled']):
 ?>
 				<h1><?php echo get_class($exception) ?></h1>
 				<p id="message">
@@ -76,7 +76,7 @@ function print_vars ($vars) {
 	foreach ($vars as $var => $value) {
 		echo "<strong>$var</strong>: ";
 		print_r($value);
-		if (!isset($value)) echo "\n";
+		if (!isset($value) || is_scalar($value)) echo "\n";
 	}
 }
 ?>
