@@ -121,20 +121,32 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable {
 	}
 
 	/**
-	 * Iterates the contained models and deletes them from the database. The number of actually deleted
-	 * in the database is returned.
+	 * If $key is specified, the contained model at that index is deleted from the database and
+	 * removed from this proxy. Else all contained models are iterated and deleted from the database.
 	 *
-	 * @return int Number of deleted rows in the database.
+	 * The number of actually deleted in the database is returned.
+	 *
+	 * @param string $key	Key of one model to delete.
+	 * @return int			Number of deleted rows in the database.
 	 */
-	public function delete () {
+	public function delete ($key = null) {
 		$numAffected = 0;
 
 		if (isset($this->objects)) {
-			foreach ($this->models as $idx => $model) {
-				if (!empty($model->original)) {
-					$numAffected += $this->objects->delete($model);
+			if (!empty($key)) {
+				if (isset($this->models[$key])) {
+					$numAffected = $this->objects->delete($this->models[$key]);
+					unset($this->models[$key]);
 				}
-				unset($this->models[$idx]);
+				else throw new Exception("Model with key $key does not exist.");
+			}
+			else {
+				foreach ($this->models as $idx => $model) {
+					if (!empty($model->original)) {
+						$numAffected += $this->objects->delete($model);
+					}
+					unset($this->models[$idx]);
+				}
 			}
 		}
 
