@@ -1,8 +1,8 @@
 <?php
+import('strings', 'util');
+
 /**
  * This class provides an abstraction of the XSL transformation capabilities in PHP 5.
- * 
- * @version		$Id: XslTransformer.php 1548 2008-09-05 13:10:30Z anders $
  */
 class XslTransformer {
 	private $stylesheet;
@@ -21,10 +21,10 @@ class XslTransformer {
 	}
 
 	/**
-	 * Adds XML data from a string or a file if <code>$isFile<code> is <code>TRUE</code>.
+	 * Adds XML data from a string or a file.
 	 *
-	 * @param string $xml	XML data or path to XML file.
-	 * @param bool $isFile	Is $xml a file? Defaults to <code>FALSE</code>.
+	 * @param string $xml  XML data or path to XML file.
+	 * @param bool $isFile Is $xml a file name? Defaults to <code>FALSE</code>.
 	 */
 	public function addXml ($xml, $isFile = false) {
 		if ($isFile) {
@@ -32,8 +32,7 @@ class XslTransformer {
 				$xml = file_get_contents($xml);
 			}
 			else {
-				trigger_error("XML file ($xml) does not exist, no data to transform.",
-						E_USER_ERROR);
+				throw new Exception("XML file ($xml) does not exist, no data to transform");
 			}
 		}
 
@@ -44,8 +43,8 @@ class XslTransformer {
 	/**
 	 * Adds a parameter to the XSLT processor.
 	 *
-	 * @param string $name		Name of the parameter to add.
-	 * @param string $value		Value of the parameter to add.
+	 * @param string $name  Name of the parameter to add.
+	 * @param string $value Value of the parameter to add.
 	 */
 	public function addParameter ($name, $value) {
 		$this->parameters[$name] = $value;
@@ -54,11 +53,9 @@ class XslTransformer {
 	/**
 	 * Runs an XSL transformation on the provided XML data with the active XSL template.
 	 *
-	 * @return string	The XML result from the XSL transformation as a string.
+	 * @return string The XML result from the XSL transformation as a string.
 	 */
 	public function process () {
-		require_once(ROOT . '/utils/strings.php');
-
 		$processor = new XSLTProcessor();
 		$processor->importStyleSheet($this->stylesheet);
 
@@ -66,13 +63,7 @@ class XslTransformer {
 			$processor->setParameter('', $this->parameters);
 		}
 
-		$result = $processor->transformToXML($this->xmlData);
-
-		if ($result === false) {
-			trigger_error("XSL transformation failed.", E_USER_ERROR);
-		}
-
-		return $result;
+		return $processor->transformToXML($this->xmlData);
 	}
 }
 ?>

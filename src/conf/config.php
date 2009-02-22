@@ -7,8 +7,10 @@
 $config = array(
 		'webRoot'    => '',        // Change if not on root level. No trailing slash!
 		'staticRoot' => '/static', // URI of static resources (can be another host as http://static.example.com)
-		'debug'      => false,
 		'locale'     => 'en_US.utf8',
+		'logging'    => array(
+			'enabled'  => false
+		),	
 		/*
 		 * Database configuration. 'type' is mandatory, while implementations can define other settings.
 		 */

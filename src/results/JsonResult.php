@@ -1,8 +1,6 @@
 <?php
 /**
  * This result renders a JSON response with data to the client.
- * 
- * @version		$Id: JsonResult.php 1525 2008-07-12 23:08:56Z anders $
  */	
 class JsonResult implements Result {
 	private $data;
@@ -11,12 +9,12 @@ class JsonResult implements Result {
 	/**
 	 * Constructor.
 	 *
-	 * @param mixed $data		The data en encode in the JSON response..
-	 * @param string $charset	Charset of the data. Defaults to utf-8.
+	 * @param mixed $data     The data en encode in the JSON response..
+	 * @param string $charset Charset of the data. Defaults to utf-8.
 	 */
 	public function __construct ($data, $charset = 'utf-8') {	
-		$this->data		= $data;
-		$this->charset	= $charset;
+		$this->data    = $data;
+		$this->charset = $charset;
 	}
 
 	/**

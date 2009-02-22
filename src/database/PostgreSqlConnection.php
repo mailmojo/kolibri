@@ -8,7 +8,7 @@ require(ROOT . '/database/PostgreSqlResultSet.php');
  *
  *   'db' => array(
  *     'type'     => 'PostgreSql',
- *     'host'     => '', // Hostname of database server
+ *     'host'     => '', // Hostname of database server, omit to use local Unix domain socket
  *     'username' => '', // PostgreSQL username
  *     'password' => '', // Password of PostgreSQL user
  *     'database' => ''  // Name of database to connect to
@@ -34,7 +34,7 @@ class PostgreSqlConnection extends DatabaseConnection {
 	 * @param array $conf Database configuration.
 	 */
 	public function __construct ($conf) {
-		$this->host       = $conf['host'];
+		$this->host       = isset($conf['host']) ? $conf['host'] : null;
 		$this->username   = $conf['username'];
 		$this->password   = $conf['password'];
 		$this->database   = $conf['database'];
@@ -45,13 +45,10 @@ class PostgreSqlConnection extends DatabaseConnection {
 	 * XXX: Do we want to support pg_pconnect()?
 	 */
 	public function connect () {
-		$connectionString = "host={$this->host} dbname={$this->database} user={$this->username} "
+		$host = $this->host === null ? '' : 'host=' . $this->host;
+		$connectionString = "$host dbname={$this->database} user={$this->username} "
 				. "password={$this->password}";
 		$this->connection = pg_connect($connectionString);
-
-		if (!$this->connection) {
-			throw new DatabaseException('Could not connect to the database');
-		}
 		return true;
 	}
 

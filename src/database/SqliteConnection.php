@@ -38,10 +38,10 @@ class SqliteConnection extends DatabaseConnection {
 	 * does not exist.
 	 */
 	public function connect () {
-		$this->connection = sqlite_factory($this->database);
+		$this->connection = @sqlite_factory($this->database, 0666, $error);
 
 		if (!$this->connection) {
-			throw new DatabaseException('Could not connect to the database');
+			throw new DatabaseException('Could not connect to the database: ' . $error);
 		}
 		return true;
 	}
@@ -131,7 +131,7 @@ class SqliteConnection extends DatabaseConnection {
 		$preparedQuery = $this->prepareQuery($query, $params);
 
 		$error = null;
-		if ($result = $this->connection->unbufferedQuery($preparedQuery, SQLITE_ASSOC, $error)) {
+		if ($result = @$this->connection->unbufferedQuery($preparedQuery, SQLITE_ASSOC, $error)) {
 			$this->resultSet = new SqliteResultSet($this, $result);
 			return $this->resultSet;
 		}
