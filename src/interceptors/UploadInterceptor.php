@@ -28,11 +28,21 @@ class UploadInterceptor extends AbstractInterceptor {
 			}
 
 			foreach ($_FILES as $param => $file) {
-				if ($file['error'] != UPLOAD_ERR_NO_FILE) {
-					/*
-					 * File was actually uploaded (although it can still have errors, which will be
-					 * contained in the UploadFile). Create and assign the UploadFile.
-					 */
+				/*
+				 * Only validate that file(s) were actually uploaded (they can still have errors,
+				 * which will be contained in the UploadFile).
+				 */
+				if (is_array($file['error'])) {
+					foreach ($file['name'] as $i => $name) {
+						if ($file['error'][$i] != UPLOAD_ERR_NO_FILE) {
+							$files[] = new UploadFile($name, $file['tmp_name'][$i], $file['error'][$i]);
+						}
+					}
+					if (isset($files)) {
+						$setOn->$param = $files;
+					}
+				}
+				else if ($file['error'] != UPLOAD_ERR_NO_FILE) {
 					$setOn->$param = new UploadFile($file['name'], $file['tmp_name'], $file['error']);
 				}
 			}
