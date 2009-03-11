@@ -7,7 +7,7 @@ class HexValidator {
 	}
 
 	public function validate ($property, $rules) {
-		if (ctype_xdigit($this->model->$property)) {
+		if (ctype_xdigit($this->model->$property) === false) {
 			return array('hex' => $rules['name']);
 		}
 		return true;

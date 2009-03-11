@@ -16,7 +16,7 @@ class DateTimeValidator {
 			$month = isset($var['mon']) ? $var['mon'] : date('n');
 			$year = isset($var['year']) ? $var['year'] : date('Y');
 
-			$theDate = mktime($hour, $minute, $second, $month, $day, $year);
+			$theDate = mktime((int) $hour, (int) $minute, (int) $second, (int) $month, (int) $day, (int) $year);
 			$date = new Date($theDate);
 		}
 		else {
