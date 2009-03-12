@@ -20,8 +20,8 @@ class DateValidator {
 			$date = DateFormat::parse($this->model->$property);
 		}
 
-		if (!checkdate($date->getTimeField(Date::MONTH), $date->getTimeField(Date::DAY_OF_MONTH),
-				$date->getTimeField(Date::YEAR))) {
+		if ($date === null || !checkdate($date->getTimeField(Date::MONTH),
+				$date->getTimeField(Date::DAY_OF_MONTH), $date->getTimeField(Date::YEAR))) {
 			return array('date' => $rules['name']);
 		}
 

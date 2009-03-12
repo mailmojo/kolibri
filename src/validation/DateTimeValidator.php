@@ -23,8 +23,8 @@ class DateTimeValidator {
 			$date = DateFormat::parse($this->model->$property);
 		}
 
-		if (!checkdate($date->getTimeField(Date::MONTH), $date->getTimeField(Date::DAY_OF_MONTH),
-				$date->getTimeField(Date::YEAR))
+		if ($date === null || !checkdate($date->getTimeField(Date::MONTH),
+				$date->getTimeField(Date::DAY_OF_MONTH), $date->getTimeField(Date::YEAR))
 				|| (min($date->getTimeField(Date::HOUR), $date->getTimeField(Date::MINUTE), 0) < 0)
 				|| ($date->getTimeField(Date::HOUR) > 23) || ($date->getTimeField(Date::MINUTE) > 59)) {
 			return array('date' => $rules['name']);

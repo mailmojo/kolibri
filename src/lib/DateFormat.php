@@ -75,16 +75,11 @@ class DateFormat {
 	 * @return Date				A <code>Date</code> parsed from the string.
 	 */
 	public static function parse ($string) {
-		// Commented out as PHP5 is supposed to ignore fractural seconds
-		//if (($msPos = strpos($string, '.')) !== false) {
-		//	$exMs = substr($string, 0, $msPos);
-		//	$time = strtotime($exMs);
-		//}
-		//else {
-			$time = strtotime($string);
-		//}
-		
-		return new Date($time);
+		$time = (strlen($string) > 6 ? strtotime($string) : false);
+		if ($time !== false) {
+			return new Date($time);
+		}
+		return null;
 	}
 
 	/**
