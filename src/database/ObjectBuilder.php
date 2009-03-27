@@ -260,12 +260,21 @@ class ObjectBuilder {
 	private function populateObject ($object, $row) {
 		$objClass = get_class($object);
 
-		// If we have not yet cached the primary key of this object type, we do so here
-		if (!isset($this->primaryKeys[$objClass])) {
+		/*
+		 * If we have not yet cached the primary key of this object type, we do so here.
+		 * Container need not be evaluated as it isn't an actual model.
+		 */
+		if (!isset($this->primaryKeys[$objClass]) && !$object instanceof Container) {
 			$reflection = new ReflectionObject($object);
 			if (!$reflection->hasConstant('PK')) {
-				throw new DatabaseException('No primary key defined for model of type ' . $objClass
-					. '. HINT: You must define a PK constant.');
+				throw new Exception("No primary key defined for model of type $objClass. "
+					. 'HINT: You must define a PK constant.');
+			}
+
+			$pk = $reflection->getConstant('PK');
+			if (!$reflection->hasProperty($pk)) {
+				throw new Exception("No property named '$pk' exists for model of type $objClass. "
+					. 'HINT: The PK constant must define an existing property.');
 			}
 
 			$this->primaryKeys[$objClass] = $reflection->getConstant('PK');
@@ -301,6 +310,5 @@ class ObjectBuilder {
  */
 class Container {
 	public $dataset = array();
-	const PK = null;
 }
 ?>

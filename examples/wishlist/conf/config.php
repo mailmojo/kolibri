@@ -11,6 +11,7 @@ $config = array(
 			'enabled'  => false,   // When logging is disabled, errors are outputted directly. When enabled...
 			'logFile'  => '',      // ...they can be logged to a file
 			'logEmail' => ''       // ...and/or an email address (make sure you config 'mail' for this to work)
+		),
 		/*
 		 * Database configuration. 'type' is mandatory, while implementations define other settings.
 		 */
