@@ -203,10 +203,10 @@ abstract class DatabaseConnection {
 			return str_replace($search, $replace, $query);
 		}
 
-		if (!is_array($params) && $params !== null) {
-			$params = array($params); // Wrap in array as code below expects an array
+		if (is_scalar($params)) {
+			$params = array($params); // Wrap scalar value in array as code below expects an array
 		}
-		else {
+		else if ($params === null) {
 			/*
 			 * Params is null, which normally means user didn't supply any. Change into empty
 			 * array so we can catch cases where replacement char is present but not param.
