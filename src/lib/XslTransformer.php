@@ -1,13 +1,10 @@
 <?php
-import('strings', 'util');
-
 /**
  * This class provides an abstraction of the XSL transformation capabilities in PHP 5.
  */
 class XslTransformer {
 	private $stylesheet;
-	private $xmlData;
-	private $parameters;
+	private $processors;
 
 	/**
 	 * Creates a new XSL transformer with a stylesheet to transform data with.
@@ -18,26 +15,7 @@ class XslTransformer {
 	public function __construct ($xsl) {
 		$this->stylesheet = new DOMDocument();
 		$this->stylesheet->load($xsl);
-	}
-
-	/**
-	 * Adds XML data from a string or a file.
-	 *
-	 * @param string $xml  XML data or path to XML file.
-	 * @param bool $isFile Is $xml a file name? Defaults to <code>FALSE</code>.
-	 */
-	public function addXml ($xml, $isFile = false) {
-		if ($isFile) {
-			if (file_exists($xml)) {
-				$xml = file_get_contents($xml);
-			}
-			else {
-				throw new Exception("XML file ($xml) does not exist, no data to transform");
-			}
-		}
-
-		$this->xmlData = new DOMDocument();
-		$this->xmlData->loadXml($xml);
+		$this->processor = new XSLTProcessor();
 	}
 
 	/**
@@ -47,7 +25,7 @@ class XslTransformer {
 	 * @param string $value Value of the parameter to add.
 	 */
 	public function addParameter ($name, $value) {
-		$this->parameters[$name] = $value;
+		$this->processor->setParameter('', $name, $value);
 	}
 
 	/**
@@ -55,15 +33,13 @@ class XslTransformer {
 	 *
 	 * @return string The XML result from the XSL transformation as a string.
 	 */
-	public function process () {
-		$processor = new XSLTProcessor();
-		$processor->importStyleSheet($this->stylesheet);
-
-		if (is_array($this->parameters)) {
-			$processor->setParameter('', $this->parameters);
+	public function process ($dom) {
+		if (!$dom instanceof DOMDocument) {
+			throw new Exception('XslTransformer expects DOMDocument to process.');
 		}
-
-		return $processor->transformToXML($this->xmlData);
+		
+		$this->processor->importStyleSheet($this->stylesheet);
+		return $this->processor->transformToXML($dom);
 	}
 }
 ?>

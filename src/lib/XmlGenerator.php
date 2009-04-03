@@ -27,6 +27,10 @@ class XmlGenerator {
 		}
 	}
 	
+	public function getDom () {
+		return $this->document;
+	}
+	
 	/**
 	 * Returns the DOM tree as an XML string.
 	 *

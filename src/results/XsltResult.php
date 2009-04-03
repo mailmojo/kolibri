@@ -35,7 +35,6 @@ class XsltResult extends AbstractResult {
 		$xmlGenerator->append($this->action);
 		
 		$transformer = new XslTransformer($this->xslTemplate);
-		$transformer->addXml($xmlGenerator->getXml());
 
 		// Add config params to XSLT as parameters
 		foreach (Config::get() as $key => $value) {
@@ -44,7 +43,7 @@ class XsltResult extends AbstractResult {
 			}
 		}
 
-		echo $transformer->process();
+		echo $transformer->process($xmlGenerator->getDom());
 	}
 }
 ?>
