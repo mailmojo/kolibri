@@ -33,7 +33,7 @@ class SmartyResult extends AbstractResult {
 		
 		$this->smartyTemplate = "$template.tpl";
 		if (!file_exists(VIEW_PATH . "/$template.tpl")) {
-			trigger_error('Smarty template ({$this->smartyTemplate}) does not exist.', E_USER_ERROR);
+			throw Exception("Smarty template ({$this->smartyTemplate}) does not exist");
 		}
 	}
 	
@@ -46,9 +46,9 @@ class SmartyResult extends AbstractResult {
 	public function render ($request) {
 		$conf = Config::get('smarty');
 		if ($conf === null) {
-			trigger_error('Smarty settings missing from application configuration.', E_USER_ERROR);
+			throw new Exception('Smarty settings missing from application configuration');
 		}
-		
+
 		// Configure the Smarty engine
 		$smarty = new Smarty();
 		$smarty->template_dir = (isset($conf['templateDir']) ? $conf['templateDir'] : VIEW_PATH);

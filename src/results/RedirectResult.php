@@ -1,8 +1,6 @@
 <?php
 /**
  * Provides the implementation of a result set which when rendered sends a redirect to the client.
- * 
- * @version		$Id: RedirectResult.php 1518 2008-06-30 23:43:38Z anders $
  */	
 class RedirectResult extends AbstractResult {
 	private $location;
@@ -10,7 +8,7 @@ class RedirectResult extends AbstractResult {
 	/**
 	 * Constructor.
 	 * 
-	 * @param string $location		Location of the redirect relative to the web root.
+	 * @param string $location Location of the redirect relative to the web root.
 	 */
 	public function __construct ($action, $location) {
 		parent::__construct($action);

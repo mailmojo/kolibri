@@ -10,16 +10,16 @@ class XsltResult extends AbstractResult {
 	/**
 	 * Constructor.
 	 *
-	 * @param Request &$request		The request object representing the current HTTP request.
-	 * @param string $xsl_template	Name of XSL file (excluding the extension) to use, relative to
-	 * 								the views-directory.
+	 * @param object $action      Current action.
+	 * @param string $xslTemplate Name of XSL file (excluding the extension) to use, relative to
+	 *                            the views-directory.
 	 */
 	public function __construct ($action, $xslTemplate, $title = null) {
 		parent::__construct($action);
 
 		$this->xslTemplate = VIEW_PATH . "$xslTemplate.xsl";
 		if (!file_exists($this->xslTemplate)) {
-			trigger_error("XSL template ({$this->xslTemplate}) does not exist.", E_USER_ERROR);
+			throw new Exception("XSL template ({$this->xslTemplate}) does not exist");
 		}
 	}
 	
@@ -49,8 +49,7 @@ class XsltResult extends AbstractResult {
 			}
 		}
 
-		$xhtml = $transformer->process();
-		echo $xhtml;
+		echo $transformer->process();
 	}
 }
 ?>

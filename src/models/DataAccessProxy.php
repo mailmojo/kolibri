@@ -132,7 +132,7 @@ class DataAccessProxy {
 		 * If no arguments were supplied, we pass the model(s) on as arguments, so we don't have
 		 * to do this manually ($model->objects->something($model) looks kind of strange).
 		 */
-		if ($args === null) {
+		if (empty($args)) {
 			$model = $this->modelProxy->extract();
 			$args = $model;
 		}

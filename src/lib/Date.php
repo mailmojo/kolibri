@@ -38,7 +38,7 @@ class Date {
 	// Date field constants
 	const SECOND		= 'seconds';
 	const MINUTE		= 'minutes';
-	const HOUR			= 'hour';
+	const HOUR			= 'hours';
 	const DATE			= 'mday';
 	const DAY_OF_WEEK	= 'wday';
 	const DAY_OF_MONTH	= 'mday';
