@@ -4,9 +4,9 @@
  * request performed, and a response will usually be rendered to the client over HTTP.
  */
 abstract class AbstractResult implements Result {
-	private $action;
-	private $contentType;
-	private $charset;
+	protected $action;
+	protected $contentType;
+	protected $charset;
 	
 	/**
 	 * Constructor.
@@ -39,10 +39,6 @@ abstract class AbstractResult implements Result {
 	 * @return array Data from the action.
 	 */
 	public function getActionData () {
-		if (method_exists($this->action, 'expose')) {
-			return $action->expose();
-		}
-
 		$data = array();
 		foreach ($this->action as $key => $value) {
 			$data[$key] = $value;

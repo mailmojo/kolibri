@@ -4,24 +4,24 @@
  * made available through convenience methods, as well as the complete URI and method of the
  * request.
  */
-class Request implements ArrayAccess, IteratorAggregate {
+class Request implements ArrayAccess {
 	/**
 	 * Request URI.
 	 * @var string
 	 */
-	private $uri;
+	public $uri;
 
 	/**
 	 * Request parameters.
 	 * @var array
 	 */
-	private $params;
+	public $params;
 	
 	/**
 	 * HTTP method for this request.
 	 * @var string
 	 */
-	private $method;
+	public $method;
 	
 	/**
 	 * Creates an instance of this class. GET and POST parameters are merged. If any parameter keys
@@ -84,15 +84,6 @@ class Request implements ArrayAccess, IteratorAggregate {
 	}
 
 	/**
-	 * Returns a default iterator which enables iterating over request parameters.
-	 *
-	 * @return ArrayIterator
-	 */
-	public function getIterator () {
-		return new ArrayIterator($this->params);
-	}
-	
-	/**
 	 * Returns the value of the parameter with the specified key, or <code>NULL</code> if the parameter is
 	 * not found.
 	 * 
@@ -138,23 +129,6 @@ class Request implements ArrayAccess, IteratorAggregate {
 	 */
 	public function putAll ($params) {
 		$this->params = array_merge($this->params, $params);
-	}
-
-	/**
-	 * Defines our custom hierarchy when exposing this object. The reason we want a different structure
-	 * is to provide easy access to request parameters in views. Instead of accessing request/params/foo,
-	 * users can more simply use params/foo. Request-specific meta-data resides under the request/ element.
-	 *
-	 * @return array	Exposed structure of this object.
-	 */
-	public function expose () {
-		return array(
-				'request'	=> array(
-						'uri'		=> $this->uri,
-						'method'	=> $this->method
-					),
-				'params'	=> $this->params
-		);
 	}
 }
 ?>
