@@ -34,7 +34,9 @@ class ModelInterceptor extends AbstractInterceptor {
 					$this->populate($model, $exploded, $value);
 				}
 				else {
-					$model->$param = $this->convertType($value);
+					if (property_exists($model, $param) || $param == 'original') {
+						$model->$param = $this->convertType($value);
+					}
 				}
 			}
 
@@ -93,6 +95,8 @@ class ModelInterceptor extends AbstractInterceptor {
 	 * of the form <code>outerProperty::innerProperty</code> in which case <code>outerProperty</code> in
 	 * the model must be another model with the an <code>innerProperty</code> property to be populated
 	 * with the value.
+	 * 
+	 * TODO: This must be better documented and possibly add property_exists()-checks
 	 *
 	 * @param object $model		Model object to populate.
 	 * @param string $property	Property to populate.

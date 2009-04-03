@@ -21,16 +21,17 @@ class ValidatorInterceptor extends AbstractInterceptor {
 			 * Action is ValidationAware, request is POSTed and a model is prepared. Create a validator,
 			 * do the validation and put errors into the action.
 			 */
-			$conf = Config::getValidationConfig();
+			/*$conf = Config::getValidationConfig();
 			$validator = new Validator($conf['classes'], $conf['messages']);
-			$action->errors = $validator->validate($action->model);
+			$action->errors = $validator->validate($action->model);*/
+			$action->model->validate();
 		}
 
 		$result = $dispatcher->invoke();
 
 		if ($action instanceof ValidationAware && $action instanceof MessageAware) {
 			// Report errors if action has any errors registered
-			if (!empty($action->errors)) {
+			if (!empty($action->model->errors)) {
 				$action->msg->setMessage('Submitted form contains errors. Please correct any errors listed
 							in the form and try again.', false);
 			}

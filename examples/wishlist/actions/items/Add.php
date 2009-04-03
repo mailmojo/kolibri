@@ -19,7 +19,7 @@ class Add extends ActionSupport implements ModelAware, ValidationAware {
 	 * As the name implies, this handles POST.
 	 */
 	public function doPost () {
-		if (empty($this->errors)) {
+		if ($this->model->isValid()) {
 			/*
 			 * No validation errors are reported, so we can go ahead and save the model. Notice that $this->model 
 			 * now is a fully prepared model.

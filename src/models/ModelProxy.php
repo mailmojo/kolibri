@@ -42,6 +42,12 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable {
 	 * @var object
 	 */
 	protected $current;
+	
+	/**
+	 * Flag to indicate whether we have proxified inner models.
+	 * @var bool
+	 */
+	protected $isInnerProxied;
 
 	/**
 	 * Creates a <code>ModelProxy</code> instance for the model supplied.
@@ -58,92 +64,10 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable {
 			$model = current($this->models);
 		}
 
+		$this->isInnerProxied = false;
 		$this->initDaoProxy($model);
 	}
 	
-	/**
-	 * Iterates the contained models, makes sure they are approved for further processing, and
-	 * invokes <code>processModel()</code> for each one. What "approved" and "process" actually
-	 * means depends on which proxy implementation and method invoked this method. See the
-	 * specific <code>approveModel()</code> and <code>processModel()</code> for details.
-	 */
-	protected function processModels () {
-		$numAffected = 0;
-		
-		foreach ($this->models as $model) {
-			// Checks if this model is approved for processing to continue
-			if (!$this->approveModel($model)) {
-				// XXX: Should we simply return false, or make more noise with an exception?
-				return false;
-			}
-			
-			// Process this model (save and/or validate)
-			$numAffected += $this->processModel($model);
-			
-			// Loop through model properties and provess any inner models
-			foreach ($model as $property => &$innerModel) {
-				/*
-				 * If $innerModel is an array or object, we try to proxy it. If it succeeds, it is
-				 * indeed one or more models we might want to provess below, so we put the proxy back
-				 * into the model object.
-				 */
-				if (is_array($innerModel) || is_object($innerModel)) {
-					$proxy = Models::getModel($innerModel);
-					if ($proxy !== null) {
-						$innerModel = $proxy;
-					}
-				}
-
-				if ($innerModel instanceof ModelProxy) {
-					$this->propagateKey($innerModel, $model);
-					// XXX: We do nothing with the number of affected rows for inner saves. Should we?
-					$innerModel->processModels();
-				}
-			}
-		}
-		
-		return $numAffected;
-	}
-	
-	/**
-	 * Approves the supplied model for further processing by calling any existing <code>preSave()</code>
-	 * method on the model itself. If the method doesn't exist, the model is approved.
-	 *  
-	 * @param object $model	The model to approve.
-	 * @return bool			<code>true</code> if the model is approved, <code>false</code> if not.
-	 */
-	protected function approveModel ($model) {
-		// If model has preSave()-method, call it to determine if it approves saving
-		if (method_exists($model, 'preSave')) {
-			return $model->preSave();
-		}
-		return true;
-	}
-	
-	/**
-	 * Process the supplied model by calling the <code>update()</code> DAO method if the model isn't
-	 * new and changes have been made on its data, or the <code>insert()</code> DAO method if it's
-	 * new.
-	 *  
-	 * @param object $model	The model to process.
-	 * @return int			Number of rows affected in the database.
-	 */
-	protected function processModel ($model) {
-		$numAffected = 0;
-		
-		if (!empty($model->original)) {
-			if (property_exists($model, 'isDirty') && $model->isDirty) {
-				 $numAffected = $this->objects->update($model);
-			}
-		}
-		else {
-			$numAffected = $this->objects->insert($model);
-		}
-		
-		$model->isDirty = false;
-		return $numAffected;
-	}
-		
 	/**
 	 * Iterates the contained models and updates dirty models or inserts new models. The number of
 	 * actually saved rows in the database is returned.
@@ -155,7 +79,30 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable {
 			$type = get_class($this->current);
 			throw new Exception("Model $type is not DataProvided and cannot be saved.");
 		}
-		return $this->processModels();
+		
+		$this->proxifyInnerModels();
+		$numAffected = 0;
+		
+		foreach ($this->models as $model) {
+			// Checks if this model is approved for processing to continue
+			if (!$this->preSaveModel($model)) {
+				// XXX: Should we return false, or make more noise with an exception?
+				return false;
+			}
+			
+			// Process this model (save and/or validate)
+			$numAffected += $this->saveModel($model);
+			
+			foreach ($model as $property) {
+				if ($property instanceof ModelProxy) {
+					// Propagate primary key into inner model and recurse save
+					$this->propagateKey($innerModel, $model);
+					$property->save();
+				}
+			}
+		}
+		
+		return $numAffected;
 	}
 
 	/**
@@ -190,7 +137,7 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable {
 
 		return $numAffected;
 	}
-
+	
 	/**
 	 * Checks if the specified property on the current model is empty.
 	 *
@@ -236,7 +183,7 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable {
 			if (property_exists($model, $name)) {
 				if ($model->$name !== $value) {
 					$model->$name = $value;
-					$model->isDirty = true;
+					$this->modelChanged($model);
 				}
 			}
 		}
@@ -252,7 +199,8 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable {
 	 */
 	public function __call ($name, $args) {
 		if (!empty($args)) {
-			$this->current->isDirty = true;
+			$this->modelChanged($this->current);
+			//$this->current->isDirty = true;
 		}
 
 		$reflection = new ReflectionMethod(get_class($this->current), $name);
@@ -290,7 +238,8 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable {
 		if (is_object($value)) {
 			if ($offset !== null) {
 				$this->models[$offset] = $value;
-				$this->models[$offset]->isDirty = true;
+				$this->modelChanged($this->models[$offset]);
+				//$this->models[$offset]->isDirty = true;
 			}
 			else {
 				$this->models[] = $value;
@@ -379,7 +328,57 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable {
 		}
 		return $this->models;
 	}
-
+	
+	/**
+	 * Flag the model as dirty, as changes have been made to its state.
+	 *
+	 * @param object $model	The model whose state has changed.
+	 */
+	protected function modelChanged ($model) {
+		$model->isDirty = true;
+	}
+	
+	/**
+	 * Calls any existing <code>preSave()</code> method on the supplied model before
+	 * <code>saveModel()</code> is invoked. This makes it possible for the model itself to hook
+	 * into the save process.
+	 *  
+	 * @param object $model	The model to invoke any preSave() on.
+	 * @return bool			<code>true</code> if we should call saveModel() next,
+	 * 						<code>false</code> if we should stop the saving.
+	 */
+	protected function preSaveModel ($model) {
+		// If model has preSave()-method, call it to determine if it approves saving
+		if (method_exists($model, 'preSave')) {
+			return $model->preSave();
+		}
+		return true;
+	}
+	
+	/**
+	 * Saves the supplied model by calling the <code>update()</code> DAO method if the model isn't
+	 * new and changes have been made on its data, or the <code>insert()</code> DAO method if it's
+	 * new.
+	 *
+	 * @param object $model	The model to save.
+	 * @return int			Number of rows affected in the database.
+	 */
+	protected function saveModel ($model) {
+		$numAffected = 0;
+		
+		if (!empty($model->original)) {
+			if (property_exists($model, 'isDirty') && $model->isDirty) {
+				 $numAffected = $this->objects->update($model);
+			}
+		}
+		else {
+			$numAffected = $this->objects->insert($model);
+		}
+		
+		$model->isDirty = false;
+		return $numAffected;
+	}
+	
 	/**
 	 * Initializes a proxy to the data access object of the model, if it is <code>DataProvided</code>.
 	 *
@@ -390,21 +389,51 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable {
 			$this->objects = new DataAccessProxy($this, get_class($model));
 		}
 	}
-
+	
 	/**
-	 * Checks every model object in a ModelProxy for the existance of a foreign key to the supplied model
-	 * and updates it's value if it's empty.
+	 * Iterates over the contained models and their properties, and proxifies any inner models.
+	 * This makes it possible for us to automatically validate and save them along with the
+	 * outermost models.
+	 */
+	protected function proxifyInnerModels () {
+		if ($this->isInnerProxied) {
+			return;
+		}
+		
+		foreach ($this->models as $model) {
+			foreach ($model as &$innerModel) {
+				/*
+				 * If $innerModel is an array or object, we try to proxy it. If it succeeds, it is
+				 * indeed one or more models, so set the created proxy back into the model object.
+				 */
+				if (is_array($innerModel) || is_object($innerModel)) {
+					$proxy = Models::getModel($innerModel);
+					if ($proxy !== null) {
+						$innerModel = $proxy;
+						// Recurse to proxify even more deeply nested models
+						$innerModel->proxifyInnerModels();
+					}
+				}
+			}
+		}
+		
+		$this->isInnerProxied = true;
+	}
+	
+	/**
+	 * Checks every model object in a ModelProxy for the existance of a foreign key to the supplied
+	 * model and updates it's value if it's empty.
 	 *
 	 * @param ModelProxy $proxy The ModelProxy with model objects to update.
-	 * @param object $model     The model whose primary key defines the foreign key to look for.
+	 * @param object $model     The model whose primary key defines the foreign key to update.
 	 */
 	private function propagateKey ($proxy, $model) {
 		$reflection = new ReflectionObject($model);
 		$pk = $reflection->getConstant('PK');
 
 		foreach ($proxy as $innerModel) {
+			// Update the foreign key to main model if it exists and is empty
 			if (property_exists($innerModel, $pk) && empty($innerModel->$pk)) {
-				// Inner model has an empty foreign key to the main model, initialize before saving
 				$innerModel->$pk = $model->$pk;
 			}
 		}

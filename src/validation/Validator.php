@@ -34,12 +34,15 @@ class Validator {
 	}
 
 	/**
-	 * Validates a model and returns a two-dimensional array with the specifics of any failures.
-	 * The array keys refer to the property of the model whose validation failed, while the value is
-	 * an array containing human-readable messages of the specifics.
+	 * Validates a model and returns <code>true</code> if the model validates, <code>false</code>
+	 * if not.
+	 * 
+	 * Any validation errors are put into a two-dimensional array with the specifics and set in
+	 * $errors on the model. The array keys refer to the property of the model whose validation
+	 * failed, while the value is an array containing human-readable messages of the specifics.
 	 *
-	 * @param object $model			The model to validate.
-	 * @return array				Specifying any validation errors, or empty if none.
+	 * @param object $model		The model to validate.
+	 * @return bool				Indicating success or failure.
 	 */
 	public function validate ($model) {
 		$ruleSet	= $model->rules();
@@ -74,8 +77,14 @@ class Validator {
 				}
 			}
 		}
-
-		return $errors;
+		
+		if (!empty($errors)) {
+			$model->errors = $errors;
+			$model->isValid = false;
+		}
+		else $model->isValid = true;
+		
+		return $model->isValid;
 	}
 
 	/**
