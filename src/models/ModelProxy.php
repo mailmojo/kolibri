@@ -72,7 +72,8 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable {
 	 * Iterates the contained models and updates dirty models or inserts new models. The number of
 	 * actually saved rows in the database is returned.
 	 *
-	 * @return int Number of saved rows in the database.
+	 * @return mixed	Number of saved rows in the database, or <code>false</code> if a
+	 *					preSave() method on a model returned false.
 	 */
 	public function save () {
 		if (!isset($this->objects)) {
@@ -200,7 +201,6 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable {
 	public function __call ($name, $args) {
 		if (!empty($args)) {
 			$this->modelChanged($this->current);
-			//$this->current->isDirty = true;
 		}
 
 		$reflection = new ReflectionMethod(get_class($this->current), $name);
@@ -239,7 +239,6 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable {
 			if ($offset !== null) {
 				$this->models[$offset] = $value;
 				$this->modelChanged($this->models[$offset]);
-				//$this->models[$offset]->isDirty = true;
 			}
 			else {
 				$this->models[] = $value;
