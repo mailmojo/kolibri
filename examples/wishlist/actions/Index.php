@@ -5,6 +5,7 @@
  * are displayed.
  */
 class Index extends ActionSupport implements ModelAware {
+	public $model;
 	public $items;
 
 	/**

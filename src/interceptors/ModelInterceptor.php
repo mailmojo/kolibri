@@ -24,6 +24,13 @@ class ModelInterceptor extends AbstractInterceptor {
 		$action = $dispatcher->getAction();
 
 		if ($action instanceof ModelAware) {
+			// We depend on a $model-property in ModelAware actions
+			if (!property_exists($action, 'model')) {
+				$class = get_class($action);
+				throw new Exception('Action ' . $class
+						. ' is ModelAware and must define a public $model property.');
+			}
+
 			/*
 			 * If model is availible from session we use that, but only if this is a GET
 			 * request. The reason for this is that any new POST-submit of a form should
@@ -32,10 +39,7 @@ class ModelInterceptor extends AbstractInterceptor {
 			 */
 			if ($dispatcher->getRequest()->getMethod() == 'GET'
 					&& $action instanceof SessionAware && isset($action->session['model'])) {
-				if (property_exists($action, 'model')) {
-					$action->model = $action->session['model'];
-				}
-
+				$action->model = $action->session['model'];
 				// Model has been extracted, remove it from session
 				$action->session->remove('model');
 			}
@@ -49,24 +53,25 @@ class ModelInterceptor extends AbstractInterceptor {
 					// The action supplies model class name(s), so we must instantiate
 					$model = $this->instantiateModel($action->model);
 				}
-
-				foreach ($dispatcher->getRequest() as $param => $value) {
-					if (strpos($param, '::') !== false) {
-						// Parameter is a property path to inner models. Explode the path and populate.
-						$exploded = explode('::', $param);
-						$this->populate($model, $exploded, $value);
-					}
-					else {
-						if (property_exists($model, $param) || $param == 'original') {
-							$model->$param = $this->convertType($value);
+				
+				if ($model !== null) {
+					foreach ($dispatcher->getRequest() as $param => $value) {
+						if (strpos($param, '::') !== false) {
+							// Parameter is a property path to inner models. Explode the path and populate.
+							$exploded = explode('::', $param);
+							$this->populate($model, $exploded, $value);
+						}
+						else {
+							if (property_exists($model, $param) || $param == 'original') {
+								$model->$param = $this->convertType($value);
+							}
 						}
 					}
+
+					// Prepare a ModelProxy for the model
+					$action->model = Models::getModel($model);
 				}
-
-				// Prepare a ModelProxy for the model
-				$action->model = Models::getModel($model);
 			}
-
 		}
 
 		return $dispatcher->invoke();
