@@ -19,7 +19,6 @@
 
 	<!-- Include Kolibri snippets, helpers for forms and status messages. -->
 	<xsl:include href="snippets/kolibri.xsl" />
-	<xsl:include href="snippets/message.xsl" />
 
 	<xsl:template match="/result">
 		<html>
