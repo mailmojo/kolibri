@@ -24,7 +24,6 @@ class XsltResult extends AbstractResult {
 	 * Performs the XSL transformations on the XML-data and outputs it.
 	 */
 	public function render ($request) {
-		// Convert the request and action data to XML for XSL transformation
 		$xmlGenerator = new XmlGenerator();
 		// Wrap request data in a containing element, <request />
 		$xmlGenerator->append($request, 'request');

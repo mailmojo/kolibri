@@ -10,11 +10,10 @@ class XslTransformer {
 	 * Creates a new XSL transformer with a stylesheet to transform data with.
 	 *
 	 * @param string $xsl	Path to stylesheet.
-	 * @return XslTransformer
 	 */
 	public function __construct ($xsl) {
 		if (!file_exists($xsl)) {
-			throw new Exception("XSL template does not exist: $xsl");
+			throw new Exception("XSL stylesheet does not exist: $xsl");
 		}
 		
 		$this->stylesheet = new DOMDocument();

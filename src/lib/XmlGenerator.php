@@ -8,6 +8,10 @@
  * to get the DOMDocument directly (useful for utilizing the result with other XML technologies like XSLT).
  */
 class XmlGenerator {
+	// Default element names for scalar and complex data
+	const SCALAR_ELEMENT_NAME = 'value';
+	const COMPLEX_ELEMENT_NAME = 'data';
+	
 	private $document;
 	
 	/**
@@ -17,7 +21,7 @@ class XmlGenerator {
 	 */
 	public function __construct ($rootElement = 'result') {
 		$this->document	= new DOMDocument('1.0', 'utf-8');
-		
+
 		try {
 			$root = $this->document->createElement($rootElement);
 			$this->document->appendChild($root);
@@ -43,10 +47,9 @@ class XmlGenerator {
 	
 	/**
 	 * Adds more data to the XML document. If you specify a container name, the data will be wrapped
-	 * in an XML element of that name. Otherwise the element name for the data will be inferred from
-	 * the type of data. An object will get it's element name from it's class name. An array will be
-	 * wrapped in an <array> element, and scalar values will be wrapped in elements named after the scalar
-	 * type, ie. <boolean> or <number>.
+	 * in an XML element of that name, otherwise the data will be appended directly to the root
+	 * element. Complex data - arrays and objects - will have all their values/properties built separately
+	 * and appended directly. Scalar data will be wrapped in a <value> element.
 	 *
 	 * @param mixed $data       The data to add. Any PHP data type can be added except for the abstract
 	 *                          resource data type.
@@ -71,61 +74,61 @@ class XmlGenerator {
 	}
 
 	/**
-	 * Main entry point for building the XML structure out of PHP data structures. Distinguishes between
-	 * PHP data types as either scalar or complex and calls appropriate methods for building the XML.
+	 * Main entry point and routing method for building PHP data structures. The container
+	 * for the data must be either an existing DOMNode (ie. the document element), a string
+	 * with the name of an element or NULL for which a default name will be used. A new
+	 * DOMElement will be created when the container is a string value or NULL.
 	 *
-	 * @return DOMElement	A single DOMElement containing all non-NULL data in the data supplied, or NULL
-	 *						if the build resulted in an empty element.
+	 * @param mixed $data		PHP data structure to build DOMNodes for (object, array or scalar data).
+	 * @param mixed $container	An existing DOMNode, a string with an element name or NULL for a default
+	 *							element name. Default element names are 'data' for complex data and
+	 *							'value' for scalar values.
+	 * @return DOMNode	A single DOMNode containing all non-NULL data supplied, or NULL
+	 *					if the build resulted in an empty element. If a DOMNode was supplied as
+	 *					the container this same DOMNode will be returned (with data appended).
 	 */
 	private function build ($data, $container) {
-		// "Short circuit" if the data is scalar
+		// Prepare the containing element if necessary
+		if (!$container instanceof DOMNode) {
+			$container = $this->createElement($container, is_scalar($data));
+		}
+
 		if (is_scalar($data)) {
-			return $this->buildScalar($data, $container);
+			$element = $this->buildScalar($data, $container);
+		}
+		else {
+			// Extract data from a proxy explicitly
+			if ($data instanceof Proxy) {
+				$data = $data->extract();
+			}
+
+			$element = $this->buildComplex($data, $container);
 		}
 		
-		// Prepare the containing element
-		if (is_string($container)) {
-			$container = $this->createElement($container);
-		}
-		
-		$dataIsObject = is_object($data);
-		
-		// Extract data from a proxy explicitly
-		if ($dataIsObject && ($data instanceof Proxy)) {
-			$data = $data->extract();
-			// Re-evaluate type of data, extract() can return an array
-			$dataIsObject = is_object($data);
-		}
-		
-		$this->buildComplex($data, $container, $dataIsObject);
-		
-		return ($container->hasChildNodes() ? $container : null);
+		return $element;
 	}
 
 	/**
 	 * Builds arrays and objects, known as complex data types.
 	 */
-	private function buildComplex ($data, $container, $isObject = false) {
+	private function buildComplex ($data, $container) {
+		$dataIsObject = is_object($data);
+		
 		// Iterate through the array values or object properties
 		foreach ($data as $key => $value) {
 			// Skip NULL values and empty strings
 			if ($value === null || $value === '') continue;
+
+			$elementName = null;
 			
-			// Use property name as key when building an object
-			if ($isObject) {
-				$elementName = $this->normalizeElementName($key);
+			// Use property name as key when building an object, and array key when value is not an object
+			if ($dataIsObject
+					|| (is_string($key) && !is_object($value))) {
+				$elementName = $key;
 			}
 			// Use class name as element name for objects in an array
 			else if (is_object($value)) {
 				$elementName = get_class($value);
-			}
-			// Try to use array key if it is a string (not numeric)
-			else if (is_string($key)) {
-				$elementName = $key;
-			}
-			// Data is an array and we've found no fitting element name, use default
-			else {
-				$elementName = 'array';
 			}
 
 			$element = $this->build($value, $elementName);
@@ -134,35 +137,19 @@ class XmlGenerator {
 				$container->appendChild($element);
 			}
 		}
+		
+		return ($container->hasChildNodes() ? $container : null);
 	}
 	
 	/**
-	 * Builds an XML representation of an atomic PHP variable (number, boolean or string).
+	 * Builds an XML representation of a scalar variable (number, boolean or string).
 	 *
 	 * @param mixed $value A number, boolean or string.
-	 * @param string $name An optional name for the containing XML element, otherwise a generic
-	 *                     name is used to describe the content.
+	 * @param DOMNode $container	The DOMNode
 	 * @return DOMElement  An XML element representing the variable for appending in a DOM tree.
 	 */
-	private function buildScalar ($value, $name = null) {
-		if (is_string($name)) {
-			$name = $this->normalizeElementName($name);
-		}
-		else if (is_numeric($value)) {
-			$name = 'number';
-		}
-		else if (is_bool($value)) {
-			$name = 'boolean';
-		}
-		else {
-			$name = 'string';
-		}
-
-		/**
-		 * Perform a simple test on string values to see if they're likely to be XML data.
-		 * If so we wrap in a CDATA section to prevent < and > from being escaped, keeping the
-		 * XML data intact.
-		 */
+	private function buildScalar ($value, $container) {
+		// Wrap values likely to be XML in a CDATA section to prevent escaping of <, > and &
 		if (is_string($value) && $this->isXml($value)) {
 			$child = $this->document->createCDATASection($value);
 		}
@@ -175,20 +162,26 @@ class XmlGenerator {
 			$child = $this->document->createTextNode($value);
 		}
 		
-		$element = $this->createElement($name);
-		$element->appendChild($child);
-		return $element;
+		$container->appendChild($child);
+		return $container;
 	}
 	
 	/**
 	 * Wrapper for creating a DOM element and catching any exceptions for invalid characters in
 	 * element name etc.
 	 *
-	 * @throws Exception	Invalid characters in element name will throw exception.
-	 * @param string $name	The name of the element to create.
+	 * @throws Exception		Invalid characters in element name will throw exception.
+	 * @param string $name		The name of the element to create, or <code>NULL</code> for a default name.
+	 * @param bool $forScalar	<code>TRUE</code> if the element will be used for a scalar value,
+	 *							<code>FALSE</code> if it will contain several other elements.
+	 *							This affects the element name chosen when none is supplied.
 	 * @return DOMElement	The created DOMElement.
 	 */
-	private function createElement ($name) {
+	private function createElement ($name, $forScalar) {
+		if (!is_string($name)) {
+			$name = ($forScalar ? self::SCALAR_ELEMENT_NAME : self::COMPLEX_ELEMENT_NAME);
+		}
+		
 		try {
 			$element = $this->document->createElement($name);
 		}
@@ -200,25 +193,13 @@ class XmlGenerator {
 	}
 	
 	/**
-	 * Extremely simple normalization for now. Since we support :: in request parameter names for
-	 * indicating object hierarchy we need to replace this with a valid XML element name character.
-	 *
-	 * @param string $name	Name to normalize.
-	 * @return string	The normalized name.
-	 */
-	private function normalizeElementName ($name) {
-		return str_replace('::', '-', $name);
-	}
-
-	/**
 	 * Checks if a string is likely to be XML data. It simply checks to see if the string starts
 	 * and ends with < and > respectively.
 	 *
 	 * @param string $value The string value to check.
-	 * @return bool         <code>TRUE</code> if the string is XML data, <code>FALSE</code> if not.
+	 * @return bool	<code>TRUE</code> if the string is XML data, <code>FALSE</code> if not.
 	 */
 	private function isXml ($value) {
-		$value = trim($value);
 		return (substr($value, 0, 1) == '<' && substr($value, -1) == '>');
 	}
 }
