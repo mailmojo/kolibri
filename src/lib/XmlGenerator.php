@@ -4,14 +4,14 @@
  * 'result' by default. After creating an instance of the XmlGenerator, you add all the data you want
  * through the append() method. Everything from objects to arrays and pure scalar values are supported.
  * The only PHP data type that is not supported, and probably won't be, is the abstract 'resource' data type.
- * Finally you call getXml() to get a string representation of the XML version of your data.
+ * Finally you call getXml() to get a string representation of the XML version of your data, or getDom()
+ * to get the DOMDocument directly (useful for utilizing the result with other XML technologies like XSLT).
  */
 class XmlGenerator {
 	private $document;
 	
 	/**
-	 * Creates a new XML generator. An XML document is immediately created with a root element, named
-	 * 'result' by default.
+	 * Creates a new XML generator. An XML document is immediately created with a root element.
 	 *
 	 * @param string $rootElement Name of the document's root element, defaults to 'result'.
 	 */
@@ -23,18 +23,19 @@ class XmlGenerator {
 			$this->document->appendChild($root);
 		}
 		catch (DOMException $e) {
-			throw new Exception("Invalid name of XML document's root element: $rootElement");
+			throw new Exception("Invalid name for the XML document's root element: $rootElement");
 		}
 	}
 	
+	/**
+	 * @return DOMDocument The DOMDocument for the generated XML structure.
+	 */
 	public function getDom () {
 		return $this->document;
 	}
 	
 	/**
-	 * Returns the DOM tree as an XML string.
-	 *
-	 * @return string The DOM tree with data represented as an XML string.
+	 * @return string The generated XML as a string.
 	 */
 	public function getXml () {
 		return $this->document->saveXML();
@@ -57,6 +58,9 @@ class XmlGenerator {
 		if ($container === null) {
 			$container = $this->document->documentElement;
 		}
+		else if (!is_string($container)) {
+			throw new Exception('Containing element name must be a string.');
+		}
 		
 		$resultNode = $this->build($data, $container);
 		
@@ -66,7 +70,14 @@ class XmlGenerator {
 		}
 	}
 
-	private function build ($data, $container = null) {
+	/**
+	 * Main entry point for building the XML structure out of PHP data structures. Distinguishes between
+	 * PHP data types as either scalar or complex and calls appropriate methods for building the XML.
+	 *
+	 * @return DOMElement	A single DOMElement containing all non-NULL data in the data supplied, or NULL
+	 *						if the build resulted in an empty element.
+	 */
+	private function build ($data, $container) {
 		// "Short circuit" if the data is scalar
 		if (is_scalar($data)) {
 			return $this->buildScalar($data, $container);
@@ -76,44 +87,45 @@ class XmlGenerator {
 		if (is_string($container)) {
 			$container = $this->createElement($container);
 		}
-		else if ($container === null || !($container instanceof DOMNode)) {
-			$container = $this->createElement('data');
-		}
 		
 		$dataIsObject = is_object($data);
 		
-		// Let a data object control what is exposed if it wants to
+		// Extract data from a proxy explicitly
 		if ($dataIsObject && ($data instanceof Proxy)) {
 			$data = $data->extract();
-			// Re-evaluate type of data, extract returns array or object
+			// Re-evaluate type of data, extract() can return an array
 			$dataIsObject = is_object($data);
 		}
 		
 		$this->buildComplex($data, $container, $dataIsObject);
 		
-		// We only return non-empty elements
 		return ($container->hasChildNodes() ? $container : null);
 	}
-	
+
+	/**
+	 * Builds arrays and objects, known as complex data types.
+	 */
 	private function buildComplex ($data, $container, $isObject = false) {
 		// Iterate through the array values or object properties
 		foreach ($data as $key => $value) {
 			// Skip NULL values and empty strings
 			if ($value === null || $value === '') continue;
 			
-			// Use array index or object property name as element name unless it's a numeric value
+			// Use property name as key when building an object
 			if ($isObject) {
 				$elementName = $this->normalizeElementName($key);
 			}
-			// Use class name as element name for objects
+			// Use class name as element name for objects in an array
 			else if (is_object($value)) {
 				$elementName = get_class($value);
 			}
+			// Try to use array key if it is a string (not numeric)
 			else if (is_string($key)) {
 				$elementName = $key;
 			}
+			// Data is an array and we've found no fitting element name, use default
 			else {
-				$elementName = null;
+				$elementName = 'array';
 			}
 
 			$element = $this->build($value, $elementName);
@@ -169,27 +181,32 @@ class XmlGenerator {
 	}
 	
 	/**
-	 * Wrapper for creating a DOM element and catching any exceptions.
+	 * Wrapper for creating a DOM element and catching any exceptions for invalid characters in
+	 * element name etc.
+	 *
+	 * @throws Exception	Invalid characters in element name will throw exception.
+	 * @param string $name	The name of the element to create.
+	 * @return DOMElement	The created DOMElement.
 	 */
 	private function createElement ($name) {
-		$element = null;
-		
 		try {
 			$element = $this->document->createElement($name);
 		}
 		catch (DOMException $e) {
-			if ($e->code == DOM_INVALID_CHARACTER_ERR) {
-				throw new Exception("Invalid character in XML element name: $name");
-			}
+			throw new Exception("Invalid character in XML element name: $name");
 		}
 		
 		return $element;
 	}
 	
+	/**
+	 * Extremely simple normalization for now. Since we support :: in request parameter names for
+	 * indicating object hierarchy we need to replace this with a valid XML element name character.
+	 *
+	 * @param string $name	Name to normalize.
+	 * @return string	The normalized name.
+	 */
 	private function normalizeElementName ($name) {
-		/**
-		 * We support :: in request parameter names indicating hierarchy of values.
-		 */
 		return str_replace('::', '-', $name);
 	}
 

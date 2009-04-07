@@ -1,6 +1,6 @@
 <?php
 /**
- * Provides the implementation of a result set using XSLT to render the data.
+ * Provides the implementation of a result using XSLT to render the data.
  * 
  * @version		$Id$
  */	
@@ -18,9 +18,6 @@ class XsltResult extends AbstractResult {
 		parent::__construct($action);
 
 		$this->xslTemplate = VIEW_PATH . "$xslTemplate.xsl";
-		if (!file_exists($this->xslTemplate)) {
-			throw new Exception("XSL template ({$this->xslTemplate}) does not exist.");
-		}
 	}
 	
 	/**
@@ -36,7 +33,7 @@ class XsltResult extends AbstractResult {
 		
 		$transformer = new XslTransformer($this->xslTemplate);
 
-		// Add config params to XSLT as parameters
+		// Add scalar config params to XSLT as parameters
 		foreach (Config::get() as $key => $value) {
 			if (!is_array($value)) {
 				$transformer->addParameter($key, $value);

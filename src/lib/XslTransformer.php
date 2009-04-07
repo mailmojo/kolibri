@@ -13,6 +13,10 @@ class XslTransformer {
 	 * @return XslTransformer
 	 */
 	public function __construct ($xsl) {
+		if (!file_exists($xsl)) {
+			throw new Exception("XSL template does not exist: $xsl");
+		}
+		
 		$this->stylesheet = new DOMDocument();
 		$this->stylesheet->load($xsl);
 		$this->processor = new XSLTProcessor();
@@ -35,7 +39,7 @@ class XslTransformer {
 	 */
 	public function process ($dom) {
 		if (!$dom instanceof DOMDocument) {
-			throw new Exception('XslTransformer expects DOMDocument to process.');
+			throw new Exception('Data to transform is not a DOMDocument.');
 		}
 		
 		$this->processor->importStyleSheet($this->stylesheet);
