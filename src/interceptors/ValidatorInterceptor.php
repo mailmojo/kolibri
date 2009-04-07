@@ -2,11 +2,11 @@
 /**
  * Interceptor handling model validation and its corresponding error messages.
  * 
- * The target action must be <code>ValidationAware</code> and return a fully populated model which
- * we are to validate. This model is usually populated by a <code>ModelInterceptor</code>. If any
- * validation errors occures, error messages are put into the action so the view can display them.
- * 
- * @version		$Id: ValidatorInterceptor.php 1526 2008-07-14 16:07:05Z anders $
+ * The target action must be <code>ValidationAware</code> and have a fully populated model
+ * which we are to validate in a public <code>$model</code> property. This model is usually
+ * populated by a <code>ModelInterceptor</code>. If validation fails, the
+ * <code>validationFailed()</code> method on the action is called for the action to determine
+ * the result and set any custom error message.
  */
 class ValidatorInterceptor extends AbstractInterceptor {
 	/**
@@ -14,55 +14,41 @@ class ValidatorInterceptor extends AbstractInterceptor {
 	 */
 	public function intercept ($dispatcher) {
 		$action = $dispatcher->getAction();
+		$valid = true;
 		
-		if ($action instanceof ValidationAware && $dispatcher->getRequest()->getMethod() == 'POST'
-				&& isset($action->model) && is_object($action->model)) {
-			/*
-			 * Action is ValidationAware, request is POSTed and a model is prepared. Create a validator,
-			 * do the validation and put errors into the action.
-			 */
-			/*$conf = Config::getValidationConfig();
-			$validator = new Validator($conf['classes'], $conf['messages']);
-			$action->errors = $validator->validate($action->model);*/
-			$action->model->validate();
+		// Validate model if action wants validation and a validateable model is prepared
+		if ($action instanceof ValidationAware
+				&& $action->model instanceof ValidateableModelProxy) {
+			if (!$action->model->validate()) {
+				$valid = false;
+				// Retrieve the result we want to return
+				$result = $action->validationFailed();
+			}
 		}
 
-		$result = $dispatcher->invoke();
+		if ($valid) {
+			$result = $dispatcher->invoke();
+		}
+		else {
+			/*
+			 * If validationFailed() didn't set a specific message, we give a general
+			 * error message.
+			 */
+			if ($action instanceof MessageAware && $action->msg->isEmpty()) {
+				$action->msg->setMessage('Submitted form contains errors. Please correct
+						any errors listed in the form and try again.', false);
+			}
 
-		if ($action instanceof ValidationAware && $action instanceof MessageAware) {
-			// Report errors if action has any errors registered
-			if (!empty($action->model->errors)) {
-				$action->msg->setMessage('Submitted form contains errors. Please correct any errors listed
-							in the form and try again.', false);
+			/*
+			 * If the result is a redirect and sessions are enabled, store model for
+			 * retrieval after redirect.
+			 */
+			if ($result instanceof RedirectResult && $action instanceof SessionAware) {
+				$action->session['model'] = $action->model;
 			}
 		}
 
 		return $result;
-//		TODO: Do we want to fix this? Errors in session is pretty useless as is below, as the invalid data
-//			isn't present after a redirect. If we do want this, submitted model data should probably be stored.
-//		$this->checkErrorsInSession($action);
-//		return $result;
 	}
-
-	/**
-	 * Checks to see if the session has error messages stored while the action do not. If so, the
-	 * errors are injected into the action and removed from the session.
-	 */
-//	private function checkErrorsInSession ($dispatcher) {
-//		$session = $dispatcher->getRequest()->getSession();
-//
-//		if ($session !== null) {
-//			$action = $dispatcher->getAction();
-//
-//			if ($action instanceof ValidationAware && empty($action->errors)) {
-//				$errorsInSession = $session->get('errors');
-//
-//				if (!empty($errorsInSession)) {
-//					$action->errors = $errorsInSession;
-//					$session->remove('errors');
-//				}
-//			}
-//		}
-//	}
 }
 ?>

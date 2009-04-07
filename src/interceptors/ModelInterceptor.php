@@ -1,12 +1,18 @@
 <?php
 /**
- * Interceptor which prepares a model with data from the request parameters.
+ * Interceptor which prepares a model with data from the request parameters, or extracts a model
+ * which was temporarily stored in the session. The target action must be
+ * <code>ModelAware</code> to subscribe to any of this interceptor's functionality.
  *
- * The target action must be <code>ModelAware</code> and return the names of the model (with any
- * inner models) we should prepare. After instantiating the specified model we loop through request
- * parameters and populate the model before it is set back into the action.
- * 
- * @version		$Id: ModelInterceptor.php 1554 2008-09-25 15:35:37Z anders $
+ * This interceptor works in two "modes": It either extracts a model already present in the
+ * session if the request is a GET request, or it instantiates and populates a model with data
+ * from the request parameters. For the latter to work, the target action must provide the name
+ * of the model (along with any inner models) in a public <code>$model</code> property, or
+ * return a pre-instantiated model from a <code>getModel()</code> method. We then loop through
+ * request parameters and populate the model.
+ *
+ * Regardless of the "mode", the model found/prepared is put into the <code>$model</code>
+ * property of the action.
  */
 class ModelInterceptor extends AbstractInterceptor {
 	private $modelNames = array();
@@ -18,30 +24,49 @@ class ModelInterceptor extends AbstractInterceptor {
 		$action = $dispatcher->getAction();
 
 		if ($action instanceof ModelAware) {
-			if (method_exists($action, 'getModel')) {
-				// The action supplies an already instantiated model
-				$model = $action->getModel();
-			}
-			else {
-				// The action supplies model class name(s), so we must instantiate
-				$model = $this->instantiateModel($action->model);
-			}
+			/*
+			 * If model is availible from session we use that, but only if this is a GET
+			 * request. The reason for this is that any new POST-submit of a form should
+			 * take precedence, to stop any invalid model in the session to override the newly
+			 * POSTed.
+			 */
+			if ($dispatcher->getRequest()->getMethod() == 'GET'
+					&& $action instanceof SessionAware && isset($action->session['model'])) {
+				if (property_exists($action, 'model')) {
+					$action->model = $action->session['model'];
+				}
 
-			foreach ($dispatcher->getRequest() as $param => $value) {
-				if (strpos($param, '::') !== false) {
-					// Parameter is a property path to inner models. Explode the path and populate.
-					$exploded = explode('::', $param);
-					$this->populate($model, $exploded, $value);
+				// Model has been extracted, remove it from session
+				$action->session->remove('model');
+			}
+			// Otherwise prepare a model from request parameters
+			else {
+				if (method_exists($action, 'getModel')) {
+					// The action supplies an already instantiated model
+					$model = $action->getModel();
 				}
 				else {
-					if (property_exists($model, $param) || $param == 'original') {
-						$model->$param = $this->convertType($value);
+					// The action supplies model class name(s), so we must instantiate
+					$model = $this->instantiateModel($action->model);
+				}
+
+				foreach ($dispatcher->getRequest() as $param => $value) {
+					if (strpos($param, '::') !== false) {
+						// Parameter is a property path to inner models. Explode the path and populate.
+						$exploded = explode('::', $param);
+						$this->populate($model, $exploded, $value);
+					}
+					else {
+						if (property_exists($model, $param) || $param == 'original') {
+							$model->$param = $this->convertType($value);
+						}
 					}
 				}
+
+				// Prepare a ModelProxy for the model
+				$action->model = Models::getModel($model);
 			}
 
-			// Prepare a ModelProxy for the model
-			$action->model = Models::getModel($model);
 		}
 
 		return $dispatcher->invoke();
