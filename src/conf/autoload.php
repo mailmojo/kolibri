@@ -33,6 +33,7 @@ $autoloadClasses = array(
 		'DataProvided'           => '/models/DataProvided.php',
 		'ModelProxy'             => '/models/ModelProxy.php',
 		'Models'                 => '/models/Models.php',
+		'Proxy'                  => '/models/Proxy.php',
 		'Validateable'           => '/models/Validateable.php',
 		'ValidateableModelProxy' => '/models/ValidateableModelProxy.php',
 		'AbstractResult'         => '/results/AbstractResult.php',

@@ -97,7 +97,7 @@ class ErrorHandler {
 {$exception}
 
 Request:
-{$this->getVars($this->request->expose())}
+{$this->getVars($this->request)}
 
 Action Variables:
 {$this->getVars($this->action)}

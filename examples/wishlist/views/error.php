@@ -51,7 +51,7 @@ HTML;
 				</pre>
 				<h2>Request</h2>
 				<pre>
-<?php echo print_vars($request->expose()) ?>
+<?php echo print_vars($request) ?>
 				</pre>
 				<h2>Action Variables</h2>
 				<pre>
