@@ -1,23 +1,32 @@
 <?php
 /**
- * The entryway to the Kolibri framework. Essential core files are included, config initialized and
- * processing of the request is started.
+ * The HTTP gateway to the Kolibri framework. Essential core files are included, config initialized and
+ * processing of the HTTP request is started.
+ * The constants defined here, ROOT and APP_PATH, can be changed from their default values by
+ * using SetEnv in the .htaccess file or in an appropriate directive in httpd.conf.
  */
 
 /*
- * Defines the root directory of the framework. By default this in a directory named kolibri within the 
- * document root, but this can be changed at will.
+ * Defines the root directory of the Kolibri framework. By default this is a directory named
+ * 'kolibri' within the document root.
  */
-define('ROOT', dirname(__FILE__));
+if ($rootDir = getenv('KOLIBRI_ROOT')) {
+	define('ROOT', $rootDir);
+}
+else {
+	define('ROOT', dirname(__FILE__) . '/kolibri');
+}
 
 /*
- * Application specific directories. Modify to your setup if different from the default.
+ * Defines the root directory for the application's actions, models, views etc. By default this is
+ * the same directory as this kolibri.php file.
  */
-//define('APP_PATH', dirname(__FILE__));
-define('APP_PATH', '/Users/frode/Sites/wishlist');
-define('ACTIONS_PATH', APP_PATH . '/actions');
-define('MODELS_PATH', APP_PATH . '/models');
-define('VIEW_PATH', APP_PATH . '/views');
+if ($appDir = getenv('KOLIBRI_APP')) {
+	define('APP_PATH', $appDir);
+}
+else {
+	define('APP_PATH', dirname(__FILE__));
+}
 
 // Require essential files. Others are loaded as needed.
 require(ROOT . '/core/Config.php');

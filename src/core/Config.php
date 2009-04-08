@@ -4,7 +4,7 @@ require(ROOT . '/core/Autoloader.php');
 /**
  * This class represents the configuration of the Kolibri framework.
  *
- * All configuration variables are easily availible through the static methods of this class.
+ * All configuration variables are easily available through the static methods of this class.
  */
 class Config {
 	/**
@@ -59,6 +59,21 @@ class Config {
 		$this->interceptorMappings = $interceptorMappings;
 		$this->validation          = array('classes' => $validators, 'messages' => $validationMessages);
 
+		/*
+		 * Define constants for application specific directories with default values
+		 * if not defined in the application config.
+		 */
+		if (!defined('ACTIONS_PATH')) {
+			define('ACTIONS_PATH', APP_PATH . '/actions');
+		}
+		if (!defined('MODELS_PATH')) {
+			define('MODELS_PATH', APP_PATH . '/models');
+		}
+		if (!defined('VIEW_PATH')) {
+			define('VIEW_PATH', APP_PATH . '/views');
+		}
+		
+		// Initialize the Kolibri class autoloader with class mappings from conf/autoload.php
 		Autoloader::initialize($autoloadClasses);
 		
 		/*
