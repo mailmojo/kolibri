@@ -6,7 +6,7 @@
  */
 $interceptors = array(
 		'message'     => 'MessageInterceptor',
-		'validation'  => 'ValidatorInterceptor',
+		'validation'  => 'ValidationInterceptor',
 		'error'       => array(
 				'ErrorInterceptor' => array('result' => 'PhpResult', 'view' => '/error')
 		),

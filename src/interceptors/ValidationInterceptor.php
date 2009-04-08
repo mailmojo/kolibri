@@ -8,7 +8,7 @@
  * <code>validationFailed()</code> method on the action is called for the action to determine
  * the result and set any custom error message.
  */
-class ValidatorInterceptor extends AbstractInterceptor {
+class ValidationInterceptor extends AbstractInterceptor {
 	/**
 	 * Invokes and processes the interceptor.
 	 */
