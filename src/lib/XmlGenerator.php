@@ -1,11 +1,31 @@
 <?php
 /**
- * Generates XML from PHP data structures. Everything is automatically wrapped in a root element, named
- * 'result' by default. After creating an instance of the XmlGenerator, you add all the data you want
- * through the append() method. Everything from objects to arrays and pure scalar values are supported.
- * The only PHP data type that is not supported, and probably won't be, is the abstract 'resource' data type.
+ * Generates XML from PHP data structures. Everything is automatically wrapped in a root
+ * element, named 'result' by default. After creating an instance of the XmlGenerator, you
+ * add all the data you want through the append() method. Everything from objects to arrays
+ * and pure scalar values are supported. The only PHP data type that is not supported, and
+ * probably won't be, is the abstract 'resource' data type.
+ *
+ * Data structures are built by the following logic (recursively):
+ *   - Objects: Each property value will be put in an element with the name of the property,
+ *     regardless of the value's data type.
+ *   - Arrays:
+ *       - Each object value will be put in an element with the name of the object's class,
+ *         regardless of the array key.
+ *       - Values with a non-numeric key (associative in PHP) will be put in an element with
+ *         the key as name.
+ *       - Values with numeric indices will be put in an element named 'data' if the value
+ *         is an array, otherwise in a 'value' element (scalar values).
+ *   - Scalar values are usually converted to text nodes. The exception is for strings
+ *     beginning with '<' and ending with '>' in which case it is assumed to be an XML string
+ *     and placed in a CDATA section to protect <, > and & from being escaped.
+ *   - NULL values, empty strings, empty arrays and objects with no values in their properties
+ *     are not included in the generated XML.
+ *
  * Finally you call getXml() to get a string representation of the XML version of your data, or getDom()
  * to get the DOMDocument directly (useful for utilizing the result with other XML technologies like XSLT).
+ *
+ * @see XmlGenerator::append() for more details.
  */
 class XmlGenerator {
 	// Default element names for scalar and complex data
@@ -32,29 +52,35 @@ class XmlGenerator {
 	}
 	
 	/**
-	 * @return DOMDocument The DOMDocument for the generated XML structure.
+	 * Returns the DOMDocument for the generated XML structure.
+	 *
+	 * @return DOMDocument
 	 */
 	public function getDom () {
 		return $this->document;
 	}
 	
 	/**
-	 * @return string The generated XML as a string.
+	 * Returns the generated XML as a string.
+	 *
+	 * @return string
 	 */
 	public function getXml () {
 		return $this->document->saveXML();
 	}
 	
 	/**
-	 * Adds more data to the XML document. If you specify a container name, the data will be wrapped
-	 * in an XML element of that name, otherwise the data will be appended directly to the root
-	 * element. Complex data - arrays and objects - will have all their values/properties built separately
-	 * and appended directly. Scalar data will be wrapped in a <value> element.
+	 * Adds more data to the XML document. If you specify a container name, the data will be
+	 * wrapped in an XML element of that name, otherwise the data will be appended directly
+	 * to the root element. Complex data - arrays and objects - will have all their
+	 * values/properties built separately, wrapped in appropriate elements and appended
+	 * directly. Scalar data will be appended directly as a text node.
 	 *
 	 * @param mixed $data       The data to add. Any PHP data type can be added except for the abstract
 	 *                          resource data type.
-	 * @param string $container An optional name of the containing element for the data value. Defaults
-	 *                          to a name inferred from the data type.
+	 * @param string $container An optional name of the containing element for the data.
+	 *                          Default is no containing element, data is appended
+	 *                          directly to the document root.
 	 */
 	public function append ($data, $container = null) {
 		// If no container element name is specified, append directly to the root element
@@ -109,24 +135,41 @@ class XmlGenerator {
 	}
 
 	/**
-	 * Builds arrays and objects, known as complex data types.
+	 * Builds arrays and objects, known as complex data types. This method will not create
+	 * a containing element for the object properties or array values. Instead the containing
+	 * DOMNode will be supplied as a parameter from build(). See the class description for
+	 * a more detailed description of how objects and arrays are converted into DOMNodes.
+	 *
+	 * @param mixed $data        Object or array to build into a DOMNode.
+	 * @param DOMNode $container Containing element for object properties and array values.
+	 * @return DOMNode The containing element if any childnodes where created,
+	 *                 <code>NULL</code> otherwise.
 	 */
 	private function buildComplex ($data, $container) {
+		static $emptyArray = array();
+		
 		$dataIsObject = is_object($data);
 		
 		// Iterate through the array values or object properties
 		foreach ($data as $key => $value) {
-			// Skip NULL values and empty strings
-			if ($value === null || $value === '') continue;
+			// Skip NULL values, empty strings and empty arrays
+			if ($value === null || $value === '' || $value === $emptyArray) continue;
 
 			$elementName = null;
 			
-			// Use property name as key when building an object, and array key when value is not an object
+			/*
+			 * When $data is an object we always use the property names as element names,
+			 * since property names are always safe element names, and strongly
+			 * associated with their values.
+			 * Otherwise $data is an array, and associative array keys are not necessarily safe.
+			 * Thus we prefer $value's class name if it's an object, otherwise we use the
+			 * associative key over the default element names ('data' and 'value') -- but
+			 * an exception will be thrown for keys not fit as element names.
+			 */
 			if ($dataIsObject
 					|| (is_string($key) && !is_object($value))) {
 				$elementName = $key;
 			}
-			// Use class name as element name for objects in an array
 			else if (is_object($value)) {
 				$elementName = get_class($value);
 			}
@@ -149,8 +192,12 @@ class XmlGenerator {
 	 * @return DOMElement  An XML element representing the variable for appending in a DOM tree.
 	 */
 	private function buildScalar ($value, $container) {
-		// Wrap values likely to be XML in a CDATA section to prevent escaping of <, > and &
-		if (is_string($value) && $this->isXml($value)) {
+		/*
+		 * Wrap values likely to be XML (meaning they start with < and end with >) in a CDATA
+		 * section to prevent escaping of <, > and &.
+		 */
+		if (is_string($value)
+				&& substr($value, 0, 1) == '<' && substr($value, -1) == '>') {
 			$child = $this->document->createCDATASection($value);
 		}
 		else {
@@ -190,17 +237,6 @@ class XmlGenerator {
 		}
 		
 		return $element;
-	}
-	
-	/**
-	 * Checks if a string is likely to be XML data. It simply checks to see if the string starts
-	 * and ends with < and > respectively.
-	 *
-	 * @param string $value The string value to check.
-	 * @return bool	<code>TRUE</code> if the string is XML data, <code>FALSE</code> if not.
-	 */
-	private function isXml ($value) {
-		return (substr($value, 0, 1) == '<' && substr($value, -1) == '>');
 	}
 }
 ?>
