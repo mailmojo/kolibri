@@ -46,6 +46,7 @@ $autoloadClasses = array(
 		'SmartyResult'           => '/results/SmartyResult.php',
 		'TextResult'             => '/results/TextResult.php',
 		'XsltResult'             => '/results/XsltResult.php',
+		'Utils'                  => '/core/Utils.php',
 		'Validator'              => '/validation/Validator.php',
 		'ValidationHelper'       => '/validation/ValidationHelper.php');
 ?>

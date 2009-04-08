@@ -1,4 +1,6 @@
 <?php
+require(ROOT . '/core/Autoloader.php');
+
 /**
  * This class represents the configuration of the Kolibri framework.
  *
@@ -46,6 +48,7 @@ class Config {
 	 * interaction with this class goes through static methods.
 	 */
 	private function __construct () {
+		require(ROOT . '/conf/autoload.php');
 		require(ROOT . '/conf/interceptors.php');
 		require(ROOT . '/conf/validation.php');
 		require(APP_PATH . '/conf/config.php');
@@ -56,6 +59,8 @@ class Config {
 		$this->interceptorMappings = $interceptorMappings;
 		$this->validation          = array('classes' => $validators, 'messages' => $validationMessages);
 
+		Autoloader::initialize($autoloadClasses);
+		
 		/*
 		 * Loop through interceptor stacks. For each stack, add the stack to the regular interceptor
 		 * list with the correct interceptors attached. This makes it possible to use a stack just as

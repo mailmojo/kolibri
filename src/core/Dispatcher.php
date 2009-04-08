@@ -1,4 +1,6 @@
 <?php
+require(ROOT . '/core/InterceptorFactory.php');
+
 /**
  * This class dispatches the request to the interceptors and action target of the request.
  * 

@@ -1,4 +1,7 @@
 <?php
+require(ROOT . '/core/Request.php');
+require(ROOT . '/core/Dispatcher.php');
+
 /**
  * This is the main class of the TURBO framework, which is responsible for initializing the request
  * processing flow.

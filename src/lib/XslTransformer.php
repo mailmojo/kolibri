@@ -1,6 +1,4 @@
 <?php
-import('strings', 'util');
-
 /**
  * This class provides an abstraction of the XSL transformation capabilities in PHP 5.
  */
