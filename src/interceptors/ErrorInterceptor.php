@@ -2,11 +2,9 @@
 require(ROOT . '/lib/ErrorHandler.php');
 
 /**
- * Interceptor which prepares and sets an error handler. Any errors triggered or exceptions thrown after
- * this interceptor is invoked will be handled by the error handler defined by this interceptor, unless
- * otherwised catched (for exceptions).
- *
- * TODO: Pluggable error handler. Specify class name by config option?
+ * Interceptor which prepares and sets an error handler. Any errors triggered or exceptions
+ * thrown after this interceptor is invoked will be handled by the error handler defined by
+ * this interceptor, unless otherwised catched (for exceptions).
  */
 class ErrorInterceptor extends AbstractInterceptor {
 	/**

@@ -30,10 +30,10 @@ class Session implements ArrayAccess, IteratorAggregate {
 	}
 
 	/**
-	 * Retrieves a specific session parameter, or NULL if not set.
-	 *
-	 * @param mixed $key	Session parameter to retrieve.
-	 * @return mixed		The session parameter, or NULL if not set.
+	 * Returns the value of the session data with the specified key.
+	 * 
+	 * @param string $key	Key to the value to return.
+	 * @return string		Value of the data, or <code>null</code> if not found.
 	 */
 	public function offsetGet ($key) {
 		return (isset($_SESSION[$key]) ? $_SESSION[$key] : null);
@@ -71,10 +71,10 @@ class Session implements ArrayAccess, IteratorAggregate {
 	 * Returns the value of the session data with the specified key.
 	 * 
 	 * @param string $key	Key to the value to return.
-	 * @return string		Value of the data, or <code>FALSE</code> if not found.
+	 * @return string		Value of the data, or <code>null</code> if not found.
 	 */
 	public function get ($key) {
-		return (isset($_SESSION[$key]) ? $_SESSION[$key] : false);
+		return (isset($_SESSION[$key]) ? $_SESSION[$key] : null);
 	}
 	
 	/**

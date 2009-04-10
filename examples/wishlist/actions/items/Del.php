@@ -7,8 +7,8 @@ class Del extends ActionSupport {
 	/**
 	 * TODO: Should really change to POST via form (and thus doPost()).
 	 */
-	public function doGet () {
-		$itemName = $this->request['id']; // We could also do $this->request->get('id'), whatever you prefer
+	public function doGet ($request) {
+		$itemName = $request['id']; // We could also do $this->request->get('id'), whatever you prefer
 		$item = Models::init('Item');
 
 		// Tries to load the item (notice that this calls load() in the ItemDao class)

@@ -22,6 +22,12 @@ class Request implements ArrayAccess {
 	 * @var string
 	 */
 	public $method;
+
+	/**
+	 * HTTP session if enabled by a <code>SessionInterceptor</code>.
+	 * @var Session
+	 */
+	public $session;
 	
 	/**
 	 * Creates an instance of this class. GET and POST parameters are merged. If any parameter keys
@@ -95,15 +101,6 @@ class Request implements ArrayAccess {
 	}
 
 	/**
-	 * Returns all request parameters.
-	 *
-	 * @return array	Request parameters as key-value pairs.
-	 */
-	public function getAll () {
-		return $this->params;
-	}
-
-	/**
 	 * Returns the URI of the request.
 	 *
 	 * @return string	Request URI.
@@ -119,6 +116,15 @@ class Request implements ArrayAccess {
 	 */
 	public function getMethod () {
 		return $this->method;
+	}
+	
+	/**
+	 * Checks whether this request has a session associated with it.
+	 *
+	 * @return bool <code>true</code> if session exists, <code>false</code> if not.
+	 */
+	public function hasSession () {
+		return isset($this->session);
 	}
 	
 	/**

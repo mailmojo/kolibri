@@ -1,9 +1,7 @@
 <?php
 /**
- * Interceptor which puts session and/or request parameters into corresponding properties of the target
- * action if <code>ParametersAware</code>.
- * 
- * @version		$Id: ParametersInterceptor.php 1518 2008-06-30 23:43:38Z anders $
+ * Interceptor which puts session and/or request parameters into corresponding properties of
+ * the target action if <code>ParametersAware</code>.
  */
 class ParametersInterceptor extends AbstractInterceptor {
 	/**
@@ -13,11 +11,13 @@ class ParametersInterceptor extends AbstractInterceptor {
 		$action = $dispatcher->getAction();
 
 		if ($action instanceof ParametersAware) {
-			if ($action instanceof SessionAware) {
-				$this->populate($action, $action->session);
-			}
+			$request = $dispatcher->getRequest();
 
-			$this->populate($action, $dispatcher->getRequest()->getAll());
+			$this->populate($action, $request->params);
+
+			if ($request->hasSession()) {
+				$this->populate($action, $request->session);
+			}
 		}
 
 		return $dispatcher->invoke();

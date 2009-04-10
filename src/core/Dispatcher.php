@@ -39,7 +39,7 @@ class Dispatcher {
 	 * 
 	 * The interceptors mapped to the target action is created and pushed to the dispatcher stack.
 	 *
-	 * @param Request $request				Request object for the interceptors.
+	 * @param Request $request				Request object.
 	 * @param ActionMapping $actionMapping	Mapping to the action to invoke.	
 	 * @return Dispatcher
 	 */
@@ -81,7 +81,7 @@ class Dispatcher {
 		}
 
 		$class = $actionMapping->getActionClass();
-		$this->action = new $class($request);
+		$this->action = new $class();
 		$this->stack = InterceptorFactory::createInterceptors($stack);
 	}
 	
@@ -108,7 +108,7 @@ class Dispatcher {
 				return $result;
 			}
 		}
-		return $this->action->{$this->actionMethod}();
+		return $this->action->{$this->actionMethod}($this->getRequest());
 	}
 
 	public function getRequest () {

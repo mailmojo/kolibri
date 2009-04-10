@@ -4,9 +4,9 @@
  */
 class Have extends ActionSupport {
 	// TODO: We should really POST instead...
-	public function doGet () {
+	public function doGet ($request) {
 		$item = Models::init('Item');
-		if ($item->objects->load($this->request['id'])) {
+		if ($item->objects->load($request['id'])) {
 			// Set received date (could of course be done in SQL, but just to show date library in use)
 			$df = DateFormat::getInstance(DateFormat::ISO_8601_DATE);
 			$item->received = $df->format(new Date());
