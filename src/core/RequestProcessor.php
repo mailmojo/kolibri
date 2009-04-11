@@ -37,8 +37,6 @@ class RequestProcessor {
 	 * Process the request.
 	 */
 	public function process () {
-		//echo "Processing request [uri: $this->uri] => [action: $this->action_path]...\n";
-
 		// Map the request to an action
 		$mapping = $this->mapper->map();
 		if ($mapping === null) {

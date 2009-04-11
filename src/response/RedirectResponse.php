@@ -2,7 +2,7 @@
 /**
  * Provides the implementation of a result set which when rendered sends a redirect to the client.
  */	
-class RedirectResult extends AbstractResult {
+class RedirectResponse extends Response {
 	private $location;
 
 	/**
@@ -19,7 +19,7 @@ class RedirectResult extends AbstractResult {
 	 * Sends the redirect to the client.
 	 */
 	public function render ($request) {
-		$action = $this->getAction();
+		$action = $this->data;
 
 		/*
 		 * If a session is active and the action has a message, store them temporarily in the

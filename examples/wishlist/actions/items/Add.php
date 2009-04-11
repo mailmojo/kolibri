@@ -27,14 +27,14 @@ class Add extends ActionSupport implements ModelAware, ValidationAware {
 			if ($this->model->save()) {
 				$this->msg->setMessage('Item successfully added.');
 			}
-			return new RedirectResult($this, '/');
+			return new RedirectResponse($this, '/');
 		}
 
 		/*
 		 * Validation errors found, so return the page again to display errors with the form populated. If we 
 		 * redirect, error messages and form data will be lost.
 		 */
-		return new XsltResult($this, '/index');
+		return new XsltResponse($this, '/index');
 	}
 }
 ?>

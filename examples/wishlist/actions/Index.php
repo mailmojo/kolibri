@@ -14,12 +14,12 @@ class Index extends ActionSupport {
 		$dbSetup = new DatabaseSetup();
 		if (!$dbSetup->isDone()) {
 			// Database tables is not set up, so redirect to setup page
-			return new RedirectResult($this, '/setup');
+			return new RedirectResponse($this, '/setup');
 		}
 
 		$items = Models::init('Item');
 		$this->items = $items->objects->findAll(); // Notice that this calls findAll() in the ItemDao class
-		return new XsltResult($this, '/index'); // Path relative to views directory, extension omitted
+		return new XsltResponse($this, '/index'); // Path relative to views directory, extension omitted
 	}
 }
 ?>
