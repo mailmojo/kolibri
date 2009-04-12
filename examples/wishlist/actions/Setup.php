@@ -11,7 +11,7 @@ class Setup extends ActionSupport {
 
 		if ($dbSetup->isDone()) {
 			$this->msg->setMessage('Database is already prepared.');
-			return new RedirectResponse($this, '/');
+			return new RedirectResponse('/');
 		}
 
 		return new XsltResponse($this, '/setup');
@@ -24,7 +24,7 @@ class Setup extends ActionSupport {
 		$dbSetup = new DatabaseSetup();
 		$dbSetup->setup();
 		$this->msg->setMessage('Database prepared. All ready for wishes.');
-		return new RedirectResponse($this, '/');
+		return new RedirectResponse('/');
 	}
 }
 ?>

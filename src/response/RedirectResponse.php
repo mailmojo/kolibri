@@ -1,17 +1,19 @@
 <?php
 /**
- * Provides the implementation of a result set which when rendered sends a redirect to the client.
- */	
+ * Provides the implementation of a response which sends a redirect to the client when rendered.
+ * It defaults to a 303 (See Other) status code, but this can be overridden.
+ */
 class RedirectResponse extends Response {
 	private $location;
 
 	/**
-	 * Constructor.
+	 * Initializze this response.
 	 * 
 	 * @param string $location Location of the redirect relative to the web root.
+	 * @param int $status      HTTP status code. Defaults to 303 See Other.
 	 */
-	public function __construct ($action, $location) {
-		parent::__construct($action);
+	public function __construct ($location, $status = 303) {
+		parent::__construct(null, $status);
 		$this->location = Config::get('webRoot') . $location;
 	}
 
@@ -19,26 +21,7 @@ class RedirectResponse extends Response {
 	 * Sends the redirect to the client.
 	 */
 	public function render ($request) {
-		$action = $this->data;
-
-		/*
-		 * If a session is active and the action has a message, store them temporarily in the
-		 * session through the redirect.
-		 */
-		if ($action instanceof SessionAware) {
-
-			if ($action instanceof MessageAware && !$action->msg->isEmpty()) {
-				$action->session['message'] = $action->msg;
-			}
-			// See ValidationInterceptor for reason this is commented away
-			//if ($action instanceof ValidationAware && !empty($action->errors)) {
-			//	$session->put('errors', $action->errors);
-			//}
-
-			$action->session->write();
-		}
-
-		header("Location: $this->location");
+		$this->setHeader('Location', $this->location);
 		exit;
 	}
 }

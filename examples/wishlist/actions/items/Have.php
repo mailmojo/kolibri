@@ -19,7 +19,7 @@ class Have extends ActionSupport {
 			$this->msg->setMessage("Item with name {$this->request['id']} not found.", false);
 		}
 
-		return new RedirectResponse($this, '/');
+		return new RedirectResponse('/');
 	}
 }
 ?>

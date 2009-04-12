@@ -3,9 +3,7 @@ require(ROOT . '/lib/Message.php');
 
 /**
  * Interceptor which provides the target action, if <code>MessageAware</code>, with a facility
- * to give the user status messages. This interceptor should be defined early in the
- * interceptor stack, but after the <code>SessionInterceptor</code>, as many interceptors
- * make use of messages if availible.
+ * to give the user status messages.
  */
 class MessageInterceptor extends AbstractInterceptor {
 	/**
@@ -13,26 +11,31 @@ class MessageInterceptor extends AbstractInterceptor {
 	 */
 	public function intercept ($dispatcher) {
 		$action = $dispatcher->getAction();
+		$request = $dispatcher->getRequest();
 
 		if ($action instanceof MessageAware) {
-			$action->msg = Message::getInstance();
+			// If a previous message is set in the session, put it into the action
+			if ($request->hasSession() && isset($request->session['message'])) {
+				$action->msg = $request->session['message'];
+				$request->session->remove('message');
+			}
+			// Otherwise create a new instance
+			else {
+				$action->msg = Message::getInstance();
+			}
 		}
 
 		$result = $dispatcher->invoke();
 
 		/*
-		 * Checks to see if the session has a message stored while the action do not. If so,
-		 * the message is injected into the action message and removed from the session.
+		 * If we are about to redirect and a message has been set, save it temporarily in the
+		 * session (if present) so it can be retrieved in the new location.
 		 */
-		if ($dispatcher->getRequest()->hasSession()
+		if ($result instanceof RedirectResult
 				&& $action instanceof MessageAware
-				&& $action->msg->isEmpty()) {
-			$request = $dispatcher->getRequest();
-			$msgFromSession = $request->session->get('message');
-			if ($msgFromSession !== null) {
-				$action->msg = $msgFromSession;
-				$request->session->remove('message');
-			}
+				&& !$action->msg->isEmpty()
+				&& $request->hasSession()) {
+			$request->session['message'] = $action->msg;
 		}
 
 		return $result;

@@ -22,7 +22,7 @@ class Del extends ActionSupport {
 			$this->msg->setMessage("Item with name $itemName not found.", false);
 		}
 
-		return new RedirectResponse($this, '/'); // Redirect back to front page, notice messages are retained
+		return new RedirectResponse('/'); // Redirect back to front page, notice messages are retained
 	}
 }
 ?>

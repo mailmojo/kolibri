@@ -203,21 +203,14 @@ abstract class DatabaseConnection {
 			return str_replace($search, $replace, $query);
 		}
 
-		if (is_scalar($params)) {
-			$params = array($params); // Wrap scalar value in array as code below expects an array
-		}
-		else if ($params === null) {
-			/*
-			 * Params is null, which normally means user didn't supply any. Change into empty
-			 * array so we can catch cases where replacement char is present but not param.
-			 */
-			$params = array();
-		}
-
-		$escapedParams = array_map(array($this, 'escapeValue'), $params);
+		/*
+		 * We cast $params to an array in order to wrap any scalar or null value passed as a
+		 * single parameter in an array.
+		 */
+		$escapedParams = array_map(array($this, 'escapeValue'), (array) $params);
 
 		/*
-		 * When params is a simple array, we expect ?-placeholders. Convert them to %s in order
+		 * With $params as a simple array, we expect ?-placeholders. Convert them to %s in order
 		 * to simply use vsprintf().
 		 */
 		$transformedQuery = str_replace('?', '%s', $query);
@@ -225,7 +218,7 @@ abstract class DatabaseConnection {
 
 		if (!$preparedQuery) {
 			$numReplacements = substr_count($transformedQuery, '%s');
-			$numParams = count($params);
+			$numParams = count($escapedParams);
 			throw new SqlException("Number of replacement chars in query ($numReplacements) "
 				. "and parameter values ($numParams) does not match.", $query);
 		}
