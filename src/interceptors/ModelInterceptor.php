@@ -55,9 +55,12 @@ class ModelInterceptor extends AbstractInterceptor {
 				}
 				
 				if ($model !== null) {
-					foreach ($dispatcher->getRequest() as $param => $value) {
+					foreach ($dispatcher->getRequest()->params as $param => $value) {
 						if (strpos($param, '::') !== false) {
-							// Parameter is a property path to inner models. Explode the path and populate.
+							/*
+							 * Parameter is a property path to inner models. Explode the path
+							 * and populate.
+							 */
 							$exploded = explode('::', $param);
 							$this->populate($model, $exploded, $value);
 						}

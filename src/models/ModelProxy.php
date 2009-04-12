@@ -24,7 +24,7 @@ require(ROOT . '/models/DataAccessProxy.php');
  * This class also implements <code>ArrayAccess</code> and <code>IteratorAggregates</code> which
  * makes it possible to treat the collection of models in the proxy as if it was a regular array.
  */
-class ModelProxy implements ArrayAccess, IteratorAggregate, Countable {
+class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 	/**
 	 * Provides access to the data access object of the model.
 	 * @var DataAccessProxy
@@ -297,22 +297,6 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable {
 			$this->models = $models;
 			$this->current = null;
 		}
-	}
-
-	/**
-	 * Exposes the models.
-	 *
-	 * If only a single model is held, it is returned as a single object. Else the model array itself is
-	 * returned in its existing key-value structure.
-	 *
-	 * @return mixed One or more models for exposure.
-	 */
-	public function expose () {
-		if (isset($this->current)) {
-			return $this->current;
-		}
-
-		return $this->models;
 	}
 
 	/**

@@ -17,7 +17,7 @@ class ParametersInterceptor extends AbstractInterceptor {
 				$this->populate($action, $action->session);
 			}
 
-			$this->populate($action, $dispatcher->getRequest());
+			$this->populate($action, $dispatcher->getRequest()->getAll());
 		}
 
 		return $dispatcher->invoke();
