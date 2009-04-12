@@ -1,20 +1,19 @@
 <?php
 /**
- * This interface is used by actions that want a model validated prior to its execution, and any errors to
- * be displayed to the user. The interface does not define any methods, but the action should expose the
- * following properties:
+ * This interface is used by actions that want a model automatically validated prior to its
+ * execution. The <code>ValidationInterceptor</code> must be configured for the action for this
+ * to have any effect, as must <code>ModelInterceptor</code> for there to be any model to
+ * validate.
  *
- * <ul>
- * <li><code>public $model</code> containing the model to validate.</li>
- * <li><code>public $errors</code> where any validation errors are stored.</li>
- * </ul>
- *
- * The <code>ValidatorInterceptor</code> must be configured for the action for this to have any effect.
- * Usually the <code>PrepareModelInterceptor</code> should be configured as well, to auto-populate the
- * <code>$model</code> property.
- *
- * @version		$Id: ValidationAware.php 1495 2008-05-16 18:00:13Z anders $
+ * If validation fails the <code>validationFailed()</code> method on the action is called for
+ * it to return the response it deems appropriate, which is usually a RedirectResult back to
+ * the form. If however validation succeeds, normal request processing proceeds.
  */
 interface ValidationAware {
+	/**
+	 * Called when validation failed. A Result object must be returned, which will be rendered
+	 * instead of continuing request processing.
+	 */
+	public function validationFailed () {}
 }
 ?>
