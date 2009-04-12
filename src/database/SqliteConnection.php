@@ -30,7 +30,7 @@ class SqliteConnection extends DatabaseConnection {
 	 * @param array $conf Database configuration.
 	 */
 	public function __construct ($conf) {
-		$this->database   = $conf['database'];
+		$this->database   = $conf['name'];
 		$this->autocommit = isset($conf['autocommit']) ? $conf['autocommit'] : false;
 	}
 

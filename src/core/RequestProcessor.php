@@ -68,20 +68,30 @@ class RequestProcessor {
 	 */
 	private function findActionMapper () {
 		$actionMappers = Config::getActionMappers();
-
-		foreach ($actionMappers as $uri => $mapper) { // Loop through URIs/mappers
+		
+		if ($actionMappers === null) {
+			return 'DefaultActionMapper';
+		}
+		
+		$requestUri = $this->request->getUri();
+		foreach ($actionMappers as $uri => $mapper) {
 			// Replace star wildcard mappings with regex "any characters" mapping, to use regex
 			$uri = '#^' . str_replace('*', '.*?', $uri) . '$#';
 
-			if (preg_match($uri, $this->request->getUri()) == 1) {
+			if (preg_match($uri, $requestUri) == 1) {
 				if ($mapper != 'DefaultActionMapper') {
-					// Mapper is application-specific, include it (DefaultActionMapper is autoloadable)
-					require(APP_PATH . "/mappers/$mapper.php");
+					// Mapper is application-specific, rely on include_path for loading it
+					require("$mapper.php");
 				}
-
+				else {
+					require('/core/DefaultActionMapper.php');
+				}
+				
 				return $mapper;
 			}
 		}
+		
+		throw new Exception("No ActionMapper configured for requested URI: $requestUri");
 	}
 
 	/**

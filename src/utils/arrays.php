@@ -20,6 +20,38 @@ function object_array_map ($methodName, $array) {
 }
 
 /**
+ * A blend of PHP's built-in array_merge() and array_merge_recursive(). This function merges
+ * recursively for array values, but like array_merge() it will overwrite a value in the
+ * first array with the corresponding value from the second array for equal keys.
+ *
+ * @param array $first  Base array in which values will be merged into.
+ * @param array $second Array to merge values from.
+ * @param array …       Optional extra arrays to merge values from.
+ * @return array Array with merged values from all input arrays.
+ */
+function array_merge_recursive_distinct (array $first, array $second/*, array …*/) {
+	$merged = $first;
+
+	if (is_array($second)) {
+		foreach ($second as $key => $value) {
+			if (is_array($value) && isset($merged[$key]) && is_array($merged[$key])) {
+				$merged[$key] = array_merge_recursive_distinct($merged[$key], $value);
+			}
+			else {
+				$merged[$key] = $value;
+			}
+		}
+	}
+
+	if (func_num_args() > 2) {
+		$params = array_merge(array($merged), array_slice(func_get_args(), 2));
+		return call_user_func_array('array_merge_recursive_distinct', $params);
+	}
+	
+	return $merged;
+}
+
+/**
  * BETA
  * Converts a multi-dimensional array into a one-dimensional array. Items which are objects are
  * converted to arrays consisting of their properties and considered just another dimension. An 

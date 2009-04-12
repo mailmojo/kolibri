@@ -30,16 +30,16 @@ class MailService extends PHPMailer {
 
 		$this->IsSmtp();
 		$this->PluginDir = ROOT . '/lib/phpmailer/';
-		$this->Host      = $conf['smtp_host'];
-		$this->SMTPAuth  = $conf['smtp_auth'];
+		$this->Host      = $conf['smtp.host'];
+		$this->SMTPAuth  = $conf['smtp.auth'];
 
-		if (isset($conf['smtp_port'])) {
-			$this->Port = $conf['smtp_port'];
+		if (isset($conf['smtp.port'])) {
+			$this->Port = $conf['smtp.port'];
 		}
 
 		if ($this->SMTPAuth) {
-			$this->Username = $conf['smtp_username'];
-			$this->Password = $conf['smtp_password'];
+			$this->Username = $conf['smtp.username'];
+			$this->Password = $conf['smtp.password'];
 		}
 
 		$this->CharSet  = 'utf-8';
@@ -82,8 +82,8 @@ class MailService extends PHPMailer {
 	public function send ($mail) {
 		if (empty($mail->from)) {
 			$conf = Config::get('mail');
-			$mail->from     = $conf['from'];
-			$mail->fromName = $conf['from_name'];
+			$mail->from     = $conf['from.email'];
+			$mail->fromName = $conf['from.name'];
 		}
 
 		$this->From     = $mail->from;

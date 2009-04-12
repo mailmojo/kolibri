@@ -27,9 +27,10 @@ final class DatabaseFactory {
 	 * @throws Exception      If the implementation the configuration specifies is not found.
 	 * @return DatabaseConnection
 	 */
-	public static function getConnection ($confName = 'db') {
-		if (!isset(self::$connections[$confName])) {
-			$dbConf = Config::get($confName);
+	public static function getConnection ($confName = null) {
+		$confKey = ($confName === null ? 'database' : "database.{$confName}");
+		if (!isset(self::$connections[$confKey])) {
+			$dbConf = Config::get($confKey);
 
 			if (!empty($dbConf)) {
 				$dbConnClass = $dbConf['type'] . 'Connection';
@@ -46,14 +47,14 @@ final class DatabaseFactory {
 					}
 				}
 
-				self::$connections[$confName] = new $dbConnClass($dbConf);
+				self::$connections[$confKey] = new $dbConnClass($dbConf);
 			}
 			else {
-				throw new DatabaseException('No database configured');
+				throw new DatabaseException("No database configuration section named '$confKey'");
 			}
 		}
 
-		return self::$connections[$confName];
+		return self::$connections[$confKey];
 	}
 }
 ?>

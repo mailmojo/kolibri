@@ -39,7 +39,7 @@ class PostgreSqlConnection extends DatabaseConnection {
 		$this->host       = isset($conf['host']) ? $conf['host'] : null;
 		$this->username   = $conf['username'];
 		$this->password   = $conf['password'];
-		$this->database   = $conf['database'];
+		$this->database   = $conf['name'];
 		$this->autocommit = isset($conf['autocommit']) ? $conf['autocommit'] : false;
 	}
 

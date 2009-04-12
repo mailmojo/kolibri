@@ -56,6 +56,8 @@ class Dispatcher {
 			$uriMatch = '#^' . str_replace('*', '.*?', $uri) . '$#';
 
 			if (preg_match($uriMatch, $request->getUri()) == 1) {
+				$interceptors = preg_split('/,\s*/', $interceptors);
+				
 				/*
 				 * Current URI matches the mapping. We loop through each interceptor mapped, find their
 				 * actual classes and sets or unsets their use depending on the current URI mapping.

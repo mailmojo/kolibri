@@ -1,10 +1,10 @@
 <?php
 /*
- * Defines classes that may be loaded upon its first use by __autoload(). They are not automatically
- * loaded unless they are actually used. See <code>UtilsInterceptor</code> for automatic loading of utils.
+ * Defines classes that may be loaded upon its first use by Autoloader::load(). They are not
+ * automatically loaded unless they are actually used. See <code>UtilsInterceptor</code> for
+ * automatic loading of utils.
  */
 $autoloadClasses = array(
-		'DefaultActionMapper'    => '/core/DefaultActionMapper.php',
 		'ActionSupport'          => '/actions/ActionSupport.php',
 		'AuthAware'              => '/actions/AuthAware.php',
 		'MessageAware'           => '/actions/MessageAware.php',

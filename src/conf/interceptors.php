@@ -7,23 +7,32 @@
 $interceptors = array(
 		'message'     => 'MessageInterceptor',
 		'validation'  => 'ValidationInterceptor',
-		'error'       => array(
-				'ErrorInterceptor' => array('result' => 'PhpResult', 'view' => '/error')
-		),
+		'error'       => array('ErrorInterceptor' => array(
+			'result' => 'PhpResult',
+			'view' => '/error'
+		)),
 		'session'     => 'SessionInterceptor',
-		'auth'        => array(
-				'AuthInterceptor'  => array(
-						'userModel' => 'AuthUser',
-						'userKey'   => 'user',
-						'loginUri'  => '/login'
-				)
-		),
+		'auth'        => 'AuthInterceptor',
 		'model'       => 'ModelInterceptor',
 		'params'      => 'ParametersInterceptor',
 		'upload'      => 'UploadInterceptor',
 		'utils'       => 'UtilsInterceptor',
 		'transaction' => 'TransactionInterceptor'
 );
+
+/*
+$interceptorConfigs = array(
+	'ErrorInterceptor' => array(
+		'result' => 'PhpResult',
+		'view' => '/error'
+	),
+	'AuthInterceptor'  => array(
+			'userModel' => 'AuthUser',
+			'userKey'   => 'user',
+			'loginUri'  => '/login'
+	)	
+);
+*/
 
 /*
  * Defines stacks of interceptors. This makes it easy to group together several interceptors, which just as
