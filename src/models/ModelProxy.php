@@ -10,7 +10,7 @@ require(ROOT . '/models/DataAccessProxy.php');
  * access the model's data access object through a consistent interface. This also adds additional
  * functionality such as automatic handling of <code>save()</code>-ing og <code>delete()</code>-ing
  * regardless of how many instances of the model is contained in this proxy.
- 
+ *
  * For instance, you can <code>$model->objects->findAll()</code>, do some processing on one or more
  * of the instances before calling <code>$model->save()</code> to persist the changes to the
  * underlying storage.
@@ -96,8 +96,8 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable {
 			
 			foreach ($model as $property) {
 				if ($property instanceof ModelProxy) {
-					// Propagate primary key into inner model and recurse save
-					$this->propagateKey($innerModel, $model);
+					// Propagate primary key of $model into $property and recurse save
+					$this->propagateKey($property, $model);
 					$property->save();
 				}
 			}
