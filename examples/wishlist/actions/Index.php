@@ -1,14 +1,16 @@
 <?php
 /**
- * Action for the display of the front page. Retrieves the wishlist items and returns the XSL page as the
- * result.
+ * Action for the display of the front page. Retrieves the wishlist items and returns the XSL
+ * page as the result. We also implement ModelAware so any validation errors when adding items
+ * are displayed.
  */
-class Index extends ActionSupport {
+class Index extends ActionSupport implements ModelAware {
+	public $model;
 	public $items;
 
 	/**
-	 * As the name implies, doGet() is called for GET request. It must return an instance of a Result class, in 
-	 * this case a XsltResult for a XSL transformation.
+	 * As the name implies, doGet() is called for GET request. It must return an instance of a
+	 * Result class, in this case a XsltResult for a XSL transformation.
 	 */
 	public function doGet () {
 		$dbSetup = new DatabaseSetup();
@@ -18,8 +20,10 @@ class Index extends ActionSupport {
 		}
 
 		$items = Models::init('Item');
-		$this->items = $items->objects->findAll(); // Notice that this calls findAll() in the ItemDao class
-		return new XsltResult($this, '/index'); // Path relative to views directory, extension omitted
+		// Notice that this calls findAll() in the ItemDao class
+		$this->items = $items->objects->findAll(); 
+		// Path is relative to views directory, extension omitted
+		return new XsltResult($this, '/index'); 
 	}
 }
 ?>

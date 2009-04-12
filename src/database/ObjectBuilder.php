@@ -258,13 +258,15 @@ class ObjectBuilder {
 	 *                       <code>FALSE</code> if not.
 	 */
 	private function populateObject ($object, $row) {
+		if ($object instanceof Container) return false;
+		
 		$objClass = get_class($object);
 
 		/*
 		 * If we have not yet cached the primary key of this object type, we do so here.
 		 * Container need not be evaluated as it isn't an actual model.
 		 */
-		if (!isset($this->primaryKeys[$objClass]) && !$object instanceof Container) {
+		if (!isset($this->primaryKeys[$objClass])) {
 			$reflection = new ReflectionObject($object);
 			if (!$reflection->hasConstant('PK')) {
 				throw new Exception("No primary key defined for model of type $objClass. "

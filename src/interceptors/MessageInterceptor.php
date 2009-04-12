@@ -2,11 +2,8 @@
 require(ROOT . '/lib/Message.php');
 
 /**
- * Interceptor which provides the target action, if <code>MessageAware</code>, with a facility to give
- * the user status messages. This interceptor should be defined early in the interceptor stack,
- * ideally after the <code>SessionInterceptor</code> and before the <code>ErrorInterceptor</code>.
- * 
- * @version		$Id: MessageInterceptor.php 1518 2008-06-30 23:43:38Z anders $
+ * Interceptor which provides the target action, if <code>MessageAware</code>, with a facility
+ * to give the user status messages.
  */
 class MessageInterceptor extends AbstractInterceptor {
 	/**
@@ -16,25 +13,31 @@ class MessageInterceptor extends AbstractInterceptor {
 		$action = $dispatcher->getAction();
 
 		if ($action instanceof MessageAware) {
-			$action->msg = Message::getInstance();
+			// If a previous message is set in the session, put it into the action
+			if ($action instanceof SessionAware && isset($action->session['message'])) {
+				$action->msg = $action->session['message'];
+				$action->session->remove('message');
+			}
+			// Otherwise create a new instance
+			else {
+				$action->msg = Message::getInstance();
+			}
 		}
 
 		$result = $dispatcher->invoke();
-		$this->checkMessageInSession($action);
-		return $result;
-	}
 
-	/**
-	 * Checks to see if the session has a message stored while the action do not. If so, the
-	 * message is injected into the action message and removed from the session.
-	 */
-	private function checkMessageInSession ($action) {
-		if ($action instanceof SessionAware && $action instanceof MessageAware && $action->msg->isEmpty()) {
-			if (isset($action->session['message'])) {
-				$action->msg = $action->session['message'];
-				unset($action->session['message']);
-			}
+		/*
+		 * If we are about to redirect and a message has been set, save it temporarily in the
+		 * session so it can be retrieved in the new location.
+		 */
+		if ($result instanceof RedirectResult
+				&& $action instanceof SessionAware
+				&& $action instanceof MessageAware
+				&& !$action->msg->isEmpty()) {
+			$action->session['message'] = $action->msg;
 		}
+
+		return $result;
 	}
 }
 ?>

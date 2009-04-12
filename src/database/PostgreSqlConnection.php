@@ -7,14 +7,15 @@ require(ROOT . '/database/PostgreSqlResultSet.php');
  * implementation relies on a configuration element in conf/config.php like the following:
  *
  *   'db' => array(
- *     'type'     => 'PostgreSql',
- *     'host'     => '', // Hostname of database server, omit to use local Unix domain socket
- *     'username' => '', // PostgreSQL username
- *     'password' => '', // Password of PostgreSQL user
- *     'database' => ''  // Name of database to connect to
+ *     'type'       => 'PostgreSql',
+ *     'host'       => '', // Hostname of database server, omit to use local Unix domain socket
+ *     'username'   => '', // PostgreSQL username
+ *     'password'   => '', // Password of PostgreSQL user
+ *     'database'   => '', // Name of database to connect to
+ *     'autocommit' => false // Optional: Defaults to false if not specified
  *   );
  *
- * A configuration element 'db' as shown specified the default database. Others can be configured
+ * A configuration element 'db' as shown specifies the default database. Others can be configured
  * with any other name, for instance 'slave1', in which a connection can be obtained by calling:
  * $conn = DatabaseFactory::getConnection('slave1');
  *
@@ -26,6 +27,7 @@ class PostgreSqlConnection extends DatabaseConnection {
 	private $username;
 	private $password;
 	private $database;
+	private $autocommit;
 
 	/**
 	 * Creates a new instance of this class. No connection to the database will be established before
@@ -38,6 +40,7 @@ class PostgreSqlConnection extends DatabaseConnection {
 		$this->username   = $conf['username'];
 		$this->password   = $conf['password'];
 		$this->database   = $conf['database'];
+		$this->autocommit = isset($conf['autocommit']) ? $conf['autocommit'] : false;
 	}
 
 	/**
@@ -53,7 +56,8 @@ class PostgreSqlConnection extends DatabaseConnection {
 	}
 
 	/**
-	 * Begins a new transaction.
+	 * Begins a new transaction. If autocommit is enabled, this turns autocommit off for the
+	 * rest of this request.
 	 *
 	 * @return bool <code>TRUE</code> if a transaction was started, <code>FALSE</code> if not (i.e.
 	 *              the connection is in an error state).
@@ -61,6 +65,9 @@ class PostgreSqlConnection extends DatabaseConnection {
 	public function begin () {
 		if (!$this->connection) {
 			$this->connect();
+		}
+		if ($this->autocommit) {
+			$this->autocommit = false;
 		}
 
 		if (pg_transaction_status($this->connection) !== PGSQL_TRANSACTION_INERROR) {
@@ -72,7 +79,7 @@ class PostgreSqlConnection extends DatabaseConnection {
 
 	/**
 	 * Commits or rolls back the active transaction, if any. The transaction is rolled back if in an
-	 * invalid state, else it is commited.
+	 * invalid state, else it is commited. If autocommit mode is enabled, it returns at once.
 	 *
 	 * @return bool <code>TRUE</code> if transaction was commited, <code>FALSE</code> if rolled back.
 	 */
@@ -81,7 +88,8 @@ class PostgreSqlConnection extends DatabaseConnection {
 
 		if (!$status
 				|| $status === PGSQL_TRANSACTION_UNKNOWN
-				|| $status === PGSQL_TRANSACTION_IDLE)
+				|| $status === PGSQL_TRANSACTION_IDLE
+				|| $this->autocommit)
 			return;
 
 		if ($status === PGSQL_TRANSACTION_INERROR) {
@@ -97,7 +105,9 @@ class PostgreSqlConnection extends DatabaseConnection {
 	 * Rolls back the active transaction.
 	 */
 	public function rollback () {
-		pg_query($this->connection, 'ROLLBACK');
+		if (!$this->autocommit) {
+			pg_query($this->connection, 'ROLLBACK');
+		}
 	}
 
 	/**
@@ -118,14 +128,16 @@ class PostgreSqlConnection extends DatabaseConnection {
 			$this->connect();
 		}
 
-		$status = pg_transaction_status($this->connection);
-		if ($status === PGSQL_TRANSACTION_UNKNOWN || $status === PGSQL_TRANSACTION_INERROR) {
-			// We can't query when the connection status is bad
-			return false;
-		}
-		else if ($status === PGSQL_TRANSACTION_IDLE) {
-			// No transaction yet started, let's begin one
-			$this->begin();
+		if (!$this->autocommit) {
+			$status = pg_transaction_status($this->connection);
+			if ($status === PGSQL_TRANSACTION_UNKNOWN || $status === PGSQL_TRANSACTION_INERROR) {
+				// We can't query when the connection status is bad
+				return false;
+			}
+			else if ($status === PGSQL_TRANSACTION_IDLE) {
+				// No transaction yet started, let's begin one
+				$this->begin();
+			}
 		}
 
 		// Interpolate any parameters into query

@@ -15,9 +15,8 @@
 	<xsl:include href="message.xsl" />
 	<xsl:include href="forms.xsl" />
 	
-	<!-- Makes the XML structures for model and errors available for the custom element templates -->
+	<!-- Makes the XML structures for model available for the custom element templates -->
 	<xsl:variable name="model" select="/result/model" />
-	<xsl:variable name="errors" select="/result/errors" />
 		
 	<func:function name="k:number">
 		<xsl:param name="value" />
@@ -174,7 +173,7 @@
 			<xsl:value-of disable-output-escaping="yes" select="$errors/*[name() = $attribute]" />
 		</xsl:variable-->
 
-		<func:result select="$errors/*[name() = $attribute]" />
+		<func:result select="$model/errors/*[name() = $attribute]" />
 	</func:function>
 	
 	<!--
@@ -194,7 +193,7 @@
 			</xsl:choose>
 		</xsl:param>
 			
-		<func:result select="boolean($errors/*[name() = $attribute])" />
+		<func:result select="boolean($model/errors/*[name() = $attribute])" />
 	</func:function>
 	
 	<!--

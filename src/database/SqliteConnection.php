@@ -31,6 +31,7 @@ class SqliteConnection extends DatabaseConnection {
 	 */
 	public function __construct ($conf) {
 		$this->database   = $conf['database'];
+		$this->autocommit = isset($conf['autocommit']) ? $conf['autocommit'] : false;
 	}
 
 	/**
@@ -56,6 +57,9 @@ class SqliteConnection extends DatabaseConnection {
 		if (!$this->inTransaction) {
 			if (!$this->connection) {
 				$this->connect();
+			}
+			if (!$this->autocommit) {
+				$this->autocommit = false;
 			}
 
 			$this->inTransaction = $this->connection->queryExec('BEGIN');
@@ -119,12 +123,14 @@ class SqliteConnection extends DatabaseConnection {
 			$this->resultSet = null;
 		}
 
-		if ($this->transactionInError) {
-			return false;
-		}
-		else if (!$this->inTransaction) {
-			// No transaction yet started, let's begin one
-			$this->begin();
+		if (!$this->autocommit) {
+			if ($this->transactionInError) {
+				return false;
+			}
+			else if (!$this->inTransaction) {
+				// No transaction yet started, let's begin one
+				$this->begin();
+			}
 		}
 
 		// Interpolate any parameters into query
