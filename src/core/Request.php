@@ -30,13 +30,13 @@ class Request implements ArrayAccess {
 	public $session;
 	
 	/**
-	 * Creates an instance of this class. GET and POST parameters are merged. If any parameter keys
-	 * conflicts, POST parameters override GET parameters.
+	 * Creates an instance of this class. GET and POST parameters are merged. If any parameter
+	 * keys conflicts, POST parameters override GET parameters.
 	 * 
-	 * @param array $get_params		GET parameters for this request.
-	 * @param array $post_params	POST parameters for this request.
-	 * @param string $uri			URI of this request. Leave empty to use the actual request URI
-	 * 								from the client.
+	 * @param array $getParams  GET parameters for this request.
+	 * @param array $postParams POST parameters for this request.
+	 * @param string $uri       URI of this request. Leave empty to use the actual request URI
+	 *                          from the client.
 	 */
 	public function __construct ($getParams, $postParams, $uri = null) {
 		$this->params = array_merge($getParams, $postParams);
@@ -90,14 +90,28 @@ class Request implements ArrayAccess {
 	}
 
 	/**
-	 * Returns the value of the parameter with the specified key, or <code>NULL</code> if the parameter is
-	 * not found.
+	 * Returns the value of the parameter with the specified key, or <code>null</code> if the
+	 * parameter is not found.
 	 * 
 	 * @param string $key	Key to the parameter to return.
-	 * @return string		Value of the parameter, or <code>NULL</code>.
+	 * @return string		Value of the parameter, or <code>null</code>.
 	 */
 	public function get ($key) {
 		return (isset($this->params[$key]) ? $this->params[$key] : null);
+	}
+
+	/**
+	 * Returns the value of the specified request header, or <code>null</code> if the header
+	 * isn't set set.
+	 *
+	 * Note that this is currently only a wrapper for $_SERVER, and thus contains more than
+	 * only the request headers.
+	 *
+	 * @param string $header Header to look for.
+	 * @param string         Value of header, or <code>null</code>.
+	 */
+	public function getHeader ($header) {
+		return (isset($_SERVER[$header]) ? $_SERVER[$header] : null);
 	}
 
 	/**
@@ -128,8 +142,8 @@ class Request implements ArrayAccess {
 	}
 	
 	/**
-	 * Puts all the supplied parameters into the parameters for this request. Should only be used internally
-	 * by the framework.
+	 * Puts all the supplied parameters into the parameters for this request. Should only be
+	 * used internally by the framework.
 	 *
 	 * @param array $params		An associated array with parameters.
 	 */

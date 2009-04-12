@@ -34,10 +34,25 @@ class Response {
 	 *
 	 * @param string $header The header to set.
 	 * @param string $value  The value to set.
-	 * @param int $status    New HTTP status code to set.
+	 * @param int $status    New HTTP status code to set, if any.
 	 */
 	public final function setHeader ($header, $value, $status = null) {
 		header("$header: $value", true, $status);
+	}
+
+	/**
+	 * Checks whether the supplied header has been sent or is about to be sent to the client.
+	 *
+	 * @param string $header The header to check for.
+	 * @return bool
+	 */
+	public final function isHeaderSet ($header) {
+		foreach (headers_list() as $headerSent) {
+			if (substr($headerSent, 0, strpos($headerSent, ':')) == $header) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

@@ -9,9 +9,9 @@ class XsltResponse extends Response {
 	/**
 	 * Initialize this response.
 	 *
-	 * @param mixed $data        Data to transform.
-	 * @param string $stylesheet XSL stylesheet to use, relative to VIEW_PATH, omitting the
-	 *                           extension.
+	 * @param mixed $data         Data to transform.
+	 * @param string $stylesheet  XSL stylesheet to use, relative to VIEW_PATH, omitting the
+	 *                            extension.
 	 * @param int $status         HTTP status code. Defaults to 200 OK.
 	 * @param string $contentType Content type of the response. Defaults to text/html.
 	 */
@@ -22,7 +22,7 @@ class XsltResponse extends Response {
 	}
 
 	/**
-	 * Generates XML of the data, and performs XSLT transformation on it before outputting.
+	 * Generates XML of the data, and performs XSL transformation on it before outputting.
 	 */
 	public function render ($request) {
 		$xmlGenerator = new XmlGenerator();
