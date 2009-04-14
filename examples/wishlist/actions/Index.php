@@ -4,7 +4,7 @@
  * page as the result. We also implement ModelAware so any validation errors when adding items
  * are displayed.
  */
-class Index extends ActionSupport implements ModelAware {
+class Index implements MessageAware, ModelAware {
 	public $model;
 	public $items;
 
@@ -19,9 +19,8 @@ class Index extends ActionSupport implements ModelAware {
 			return new RedirectResponse('/setup');
 		}
 
-		$items = Models::init('Item');
 		// Notice that this calls findAll() in the ItemDao class
-		$this->items = $items->objects->findAll();
+		$this->items = Models::init('Item')->objects->findAll();
 		// Path is relative to views directory, extension omitted
 		return new XsltResponse($this, '/index');
 	}

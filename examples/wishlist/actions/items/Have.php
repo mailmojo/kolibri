@@ -2,7 +2,7 @@
 /**
  * Action for marking items as received.
  */
-class Have extends ActionSupport {
+class Have implements MessageAware {
 	// TODO: We should really POST instead...
 	public function doGet ($request) {
 		$item = Models::init('Item');

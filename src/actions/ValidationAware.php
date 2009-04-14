@@ -6,14 +6,14 @@
  * validate.
  *
  * If validation fails the <code>validationFailed()</code> method on the action is called for
- * it to return the response it deems appropriate, which is usually a RedirectResult back to
+ * it to return the response it deems appropriate, which is usually a SeeOtherResponse back to
  * the form. If however validation succeeds, normal request processing proceeds.
  */
 interface ValidationAware {
 	/**
-	 * Called when validation failed. A Result object must be returned, which will be rendered
-	 * instead of continuing request processing.
+	 * Called when validation failed. A <code>Response</code> object must be returned, which
+	 * will be rendered instead of continuing request processing.
 	 */
-	public function validationFailed () {}
+	public function validationFailed ();
 }
 ?>

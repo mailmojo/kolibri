@@ -6,7 +6,7 @@
  * which we are to validate in a public <code>$model</code> property. This model is usually
  * populated by a <code>ModelInterceptor</code>. If validation fails, the
  * <code>validationFailed()</code> method on the action is called for the action to determine
- * the result and set any custom error message.
+ * the response and set any custom error message.
  */
 class ValidationInterceptor extends AbstractInterceptor {
 	/**
@@ -40,11 +40,11 @@ class ValidationInterceptor extends AbstractInterceptor {
 			}
 
 			/*
-			 * If the result is a redirect and sessions are enabled, store model for
+			 * If the response is a redirect and sessions are enabled, store model for
 			 * retrieval after redirect.
 			 */
-			if ($result instanceof RedirectResult && $action instanceof SessionAware) {
-				$action->session['model'] = $action->model;
+			if ($result instanceof RedirectResponse && $dispatcher->getRequest()->hasSession()) {
+				$dispatcher->getRequest()->session['model'] = $action->model;
 			}
 		}
 

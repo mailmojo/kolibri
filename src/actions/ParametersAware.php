@@ -1,8 +1,8 @@
 <?php
 /**
- * This interface is used by actions that want properties populated from session and/or request parameters.
- * 
- * @version		$Id: ParametersAware.php 1518 2008-06-30 23:43:38Z anders $
+ * This interface is used by actions that want properties populated from session and/or request
+ * parameters. The <code>ParametersInterceptor</code> must also be configured for the action
+ * for this to have any effect.
  */
 interface ParametersAware {}
 ?>

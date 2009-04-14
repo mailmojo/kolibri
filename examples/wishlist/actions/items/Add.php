@@ -3,7 +3,7 @@
  * Action for adding new item. We implement ModelAware to have the model object populated by
  * request data, and ValidationAware to have it automatically validated.
  */
-class Add extends ActionSupport implements ModelAware, ValidationAware {
+class Add implements MessageAware, ModelAware, ValidationAware {
 	/**
 	 * Defines the model class to instantiate, which will be populated with request data and
 	 * put back into this property.
@@ -17,7 +17,7 @@ class Add extends ActionSupport implements ModelAware, ValidationAware {
 	public function doPost () {
 		$this->model->save();
 		$this->msg->setMessage('Item successfully added.');
-		return new RedirectResult('/');
+		return new RedirectResponse('/');
 	}
 
 	/**
@@ -29,7 +29,7 @@ class Add extends ActionSupport implements ModelAware, ValidationAware {
 	public function validationFailed () {
 		// We could set a custom error message here if we want to override the default. I.e.:
 		// $this->msg->setMessage('The item could not be added to the wishlist', false);
-		return new RedirectResult('/');
+		return new RedirectResponse('/');
 	}
 }
 ?>

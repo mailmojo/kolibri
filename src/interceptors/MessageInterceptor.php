@@ -3,7 +3,8 @@ require(ROOT . '/lib/Message.php');
 
 /**
  * Interceptor which provides the target action, if <code>MessageAware</code>, with a facility
- * to give the user status messages.
+ * to give the user status messages. The facility is set in an implicit <code>$msg</code>
+ * property on the action.
  */
 class MessageInterceptor extends AbstractInterceptor {
 	/**
@@ -31,7 +32,7 @@ class MessageInterceptor extends AbstractInterceptor {
 		 * If we are about to redirect and a message has been set, save it temporarily in the
 		 * session (if present) so it can be retrieved in the new location.
 		 */
-		if ($result instanceof RedirectResult
+		if ($result instanceof RedirectResponse
 				&& $action instanceof MessageAware
 				&& !$action->msg->isEmpty()
 				&& $request->hasSession()) {

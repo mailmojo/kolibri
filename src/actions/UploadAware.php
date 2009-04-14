@@ -1,9 +1,8 @@
 <?php
 /**
- * This interface is used by actions that want uploaded files direct put into action instance variables.
- * The <code>UploadInterceptor</code> must be invoked for this to have any effect.
- * 
- * @version		$Id: UploadAware.php 1538 2008-08-03 22:10:45Z anders $
+ * This interface is used by actions that want uploaded files direct put into action instance
+ * variables, or a property on an exposed model. The <code>UploadInterceptor</code> must be
+ * configured for this to have any effect.
  */
 interface UploadAware {}
 ?>

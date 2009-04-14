@@ -2,7 +2,7 @@
 /**
  * Action for the setup page -- prepares database tables.
  */
-class Setup extends ActionSupport {
+class Setup implements MessageAware {
 	/**
 	 * Displays the setup page if database is not already prepared.
 	 */

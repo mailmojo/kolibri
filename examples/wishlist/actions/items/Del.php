@@ -3,12 +3,13 @@
  * Action for deleting items. As the item to delete is specified by the last URI element (which does not have 
  * a matching action file), it is implicitly put in the "id" request parameter.
  */
-class Del extends ActionSupport {
+class Del implements MessageAware {
 	/**
 	 * TODO: Should really change to POST via form (and thus doPost()).
 	 */
 	public function doGet ($request) {
-		$itemName = $request['id']; // We could also do $this->request->get('id'), whatever you prefer
+		// We could also do $this->request->get('id'), whatever you prefer
+		$itemName = $request['id'];
 		$item = Models::init('Item');
 
 		// Tries to load the item (notice that this calls load() in the ItemDao class)
@@ -22,7 +23,8 @@ class Del extends ActionSupport {
 			$this->msg->setMessage("Item with name $itemName not found.", false);
 		}
 
-		return new RedirectResponse('/'); // Redirect back to front page, notice messages are retained
+		// Redirect back to front page, notice messages are retained
+		return new RedirectResponse('/');
 	}
 }
 ?>
