@@ -23,9 +23,10 @@
 		<div id="error">
 <?php
 /*
- * If logging is disable, we display detailed error.
+ * If logging is disabled we display detailed error, but only if we're not in production mode.
  */
-if (!isset($config['logging']['enabled']) || !$config['logging']['enabled']):
+if (Config::getMode() != Config::PRODUCTION
+		&& !isset($config['logging']['level']) || $config['logging']['level'] == false):
 ?>
 				<h1><?php echo get_class($exception) ?></h1>
 				<p id="message">

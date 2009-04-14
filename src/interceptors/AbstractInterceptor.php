@@ -11,9 +11,9 @@ abstract class AbstractInterceptor implements Interceptor {
 	 * the instance. This requires that the concrete interceptor implementation defines the properties as
 	 * protected or public.
 	 *
-	 * @param array $conf	Configuration for this interceptor, if any.
+	 * @param array $conf Configuration for this interceptor, if any.
 	 */
-	public function __construct ($conf = null) {
+	public function __construct (array $conf = null) {
 		if ($conf !== null) {
 			foreach ($conf as $param => $value) {
 				$this->$param = $value;

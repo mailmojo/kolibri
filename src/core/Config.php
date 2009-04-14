@@ -1,5 +1,11 @@
 <?php
 require(ROOT . '/core/Autoloader.php');
+require(ROOT . '/core/ConfigHelper.php');
+
+// Define constants for application specific directories
+define('ACTIONS_PATH', APP_PATH . '/actions');
+define('MODELS_PATH', APP_PATH . '/models');
+define('VIEW_PATH', APP_PATH . '/views');
 
 /**
  * This class represents the configuration of the Kolibri framework.
@@ -9,18 +15,23 @@ require(ROOT . '/core/Autoloader.php');
 class Config {
 	/**
 	 * Constants for the different environment modes an application can be in.
-	 * Development is default, but can be changed through KOLIBRI_ENV environment
-	 * variable or by calling Config::setMode().
+	 * Development is default, but can be changed through KOLIBRI_MODE environment variable.
 	 */
+	const PRODUCTION = 'production';
 	const DEVELOPMENT = 'development';
 	const TEST = 'test';
-	const PRODUCTION = 'production';
+	
+	/**
+	 * Current environment mode.
+	 * @var string
+	 */
+	private $mode;
 	
 	/**
 	 * General configuration settings.
 	 * @var array
 	 */
-	private $config = array();
+	private $config;
 
 	/**
 	 * Name of interceptors and interceptor stacks mapped to interceptor classes.
@@ -29,11 +40,29 @@ class Config {
 	private $interceptorClasses;
 
 	/**
-	 * Defines the validation configuration (validator classes and validation messages).
+	 * Settings for interceptors.
 	 * @var array
 	 */
-	private $validation;
+	private $interceptorSettings;
+	
+	/**
+	 * Prepared list of URIs to unique set of interceptors.
+	 * @var array
+	 */
+	private $interceptorMappings;
+	
+	/**
+	 * Defines the validation classes.
+	 * @var array
+	 */
+	private $validationClasses;
 
+	/**
+	 * Defines validation error messages.
+	 * @var array
+	 */
+	private $validationMessages;
+	
 	/**
 	 * Singleton instance of this class.
 	 * @var Config
@@ -44,70 +73,68 @@ class Config {
 	 * Private constructor which initializes the configuration. It is defined private as all
 	 * interaction with this class goes through static methods.
 	 */
-	private function __construct () {
-		// Define constants for application specific directories
-		define('ACTIONS_PATH', APP_PATH . '/actions');
-		define('MODELS_PATH', APP_PATH . '/models');
-		define('VIEW_PATH', APP_PATH . '/views');
+	private function __construct ($mode) {
+		$this->mode = $mode;
 
-		// Require Kolibri core configuration files.
 		require(ROOT . '/conf/autoload.php');
 		require(ROOT . '/conf/interceptors.php');
 		require(ROOT . '/conf/validation.php');
 
-		// Initialize the Kolibri class autoloader with class mappings from conf/autoload.php
+		// Initialize the Kolibri class autoloader with classname-to-file mappings from conf/autoload.php
 		Autoloader::initialize($autoloadClasses);
 
+		// Load relevant app configuration depending on current environment mode
+		$this->config = ConfigHelper::loadApp($this->mode);
+		
 		/*
-		 * Loop through interceptor stacks. For each stack, add the stack to the regular interceptor
-		 * list with the correct interceptors attached. This makes it possible to use a stack just as
-		 * a single interceptor.
+		 * Extract all interceptor configurations from the loaded application
+		 * configuration. These configurations are irrelevant as normal configuration
+		 * values. They are instead merged with the default configuration and compiled
+		 * internally for use with the Dispatcher.
 		 */
-		$this->interceptorClasses  = $interceptors;
-		foreach ($interceptorStacks as $name => $stack) {
-			foreach ($stack as $interceptor) {
-				/*
-				 * $interceptor must be the name of an existing interceptor. This gives us access
-				 * to the actual interceptor class within the stack.
-				 */
-				$this->interceptorClasses[$name][] = $this->interceptorClasses[$interceptor];
-			}
+		if (isset($this->config['interceptors.stacks'])) {
+			$appInterceptorStacks = $this->config['interceptors.stacks'];
+			unset($this->config['interceptors.stacks']);
 		}
+		else $appInterceptorStacks = array();
+		
+		if (isset($this->config['interceptors.settings'])) {
+			$appInterceptorSettings = $this->config['interceptors.settings'];
+			unset($this->config['interceptors.settings']);
+		}
+		else $appInterceptorSettings = array();
 
+		if (isset($this->config['interceptors'])) {
+			$appInterceptorMappings = $this->config['interceptors'];
+			unset($this->config['interceptors']);
+		}
+		else $appInterceptorMappings = array();
+		
+		// Compile single index of interceptor classes, default stacks and application stacks
+		$this->interceptorClasses =
+				ConfigHelper::prepareInterceptors($interceptors, $interceptorStacks, $appInterceptorStacks);
+		// Merge default interceptor settings with any application specific settings
+		$this->interceptorSettings =
+				ConfigHelper::prepareInterceptorSettings($interceptors, $interceptorSettings,
+						$appInterceptorSettings);
+		/*
+		 * Optimize interceptor mappings by flattening stacks and filtering down to a unique
+		 * list of interceptors for each URI.
+		 */
+		$this->interceptorMappings =
+				ConfigHelper::prepareInterceptorMappings($this->interceptorClasses, $appInterceptorMappings);
+		
 		// Store validation configuration from conf/validation.php
-		$this->validation = array('classes' => $validators, 'messages' => $validationMessages);
-
-		// Set the currently active environment mode, default is development mode
-		if (($env_mode = getenv('KOLIBRI_ENV')) && self::validateMode($env_mode)) {
-			$this->mode = $env_mode;
-		}
-		else {
-			$this->mode = self::DEVELOPMENT;
-		}
-		
-		$this->loadApp();
+		$this->validationClasses = $validators;
+		$this->validationMessages = $validationMessages;
 	}
-
+	
 	/**
-	 * Loads all application configuration for the current environment mode.
-	 * Configuration files are loaded for each environment in a hierarchy:
-	 *   Production -> Development -> Test
-	 * The production configuration will always be loaded, but overridden where
-	 * neccessary in development and test environments.
+	 * Initializes PHP settings based on the current configuration. This is done separately
+	 * from the constructor to support initalization after loading a stored instance
+	 * of the configuration (ie. serialized).
 	 */
-	private function loadApp () {
-		$configStack = array(Config::PRODUCTION);
-		if ($this->mode == Config::DEVELOPMENT || $this->mode == Config::TEST) {
-			$configStack[] = Config::DEVELOPMENT;
-		}
-		if ($this->mode == Config::TEST) {
-			$configStack[] = Config::TEST;
-		}
-
-		foreach ($configStack as $configFile) {
-			$this->load($configFile);
-		}
-		
+	private function init () {
 		$incPath = ROOT . '/lib';
 		if (isset($this->config['includePath'])) {
 			$incPath .= PATH_SEPARATOR . implode(PATH_SEPARATOR, (array) $this->config['includePath']);
@@ -127,55 +154,6 @@ class Config {
 	}
 	
 	/**
-	 * Loads the application's configuration file for a specific environment mode.
-	 * The configuration values loaded will be merged recursively with any previously
-	 * loaded configuration.
-	 *
-	 * @param string $mode Either Config::PRODUCTION, Config::DEVELOPMENT or Config::TEST.
-	 * @throws Exception   If the configuration file for the mode does not exist, or
-	 *                     there was an error parsing the file (syntax error).
-	 */
-	private function load ($mode) {
-		$file = APP_PATH . "/conf/{$mode}.ini";
-		if (!file_exists($file)) {
-			throw new Exception("Application configuration file missing for {$mode} environment: $file");
-		}
-		
-		$config = @parse_ini_file($file, true);
-		if (is_array($config)) {
-			/*
-			 * The 'app' section in configuration files are always automatically flattened
-			 * to global configuration values for convenience.
-			 */
-			if (isset($config['app'])) {
-				foreach ($config['app'] as $key => $value) {
-					$config[$key] = $value;
-				}
-				unset($config['app']);
-			}
-
-			/*
-			 * We want to prevent accidental use of the development or production database
-			 * in the test environment where all data is volatile.
-			 */
-			if ($mode == self::TEST) {
-				if (isset($this->config['database']) && !isset($config['database'])) {
-					throw new Exception('No test database configured to override development database.');
-				}
-			}
-			
-			// Merge newly loaded configuration with previously loaded configuration recursively
-			Utils::import('arrays');
-			$this->config = array_merge_recursive_distinct($this->config, $config);
-		}
-		else if ($config === false) {
-			// Raise the PHP warning from syntax errors in configuration file to an Exception
-			$error = error_get_last();
-			throw new Exception($error['message']);
-		}
-	}
-	
-	/**
 	 * Returns an instance of this class. An existing instance is returned if one exists, else a new
 	 * instance is created.
 	 * 
@@ -183,7 +161,10 @@ class Config {
 	 */
 	public static function getInstance () {
 		if (!isset(self::$instance)) {
-			self::$instance = new Config();
+			$mode = ConfigHelper::getMode();
+			// XXX: Unserialize cached config when appropriate depending on mode here
+			self::$instance = new Config($mode);
+			self::$instance->init();
 		}
 		return self::$instance;
 	}
@@ -196,31 +177,6 @@ class Config {
 	public static function getMode () {
 		$instance = Config::getInstance();
 		return $instance->mode;
-	}
-	
-	/**
-	 * Sets the active environment mode for Kolibri during runtime.
-	 * Note that the environment mode should be set as early as possible. The best way
-	 * is by setting the KOLIBRI_ENV environment variable.
-	 *
-	 * @param string $mode One of Config::DEVELOPMENT, Config::TEST or Config::PRODUCTION.
-	 * @throws Exception   If the mode specified is not a recognized mode.
-	 */
-	public static function setMode ($mode) {
-		if (self::validateMode($mode)) {
-			$instance = Config::getInstance();
-			$instance->mode = $mode;
-			// XXX: Reload app configuration?
-		}
-	}
-	
-	private static function validateMode ($mode) {
-		if ($mode == Config::DEVELOPMENT || $mode == Config::TEST || $mode == Config::PRODUCTION) {
-			return true;
-		}
-		else {
-			throw new Exception("Invalid Kolibri environment mode: $mode");
-		}
 	}
 	
 	/**
@@ -256,43 +212,35 @@ class Config {
 	 */
 	public static function getInterceptorMappings () {
 		$instance = Config::getInstance();
-		return (isset($instance->config['interceptors']) ? $instance->config['interceptors'] : array());
+		return (array) $instance->interceptorMappings;
 	}
 
 	/**
-	 * Returns an array with the class of an interceptor or classes of an interceptor stack.
+	 * Returns any settings defined for a specific interceptor, or all interceptor
+	 * settings.
 	 *
-	 * @param string $key	Key of interceptor or interceptor stack to get classes for.
-	 * @return array		Array of class names.
+	 * @param string $name Optional name of interceptor to return settings for.
+	 * @return array Associative array with settings for all interceptors or the one
+	 *               interceptor asked for.
 	 */
-	public static function getInterceptorClasses ($key) {
+	public static function getInterceptorSettings ($name = null) {
 		$instance = Config::getInstance();
-
-		if (!empty($instance->interceptorClasses[$key])) {
-			$class = $instance->interceptorClasses[$key];
-
-			/*
-			 * We must check if index 0 is not set in addition to the regular array-check, as $class can
-			 * be an interceptor definition with parameters (an array with a class name as the key and an
-			 * array of interceptor parameters as the value). We want to wrap those in an array as well,
-			 * hence the extra check.
-			 */
- 			 if (!is_array($class) || !isset($class[0])) {
-				return array($class);
-			}
-			return $class;
+		if ($name !== null) {
+			return (isset($instance->interceptorSettings[$name]) ?
+				$instance->interceptorSettings[$name] : null);
 		}
-		return array();
+		return (array) $instance->interceptorSettings;
 	}
 
 	/**
 	 * Returns an array of validation configuration.
+	 * XXX: Separate fetching of validation classes and messages.
 	 *
 	 * @return array		Array of validation configuration.
 	 */
 	public static function getValidationConfig () {
 		$instance = Config::getInstance();
-		return $instance->validation;
+		return array('classes' => $instance->validationClasses, 'messages' => $instance->validationMessages);
 	}
 }
 ?>

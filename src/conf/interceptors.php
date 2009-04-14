@@ -7,10 +7,7 @@
 $interceptors = array(
 		'message'     => 'MessageInterceptor',
 		'validation'  => 'ValidationInterceptor',
-		'error'       => array('ErrorInterceptor' => array(
-			'result' => 'PhpResult',
-			'view' => '/error'
-		)),
+		'error'       => 'ErrorInterceptor',
 		'session'     => 'SessionInterceptor',
 		'auth'        => 'AuthInterceptor',
 		'model'       => 'ModelInterceptor',
@@ -21,18 +18,20 @@ $interceptors = array(
 );
 
 /*
-$interceptorConfigs = array(
-	'ErrorInterceptor' => array(
+ * Defines the default settings for interceptors. Can be overriden in applications in the
+ * [interceptors.settings] section of a ini file.
+ */
+$interceptorSettings = array(
+	'error' => array(
 		'result' => 'PhpResult',
-		'view' => '/error'
+		'view'   => '/error'
 	),
-	'AuthInterceptor'  => array(
-			'userModel' => 'AuthUser',
-			'userKey'   => 'user',
-			'loginUri'  => '/login'
+	'auth'  => array(
+		'userModel' => 'AuthUser',
+		'userKey'   => 'user',
+		'loginUri'  => '/login'
 	)	
 );
-*/
 
 /*
  * Defines stacks of interceptors. This makes it easy to group together several interceptors, which just as

@@ -14,6 +14,6 @@ interface ValidationAware {
 	 * Called when validation failed. A Result object must be returned, which will be rendered
 	 * instead of continuing request processing.
 	 */
-	public function validationFailed () {}
+	public function validationFailed ();
 }
 ?>
