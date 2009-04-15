@@ -2,10 +2,9 @@
 /**
  * Interceptor which checks to see if the user making this request is authenticated.
  *
- * If the target action is <code>AuthAware</code> and implements the <code>allowedAccess()</code> method,
- * the user is passed to the action for it to determine whether to allow access.
- * 
- * @version		$Id: AuthInterceptor.php 1537 2008-08-02 19:22:57Z anders $
+ * If session is enabled, the target action is <code>AuthAware</code> and implements the
+ * <code>allowedAccess()</code> method, the user is passed to the action for it to determine
+ * whether to allow access.
  */
 class AuthInterceptor extends AbstractInterceptor {
 	/**
@@ -38,25 +37,30 @@ class AuthInterceptor extends AbstractInterceptor {
 	 */
 	public function intercept ($dispatcher) {
 		$action = $dispatcher->getAction();
-		$user = $action->session[$this->userKey];
+		$request = $dispatcher->getRequest();
 
-		if (!$this->isUserAuthenticated($user)) {
-			$action->session['target'] = $dispatcher->getRequest()->getUri();
-			if ($action instanceof MessageAware) {
-				$action->msg->setMessage('Vennligst logg inn for å komme til siden du forespurte.', false);
+		if ($request->hasSession()) {
+			$user = $request->session[$this->userKey];
+
+			if (!$this->isUserAuthenticated($user)) {
+				$request->session['target'] = $request->getUri();
+				if ($action instanceof MessageAware) {
+					$action->msg->setMessage('You must log in to access
+							the page you requested.', false);
+				}
+
+				return $this->denyAccess();
 			}
 
-			return $this->denyAccess($dispatcher);
-		}
+			if ($action instanceof AuthAware) {
+				if (method_exists($action, 'allowedAccess')) {
+					if (!$action->allowedAccess($user)) {
+						if (method_exists($action, 'denyAccess')) {
+							return $action->denyAccess($user);
+						}
 
-		if ($action instanceof AuthAware) {
-			if (method_exists($action, 'allowedAccess')) {
-				if (!$action->allowedAccess($user)) {
-					if (method_exists($action, 'denyAccess')) {
-						return $action->denyAccess($user);
+						return $this->denyAccess();
 					}
-
-					return $this->denyAccess($dispatcher);
 				}
 			}
 		}
@@ -66,8 +70,8 @@ class AuthInterceptor extends AbstractInterceptor {
 	/**
 	 * Makes sure the user value found in the session is of the correct type.
 	 *
-	 * @param mixed $user	Session value to make sure represents a user.
-	 * @return bool			TRUE if $user represents an authenticated user, FALSE if not.
+	 * @param mixed $user Session value to make sure represents a user.
+	 * @return bool       TRUE if $user represents an authenticated user, FALSE if not.
 	 */
 	private function isUserAuthenticated ($user) {
 		if ($user !== null) {
@@ -86,8 +90,8 @@ class AuthInterceptor extends AbstractInterceptor {
 	/**
 	 * Denies access by redirecting to the configured login URI.
 	 */
-	private function denyAccess ($dispatcher) {
-		return new RedirectResult($dispatcher->getAction(), $this->loginUri);
+	private function denyAccess () {
+		return new RedirectResponse($this->loginUri);
 	}
 }
 ?>

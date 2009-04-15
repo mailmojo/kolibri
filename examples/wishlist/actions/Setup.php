@@ -2,7 +2,7 @@
 /**
  * Action for the setup page -- prepares database tables.
  */
-class Setup extends ActionSupport {
+class Setup implements MessageAware {
 	/**
 	 * Displays the setup page if database is not already prepared.
 	 */
@@ -11,10 +11,10 @@ class Setup extends ActionSupport {
 
 		if ($dbSetup->isDone()) {
 			$this->msg->setMessage('Database is already prepared.');
-			return new RedirectResult($this, '/');
+			return new RedirectResponse('/');
 		}
 
-		return new XsltResult($this, '/setup');
+		return new XsltResponse($this, '/setup');
 	}
 
 	/**
@@ -24,7 +24,7 @@ class Setup extends ActionSupport {
 		$dbSetup = new DatabaseSetup();
 		$dbSetup->setup();
 		$this->msg->setMessage('Database prepared. All ready for wishes.');
-		return new RedirectResult($this, '/');
+		return new RedirectResponse('/');
 	}
 }
 ?>
