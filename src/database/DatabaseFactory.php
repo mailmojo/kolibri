@@ -2,9 +2,10 @@
 require(ROOT . '/database/DatabaseConnection.php');
 
 /**
- * Factory class used to instantiate and return <code>DatabaseConnection</code> objects representing
- * a connection to a database. By using the <code>getConnection()</code> factory, the same object for
- * a given connection is returned over repeated invokations during the same PHP execution.
+ * Factory class used to instantiate and return <code>DatabaseConnection</code> objects
+ * representing a connection to a database. By using the <code>getConnection()</code> factory,
+ * the same object for a given connection is returned over repeated invokations during the
+ * same PHP execution.
  */
 final class DatabaseFactory {
 	/**
@@ -19,17 +20,18 @@ final class DatabaseFactory {
 	private function __construct () {}
 
 	/**
-	 * Returns an implementation-specific <code>DatabaseConnection</code> for a connection to the
-	 * database represented by the supplied configuration parameter. It defaults to the general 'db'
-	 * configuration.
+	 * Returns an implementation-specific <code>DatabaseConnection</code> for a connection to
+	 * the database represented by the supplied configuration parameter. It defaults to the
+	 * general 'database' section in the application's configuration.
 	 *
 	 * @param array $confName Name of configuration parameter to return connection of.
 	 * @throws Exception      If the implementation the configuration specifies is not found.
 	 * @return DatabaseConnection
 	 */
-	public static function getConnection ($confName = 'db') {
-		if (!isset(self::$connections[$confName])) {
-			$dbConf = Config::get($confName);
+	public static function getConnection ($confName = null) {
+		$confKey = ($confName === null ? 'database' : "database.{$confName}");
+		if (!isset(self::$connections[$confKey])) {
+			$dbConf = Config::get($confKey);
 
 			if (!empty($dbConf)) {
 				$dbConnClass = $dbConf['type'] . 'Connection';
@@ -42,18 +44,20 @@ final class DatabaseFactory {
 						require($connectionFile);
 					}
 					else {
-						throw new DatabaseException("Database implementation $dbConnClass not found");
+						throw new DatabaseException("Database implementation $dbConnClass "
+								. 'not found');
 					}
 				}
 
-				self::$connections[$confName] = new $dbConnClass($dbConf);
+				self::$connections[$confKey] = new $dbConnClass($dbConf);
 			}
 			else {
-				throw new DatabaseException('No database configured');
+				throw new DatabaseException('No database configuration section named '
+						. "'$confKey'");
 			}
 		}
 
-		return self::$connections[$confName];
+		return self::$connections[$confKey];
 	}
 }
 ?>

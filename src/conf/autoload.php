@@ -1,11 +1,10 @@
 <?php
 /*
- * Defines classes that may be loaded upon its first use by __autoload(). They are not
+ * Defines classes that may be loaded upon its first use by ClassLoader::load(). They are not
  * automatically loaded unless they are actually used. See <code>UtilsInterceptor</code> for
  * automatic loading of utils.
  */
 $autoloadClasses = array(
-		'DefaultActionMapper'       => '/core/DefaultActionMapper.php',
 		'AuthAware'                 => '/actions/AuthAware.php',
 		'MessageAware'              => '/actions/MessageAware.php',
 		'ModelAware'                => '/actions/ModelAware.php',
@@ -45,6 +44,7 @@ $autoloadClasses = array(
 		'SeeOtherResponse'          => '/response/SeeOtherResponse.php',
 		'SmartyResponse'            => '/response/SmartyResponse.php',
 		'XsltResponse'              => '/response/XsltResponse.php',
+		'Utils'                     => '/utils/Utils.php',
 		'Validator'                 => '/validation/Validator.php',
 		'ValidationHelper'          => '/validation/ValidationHelper.php');
 ?>

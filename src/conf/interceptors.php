@@ -7,22 +7,30 @@
 $interceptors = array(
 		'message'     => 'MessageInterceptor',
 		'validation'  => 'ValidationInterceptor',
-		'error'       => array(
-				'ErrorInterceptor' => array('result' => 'PhpResult', 'view' => '/error')
-		),
+		'error'       => 'ErrorInterceptor',
 		'session'     => 'SessionInterceptor',
-		'auth'        => array(
-				'AuthInterceptor'  => array(
-						'userModel' => 'AuthUser',
-						'userKey'   => 'user',
-						'loginUri'  => '/login'
-				)
-		),
+		'auth'        => 'AuthInterceptor',
 		'model'       => 'ModelInterceptor',
 		'params'      => 'ParametersInterceptor',
 		'upload'      => 'UploadInterceptor',
 		'utils'       => 'UtilsInterceptor',
 		'transaction' => 'TransactionInterceptor'
+);
+
+/*
+ * Defines the default settings for interceptors. Can be overriden in applications in the
+ * [interceptors.settings] section of a ini file.
+ */
+$interceptorSettings = array(
+	'error' => array(
+		'response' => 'PhpResponse',
+		'view'   => '/error'
+	),
+	'auth'  => array(
+		'userModel' => 'AuthUser',
+		'userKey'   => 'user',
+		'loginUri'  => '/login'
+	)	
 );
 
 /*

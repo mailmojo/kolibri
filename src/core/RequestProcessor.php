@@ -1,4 +1,7 @@
 <?php
+require(ROOT . '/core/Request.php');
+require(ROOT . '/core/Dispatcher.php');
+
 /**
  * This is the main class of the Kolibri framework, which is responsible for initializing the
  * request processing flow.
@@ -61,20 +64,31 @@ class RequestProcessor {
 	 */
 	private function findActionMapper () {
 		$actionMappers = Config::getActionMappers();
-
-		foreach ($actionMappers as $uri => $mapper) { // Loop through URIs/mappers
+		
+		if ($actionMappers === null) {
+			require(ROOT . '/core/DefaultActionMapper.php');
+			return 'DefaultActionMapper';
+		}
+		
+		$requestUri = $this->request->getUri();
+		foreach ($actionMappers as $uri => $mapper) {
 			// Replace star wildcard mappings with regex "any characters" mapping, to use regex
 			$uri = '#^' . str_replace('*', '.*?', $uri) . '$#';
 
-			if (preg_match($uri, $this->request->getUri()) == 1) {
+			if (preg_match($uri, $requestUri) == 1) {
 				if ($mapper != 'DefaultActionMapper') {
-					// Mapper is application-specific, include it (DefaultActionMapper is autoloadable)
-					require(APP_PATH . "/mappers/$mapper.php");
+					// Mapper is application-specific, rely on include_path for loading it
+					require("$mapper.php");
 				}
-
+				else {
+					require(ROOT . '/core/DefaultActionMapper.php');
+				}
+				
 				return $mapper;
 			}
 		}
+		
+		throw new Exception("No ActionMapper configured for requested URI: $requestUri");
 	}
 
 	/**

@@ -10,7 +10,7 @@ class UtilsInterceptor extends AbstractInterceptor {
 		$utils = Config::get('loadUtils');
 		if (is_array($utils)) {
 			foreach ($utils as $util) {
-				import($util, 'util');
+				Utils::import($util);
 			}
 		}
 

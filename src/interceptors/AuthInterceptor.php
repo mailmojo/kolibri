@@ -29,7 +29,7 @@ class AuthInterceptor extends AbstractInterceptor {
 	 * Initialize this interceptor by making sure the user model has been included.
 	 */
 	public function init () {
-		import($this->userModel);
+		ClassLoader::load($this->userModel);
 	}
 
 	/**

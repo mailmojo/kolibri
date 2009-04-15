@@ -12,7 +12,7 @@ abstract class AbstractInterceptor implements Interceptor {
 	 *
 	 * @param array $conf Configuration for this interceptor, if any.
 	 */
-	public function __construct ($conf = null) {
+	public function __construct (array $conf = null) {
 		if ($conf !== null) {
 			foreach ($conf as $param => $value) {
 				$this->$param = $value;

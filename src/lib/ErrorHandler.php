@@ -56,19 +56,19 @@ class ErrorHandler {
 		$data = array('exception' => $exception, 'action' => $this->action);
 		$logging = Config::get('logging');
 
-		if (!empty($logging) && isset($logging['enabled']) && $logging['enabled']) {
-			if (!empty($logging['logFile']) && is_writable($logging['logFile'])) {
+		if (!empty($logging) && isset($logging['level']) && $logging['level'] == true) {
+			if (!empty($logging['file']) && is_writable($logging['file'])) {
 				error_log($exception->getMessage() . " ({$exception->getFile()}:{$exception->getLine()})",
-					3, $logging['logFile']);
+					3, $logging['file']);
 			}
 			else {
 				error_log($exception->getMessage() . " ({$exception->getFile()}:{$exception->getLine()})");
 			}
 
-			if (!empty($logging['logEmail'])) {
+			if (!empty($logging['email'])) {
 				// Send email to admin
 				$email = $this->generateMail($exception);
-				$email->addRecipient($logging['logEmail']);
+				$email->addRecipient($logging['email']);
 				$mailer = new MailService();
 				$mailer->send($email);
 			}
