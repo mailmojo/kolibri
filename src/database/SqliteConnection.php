@@ -4,16 +4,17 @@ require(ROOT . '/database/SqliteResultSet.php');
 /**
  * This class extends the <code>DatabaseConnection</code> class to support connections to a
  * SQLite database. This class may also implement SQLite-specific features. This
- * implementations relies on a configuration element in conf/config.php like the following:
+ * implementation relies on a configuration section in production.ini (or any other environment
+ * configuration) like the following:
  *
- *   'db' => array(
- *     'type'     => 'Sqlite',
- *     'database' => '' // Absolute path to SQLite database file, writable by the PHP process
- *   );
+ *   [database]
+ *   type = "Sqlite"
+ *   database = "" ; Absolute path to SQLite database file, writable by the PHP process
  *
- * A configuration element 'db' as shown specified the default database. Others can be configured
- * with any other name, for instance 'slave1', in which a connection can be obtained by calling:
- * $conn = DatabaseFactory::getConnection('slave1');
+ * A configuration section named 'database' as shown specifies the default database. Others
+ * can be configured with sections named 'database.slave1' or similar, where 'slave1' is the
+ * custom name you specify to DatabaseFactory to obtain a connection:
+ *   $conn = DatabaseFactory::getConnection('slave1');
  *
  * See the class documentation in <code>DatabaseConnection</code> for general documentation of
  * using database connection classes.

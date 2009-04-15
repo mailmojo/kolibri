@@ -33,6 +33,13 @@ class Config {
 	private $config;
 
 	/**
+	 * Name of core classes mapped to their class files, providing a fast lookup index
+	 * for the autoloader.
+	 * @var array
+	 */
+	private $autoloadClasses;
+	
+	/**
 	 * Name of interceptors and interceptor stacks mapped to interceptor classes.
 	 * @var array
 	 */
@@ -75,13 +82,16 @@ class Config {
 	private function __construct ($mode) {
 		$this->mode = $mode;
 		
+		require(ROOT . '/conf/autoload.php');
 		require(ROOT . '/conf/interceptors.php');
 		require(ROOT . '/conf/validation.php');
-
 		require(ROOT . '/core/ConfigHelper.php');
-		$helper = new ConfigHelper($this->mode, $interceptors);
+		
+		// Cache the autoload class index
+		$this->autoloadClasses = $autoloadClasses;
 		
 		// Load relevant app configuration depending on current environment mode
+		$helper = new ConfigHelper($this->mode, $interceptors);
 		$this->config = $helper->loadApp();
 		
 		/*
@@ -133,10 +143,12 @@ class Config {
 		 * Initialize the Kolibri class autoloader with classname-to-file mappings from
 		 * conf/autoload.php
 		 */
-		require(ROOT . '/conf/autoload.php');
-		ClassLoader::initialize($autoloadClasses);
+		ClassLoader::initialize($this->autoloadClasses);
 		
-		$incPath = ROOT . '/lib' . PATH_SEPARATOR . APP_PATH . '/lib';
+		$incPath = ROOT . '/lib';
+		if (file_exists(APP_PATH . '/lib')) {
+			$incPath .= PATH_SEPARATOR . APP_PATH . '/lib';
+		}
 		if (isset($this->config['includePath'])) {
 			$paths = (array) $this->config['includePath'];
 			$incPath .= PATH_SEPARATOR . implode(PATH_SEPARATOR, $paths);
@@ -164,7 +176,7 @@ class Config {
 	 */
 	public static function getInstance () {
 		if (!isset(self::$instance)) {
-			$mode = self::getMode(true);
+			$mode = self::getMode();
 			// TODO: Unserialize cached config when appropriate depending on mode here
 			self::$instance = new Config($mode);
 			self::$instance->init();
@@ -173,17 +185,17 @@ class Config {
 	}
 
 	/**
-	 * Returns the environment mode Kolibri is currently running in.
+	 * Returns the environment mode Kolibri is currently running in. If the config has not
+	 * been initialized yet, the mode is determined by looking for a KOLIBRI_MODE environment
+	 * variable. If KOLIBRI_MODE doesn't exist, the default mode (Config::DEVELOPMENT) is
+	 * returned. When the config has been initialized, the cached mode value is returned.
 	 *
-	 * @param bool $reevaluate If <code>TRUE</code> the mode will be evaluated again
-	 *                         from the KOLIBRI_MODE environment variable. Otherwise
-	 *                         the internal cached mode value will be returned.
 	 * @return string Either Config::DEVELOPMENT, Config::TEST or Config::PRODUCTION.
 	 * @throws Exception If reevaluating mode value and KOLIBRI_MODE is found to contain
 	 *                   an unsupported environment mode.
 	 */
-	public static function getMode ($reevaluate = false) {
-		if ($reevaluate === true) {
+	public static function getMode () {
+		if (!isset(self::$instance)) {
 			if (($envMode = getenv('KOLIBRI_MODE')) !== false) {
 				if ($envMode == self::PRODUCTION
 						|| $envMode == self::DEVELOPMENT

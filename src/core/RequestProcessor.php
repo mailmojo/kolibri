@@ -70,6 +70,7 @@ class RequestProcessor {
 		$actionMappers = Config::getActionMappers();
 		
 		if ($actionMappers === null) {
+			require(ROOT . '/core/DefaultActionMapper.php');
 			return 'DefaultActionMapper';
 		}
 		
@@ -84,7 +85,7 @@ class RequestProcessor {
 					require("$mapper.php");
 				}
 				else {
-					require('/core/DefaultActionMapper.php');
+					require(ROOT . '/core/DefaultActionMapper.php');
 				}
 				
 				return $mapper;

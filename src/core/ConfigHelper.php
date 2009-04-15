@@ -39,14 +39,13 @@ class ConfigHelper {
 	}
 	
 	/**
-	 * Loads all application configuration for the current environment mode.
-	 * Configuration files are loaded for each environment in a hierarchy:
+	 * Loads and returns and array with all application configuration for the current
+	 * environment mode. Configuration files are loaded for each environment in a 
+	 * cascading hierarchy:
 	 *   Production -> Development -> Test
 	 * The production configuration will always be loaded, but overridden where
 	 * neccessary in development and test environments.
 	 *
-	 * @param string $runtimeMode Current environment mode, usually as determined through
-	 *                            ConfigHelper::getMode().
 	 * @return array Associative array with all configuration settings for the current
 	 *               environment mode.
 	 * @throws Exception If application runs in test mode but no database is configured
@@ -97,11 +96,13 @@ class ConfigHelper {
 	}
 	
 	/**
-	 * Loads the application's configuration file for a specific environment mode.
+	 * Loads and returns an array with application configuration for a specific environment
+	 * mode.
 	 *
 	 * @param string $mode Either Config::PRODUCTION, Config::DEVELOPMENT or Config::TEST.
-	 * @throws Exception   If the configuration file for the mode does not exist, or
-	 *                     there was an error parsing the file (syntax error).
+	 * @return array Associative array with configuration for the specified mode.
+	 * @throws Exception If the configuration file for the mode does not exist, or
+	 *                   there was an error parsing the file (syntax error).
 	 */
 	private function loadMode ($mode) {
 		$file = APP_PATH . "/conf/{$mode}.ini";
@@ -153,7 +154,8 @@ class ConfigHelper {
 				 * access to the actual interceptor class within the stack.
 				 */
 				if (isset($this->interceptors[$interceptor])) {
-					$classes[$name][$interceptor] = $this->interceptors[$interceptor];
+					$this->interceptors[$name][$interceptor]
+							= $this->interceptors[$interceptor];
 				}
 				else {
 					throw new Exception("Non-existing interceptor '$interceptor' used "
@@ -217,9 +219,9 @@ class ConfigHelper {
 	 * interceptor names to class names. Must be run after prepareInterceptors() for stacks
 	 * to be flattened.
 	 *
-	 * @param array $interceptors        Complete list of interceptors and interceptor stacks.
-	 * @param array $applicationMappings Mapping of application URIs to interceptors.
-	 * @return array Map of application URIs => interceptors where stacks are flattened and
+	 * @param array $applicationMappings Associative array that maps URIs to a comma separated
+	 *                                   list of interceptors and interceptor stacks.
+	 * @return array Map of application URIs to interceptors where stacks are flattened and
 	 *               interceptor names converted to their class names.
 	 */
 	public function prepareInterceptorMappings (array $applicationMappings) {

@@ -23,7 +23,7 @@ $interceptors = array(
  */
 $interceptorSettings = array(
 	'error' => array(
-		'result' => 'PhpResult',
+		'response' => 'PhpResponse',
 		'view'   => '/error'
 	),
 	'auth'  => array(

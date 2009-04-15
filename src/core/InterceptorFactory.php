@@ -11,10 +11,9 @@ abstract class InterceptorFactory {
 	private function __construct () {}
 
 	/**
-	 * Instantiates, initilizes and returns interceptors set to be used.
+	 * Instantiates, initializes and returns interceptors set to be used.
 	 *
 	 * @param array $interceptors Interceptor classes to instantiate.
-	 * @param array $settings     Associative array with settings for interceptors.
 	 * @return array An array with instantiated interceptors.
 	 */
 	public static function createInterceptors (array $interceptors) {
