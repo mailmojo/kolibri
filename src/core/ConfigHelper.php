@@ -1,29 +1,41 @@
 <?php
+require(ROOT . '/utils/arrays.php');
+
 /**
  * Helper class for reading environment variables, loading configuration files and parsing
  * configuration values.
  */
 class ConfigHelper {
 	/**
-	 * Determines and returns the current environment mode. Checks for an environment variable
-	 * named KOLIBRI_MODE and uses it's value if it's one of the three supported environment
-	 * modes. In any other case the default environment mode is development.
-	 *
-	 * @throws Exception If KOLIBRI_MODE contains an unsupported environment mode.
+	 * Current environment mode.
+	 * @var string
 	 */
-	public static function getMode () {
-		if (($envMode = getenv('KOLIBRI_MODE')) !== false) {
-			if ($envMode == Config::PRODUCTION
-					|| $envMode == Config::DEVELOPMENT
-					|| $envMode == Config::TEST) {
-				return $envMode;
-			}
-			else {
-				throw new Exception("Invalid environment mode in \$KOLIBRI_MODE: '$envMode'");
-			}
-		}
-
-		return Config::DEVELOPMENT;
+	private $runMode;
+	
+	/**
+	 * Pure mapping of interceptor names to classes.
+	 * @var array
+	 */
+	private $interceptorClasses;
+	
+	/**
+	 * Extended mapping of interceptors, prepared from core and application configurations
+	 * and including interceptor stacks.
+	 * @var array
+	 */
+	private $interceptors;
+	
+	/**
+	 * Creates a new ConfigHelper for a specific environment mode and list of
+	 * interceptors that exist.
+	 *
+	 * @param string $mode              Current environment mode.
+	 * @param array $interceptorClasses Active map of interceptor names to classes.
+	 * @return ConfigHelper
+	 */
+	public function __construct ($mode, array $interceptorClasses) {
+		$this->runMode = $mode;
+		$this->interceptorClasses = $interceptorClasses;
 	}
 	
 	/**
@@ -40,22 +52,20 @@ class ConfigHelper {
 	 * @throws Exception If application runs in test mode but no database is configured
 	 *                   to replace the development database configuration.
 	 */
-	public static function loadApp ($runtimeMode) {
-		Utils::import('arrays');
-		
+	public function loadApp () {
 		// Set up the cascading stack of configuration files depending on current mode
 		$configStack = array(Config::PRODUCTION);
-		if ($runtimeMode != Config::PRODUCTION) {
+		if ($this->runMode != Config::PRODUCTION) {
 			$configStack[] = Config::DEVELOPMENT;
 			
-			if ($runtimeMode == Config::TEST) {
+			if ($this->runMode == Config::TEST) {
 				$configStack[] = Config::TEST;
 			}
 		}
 		
 		$config = array();
 		foreach ($configStack as $configMode) {
-			$modeConfig = self::loadMode($configMode);
+			$modeConfig = $this->loadMode($configMode);
 			
 			/*
 			 * We want to prevent accidental use of the development or production database
@@ -63,7 +73,8 @@ class ConfigHelper {
 			 */
 			if ($configMode == Config::TEST) {
 				if (isset($config['database']) && !isset($modeConfig['database'])) {
-					throw new Exception('No test database configured to override development database.');
+					throw new Exception('No test database configured to override '
+						. 'development database.');
 				}
 			}
 			
@@ -92,10 +103,11 @@ class ConfigHelper {
 	 * @throws Exception   If the configuration file for the mode does not exist, or
 	 *                     there was an error parsing the file (syntax error).
 	 */
-	public static function loadMode ($mode) {
+	private function loadMode ($mode) {
 		$file = APP_PATH . "/conf/{$mode}.ini";
 		if (!file_exists($file)) {
-			throw new Exception("Application configuration file missing for {$mode} environment: $file");
+			throw new Exception("Application configuration file missing for "
+				. "{$mode} environment: $file");
 		}
 		
 		$config = @parse_ini_file($file, true);
@@ -114,15 +126,15 @@ class ConfigHelper {
 	 * correct interceptors attached. This makes it possible to use a stack just as a single
 	 * interceptor in interceptor mappings.
 	 *
-	 * @param array $classes           Mapping of interceptor names to interceptor classes.
 	 * @param array $defaultStacks     Default interceptor stacks defined in Kolibri.
 	 * @param array $applicationStacks Interceptor stacks defined in the application's
 	 *                                 configuration files.
 	 * @return array Mapping of interceptors that also include stacks.
 	 * @throws Exception If a stack includes the name of a non-existing interceptor.
 	 */
-	public static function prepareInterceptors (array $classes, array $defaultStacks,
-			array $applicationStacks) {
+	public function prepareInterceptors (array $defaultStacks, array $applicationStacks) {
+		$this->interceptors = $this->interceptorClasses;
+		
 		// Parse stacks defined in application ini files
 		foreach ($applicationStacks as $name => $stack) {
 			$applicationStacks[$name] = preg_split('/,\s*/', $stack);
@@ -134,14 +146,14 @@ class ConfigHelper {
 			 * Reset stack in case another with the same name exists already,
 			 * we don't support merging of individual interceptors for stacks.
 			 */
-			$classes[$name] = array();
+			$this->interceptors[$name] = array();
 			foreach ($stack as $interceptor) {
 				/*
-				 * $interceptor must be the name of an existing interceptor. This gives us access
-				 * to the actual interceptor class within the stack.
+				 * $interceptor must be the name of an existing interceptor. This gives us
+				 * access to the actual interceptor class within the stack.
 				 */
-				if (isset($classes[$interceptor])) {
-					$classes[$name][$interceptor] = $classes[$interceptor];
+				if (isset($this->interceptors[$interceptor])) {
+					$classes[$name][$interceptor] = $this->interceptors[$interceptor];
 				}
 				else {
 					throw new Exception("Non-existing interceptor '$interceptor' used "
@@ -150,34 +162,36 @@ class ConfigHelper {
 			}
 		}
 		
-		return $classes;
+		return $this->interceptors;
 	}
 	
 	/**
 	 * Parses and validates application specific interceptor settings, and merges them with
 	 * the default interceptor settings. Each application specific setting must have a name
 	 * including both the name of the interceptor and the property it defines a value for,
-	 * separated by a period. Ie. a setting for which model class to use for an authenticated
+	 * separated by a period. I.e. a setting for which model class to use for an authenticated
 	 * user would look like this:
 	 *   auth.userModel = MyUser
 	 *
-	 * @param array $classes             Mapping of interceptor names to interceptor classes.
-	 * @param array $defaultSettings     Kolibri's default settings for interceptors.
-	 * @param array $applicationSettings Application specific settings for interceptors.
-	 * @param array $settings Associative array with setting names and their values, grouped
-	 *                        under the name of the interceptor they relate to.
+	 * @param array $defaultSettings Kolibri's default settings for interceptors.
+	 * @param array $appSettings     Application specific settings for interceptors.
+	 * @return array Associative array with setting names and their values, grouped
+	 *               under the name of the interceptor they relate to.
 	 * @throws Exception If an application specific setting's name is invalid or incomplete.
 	 */
-	public static function prepareInterceptorSettings (array $classes, array $defaultSettings,
-			array $applicationSettings) {
-		Utils::import('arrays');
+	public function prepareInterceptorSettings (array $defaultSettings, array $appSettings) {
+		$parsedAppSettings = array();
 		
-		$settings = array();
-		foreach ($applicationSettings as $setting => $value) {
+		foreach ($appSettings as $setting => $value) {
+			/*
+			 * Make sure setting name contains one, and only one, period. We depend on the
+			 * period to separate the interceptor name from the actual setting's name.
+			 */
 			if (substr_count($setting, '.') == 1) {
 				list($interceptor, $setting) = explode('.', $setting);
-				if (isset($classes[$interceptor])) {
-					$settings[$interceptor][$setting] = $value;
+				// Make sure the interceptor a setting is defined for actually exists
+				if (isset($this->interceptorClasses[$interceptor])) {
+					$parsedAppSettings[$interceptor][$setting] = $value;
 				}
 				else {
 					throw new Exception('Settings defined for non-existing interceptor '
@@ -189,38 +203,61 @@ class ConfigHelper {
 			}
 		}
 		
-		return array_merge_recursive_distinct($defaultSettings, $settings);
+		/*
+		 * Both the default settings and parsed application settings are arrays indexed
+		 * on interceptor names with sub-arrays containing settings for each interceptor.
+		 * By merging default and application settings recursively we support overriding
+		 * individual settings as well.
+		 */
+		return array_merge_recursive_distinct($defaultSettings, $parsedAppSettings);
 	}
 	
 	/**
 	 * Prepares interceptor mappings by flattening interceptor stacks and translating
-	 * interceptor names to class names.
+	 * interceptor names to class names. Must be run after prepareInterceptors() for stacks
+	 * to be flattened.
 	 *
 	 * @param array $interceptors        Complete list of interceptors and interceptor stacks.
 	 * @param array $applicationMappings Mapping of application URIs to interceptors.
 	 * @return array Map of application URIs => interceptors where stacks are flattened and
 	 *               interceptor names converted to their class names.
 	 */
-	public static function prepareInterceptorMappings (array $interceptors, array $applicationMappings) {
+	public function prepareInterceptorMappings (array $applicationMappings) {
 		foreach ($applicationMappings as $uri => $names) {
 			$classes = array();
+
+			/*
+			 * Interceptor and stack names in the application's interceptor mapping is
+			 * a comma separated list of values.
+			 */
 			foreach (preg_split('/,\s*/', $names) as $name) {
-				if ($name{0} == '!') {
-					$prefix = '!';
+				/*
+				 * If the interceptor or stack name is prefixed by an exclamation mark it
+				 * means the interceptor(s) should not be active for the current URI.
+				 */
+				if ($exclude = ($name{0} == '!')) {
 					$name = substr($name, 1);
 				}
-				else {
-					$prefix = '';
-				}
+				$prefix = ($exclude ? '!' : '');
 				
-				if (is_array($interceptors[$name])) {
-					$classes = array_merge($classes, $interceptors[$name]);
+				/*
+				 * An array represents a stack of interceptors which we optimize by
+				 * flattening to simple interceptor class names.
+				 */
+				if (is_array($this->interceptors[$name])) {
+					foreach ($this->interceptors[$name] as $key => $class) {
+						$classes[$key] = $prefix . $class;
+					}
 				}
 				else {
-					$classes[$name] = $prefix . $interceptors[$name];
+					$classes[$name] = $prefix . $this->interceptors[$name];
 				}
 			}
 			
+			/*
+			 * Replace string from application config with optimized array of
+			 * interceptor class names.
+			 */
 			$applicationMappings[$uri] = $classes;
 		}
 

@@ -1,6 +1,5 @@
 <?php
-require(ROOT . '/core/Autoloader.php');
-require(ROOT . '/core/ConfigHelper.php');
+require(ROOT . '/core/ClassLoader.php');
 
 // Define constants for application specific directories
 define('ACTIONS_PATH', APP_PATH . '/actions');
@@ -13,7 +12,7 @@ define('VIEW_PATH', APP_PATH . '/views');
  * All configuration variables are easily available through the static methods of this class.
  */
 class Config {
-	/**
+	/*
 	 * Constants for the different environment modes an application can be in.
 	 * Development is default, but can be changed through KOLIBRI_MODE environment variable.
 	 */
@@ -75,16 +74,15 @@ class Config {
 	 */
 	private function __construct ($mode) {
 		$this->mode = $mode;
-
-		require(ROOT . '/conf/autoload.php');
+		
 		require(ROOT . '/conf/interceptors.php');
 		require(ROOT . '/conf/validation.php');
 
-		// Initialize the Kolibri class autoloader with classname-to-file mappings from conf/autoload.php
-		Autoloader::initialize($autoloadClasses);
-
+		require(ROOT . '/core/ConfigHelper.php');
+		$helper = new ConfigHelper($this->mode, $interceptors);
+		
 		// Load relevant app configuration depending on current environment mode
-		$this->config = ConfigHelper::loadApp($this->mode);
+		$this->config = $helper->loadApp();
 		
 		/*
 		 * Extract all interceptor configurations from the loaded application
@@ -111,18 +109,14 @@ class Config {
 		else $appInterceptorMappings = array();
 		
 		// Compile single index of interceptor classes, default stacks and application stacks
-		$this->interceptorClasses =
-				ConfigHelper::prepareInterceptors($interceptors, $interceptorStacks, $appInterceptorStacks);
+		$this->interceptorClasses = $helper->prepareInterceptors($interceptorStacks,
+				$appInterceptorStacks);
 		// Merge default interceptor settings with any application specific settings
-		$this->interceptorSettings =
-				ConfigHelper::prepareInterceptorSettings($interceptors, $interceptorSettings,
-						$appInterceptorSettings);
-		/*
-		 * Optimize interceptor mappings by flattening stacks and filtering down to a unique
-		 * list of interceptors for each URI.
-		 */
+		$this->interceptorSettings = $helper->prepareInterceptorSettings($interceptorSettings,
+				$appInterceptorSettings);
+		// Flatten stacks and filter down to a unique list of interceptors for each URI
 		$this->interceptorMappings =
-				ConfigHelper::prepareInterceptorMappings($this->interceptorClasses, $appInterceptorMappings);
+				$helper->prepareInterceptorMappings($appInterceptorMappings);
 		
 		// Store validation configuration from conf/validation.php
 		$this->validationClasses = $validators;
@@ -135,16 +129,25 @@ class Config {
 	 * of the configuration (ie. serialized).
 	 */
 	private function init () {
-		$incPath = ROOT . '/lib';
+		/*
+		 * Initialize the Kolibri class autoloader with classname-to-file mappings from
+		 * conf/autoload.php
+		 */
+		require(ROOT . '/conf/autoload.php');
+		ClassLoader::initialize($autoloadClasses);
+		
+		$incPath = ROOT . '/lib' . PATH_SEPARATOR . APP_PATH . '/lib';
 		if (isset($this->config['includePath'])) {
-			$incPath .= PATH_SEPARATOR . implode(PATH_SEPARATOR, (array) $this->config['includePath']);
+			$paths = (array) $this->config['includePath'];
+			$incPath .= PATH_SEPARATOR . implode(PATH_SEPARATOR, $paths);
 		}
 		ini_set('include_path', ini_get('include_path') . PATH_SEPARATOR . $incPath);
 		
 		/*
 		 * Sets the current locale for date formatting et cetera
-		 * XXX: We leave LC_NUMERIC at default, as locales with comma as decimal seperator will
-		 * cause SQL queries with floating point values to fail. We should find a better solution...
+		 * XXX: We leave LC_NUMERIC at default, as locales with comma as decimal seperator
+		 * will cause SQL queries with floating point values to fail. We should find a better
+		 * solution...
 		 */
 		if (isset($this->config['locale'])) {
 			$envLocale = setlocale(LC_NUMERIC, 0);
@@ -154,15 +157,15 @@ class Config {
 	}
 	
 	/**
-	 * Returns an instance of this class. An existing instance is returned if one exists, else a new
-	 * instance is created.
+	 * Returns an instance of this class. An existing instance is returned if one exists, else
+	 * a new instance is created.
 	 * 
 	 * @return Config
 	 */
 	public static function getInstance () {
 		if (!isset(self::$instance)) {
-			$mode = ConfigHelper::getMode();
-			// XXX: Unserialize cached config when appropriate depending on mode here
+			$mode = self::getMode(true);
+			// TODO: Unserialize cached config when appropriate depending on mode here
 			self::$instance = new Config($mode);
 			self::$instance->init();
 		}
@@ -172,19 +175,40 @@ class Config {
 	/**
 	 * Returns the environment mode Kolibri is currently running in.
 	 *
+	 * @param bool $reevaluate If <code>TRUE</code> the mode will be evaluated again
+	 *                         from the KOLIBRI_MODE environment variable. Otherwise
+	 *                         the internal cached mode value will be returned.
 	 * @return string Either Config::DEVELOPMENT, Config::TEST or Config::PRODUCTION.
+	 * @throws Exception If reevaluating mode value and KOLIBRI_MODE is found to contain
+	 *                   an unsupported environment mode.
 	 */
-	public static function getMode () {
+	public static function getMode ($reevaluate = false) {
+		if ($reevaluate === true) {
+			if (($envMode = getenv('KOLIBRI_MODE')) !== false) {
+				if ($envMode == self::PRODUCTION
+						|| $envMode == self::DEVELOPMENT
+						|| $envMode == self::TEST) {
+					return $envMode;
+				}
+				else {
+					throw new Exception("Invalid environment mode in \$KOLIBRI_MODE: '$envMode'");
+				}
+			}
+
+			return self::DEVELOPMENT;
+		}
+		
 		$instance = Config::getInstance();
 		return $instance->mode;
 	}
 	
 	/**
-	 * Returns the value of the configuration setting with the specified key, or <code>NULL</code> if
-	 * not found. If no key is supplied, all settings are returned.
+	 * Returns the value of the configuration setting with the specified key, or
+	 * <code>NULL</code> if not found. If no key is supplied, all settings are returned.
 	 * 
-	 * @param string $key	Key of the configuration value to return, or <code>NULL</code> ro retrieve all.
-	 * @return mixed		Configuration variable, <code>NULL</code> og array of all variables.
+	 * @param string $key Key of the configuration value to return, or <code>NULL</code> to
+	 *                    retrieve all.
+	 * @return mixed Configuration variable, <code>NULL</code> og array of all variables.
 	 */
 	public static function get ($key = null) {
 		$instance = Config::getInstance();
@@ -197,12 +221,15 @@ class Config {
 	/**
 	 * Returns the names of the action mappers defined for this application.
 	 *
-	 * @return mixed Associative array with URIs mapped to action mappers, or <code>NULL</code> when
-	 *               none is defined.
+	 * @return mixed Associative array with URIs mapped to action mappers, or
+	 *               <code>NULL</code> when none is defined.
 	 */
 	public static function getActionMappers () {
 		$instance = Config::getInstance();
-		return (isset($instance->config['actionmappers']) ? $instance->config['actionmappers'] : null);
+		if (isset($instance->config['actionmappers'])) {
+			return $instance->config['actionmappers'];
+		}
+		return null;
 	}
 
 	/**
@@ -234,13 +261,16 @@ class Config {
 
 	/**
 	 * Returns an array of validation configuration.
-	 * XXX: Separate fetching of validation classes and messages.
+	 * TODO: Separate fetching of validation classes and messages.
 	 *
 	 * @return array		Array of validation configuration.
 	 */
 	public static function getValidationConfig () {
 		$instance = Config::getInstance();
-		return array('classes' => $instance->validationClasses, 'messages' => $instance->validationMessages);
+		return array(
+			'classes' => $instance->validationClasses,
+			'messages' => $instance->validationMessages
+		);
 	}
 }
 ?>

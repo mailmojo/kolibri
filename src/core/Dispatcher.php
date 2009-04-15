@@ -62,7 +62,7 @@ class Dispatcher {
 				 */
 				foreach ($interceptors as $name => $class) {
 					// Only interceptor classes without a ! prefix should be in the stack
-					if (substr($class, 0, 1) != '!') {
+					if ($class{0} != '!') {
 						$stack[$name] = $class;
 					}
 					else {

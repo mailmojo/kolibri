@@ -1,6 +1,6 @@
 <?php
 /*
- * Defines classes that may be loaded upon its first use by Autoloader::load(). They are not
+ * Defines classes that may be loaded upon its first use by ClassLoader::load(). They are not
  * automatically loaded unless they are actually used. See <code>UtilsInterceptor</code> for
  * automatic loading of utils.
  */
@@ -47,7 +47,7 @@ $autoloadClasses = array(
 		'SmartyResult'           => '/results/SmartyResult.php',
 		'TextResult'             => '/results/TextResult.php',
 		'XsltResult'             => '/results/XsltResult.php',
-		'Utils'                  => '/core/Utils.php',
+		'Utils'                  => '/utils/Utils.php',
 		'Validator'              => '/validation/Validator.php',
 		'ValidationHelper'       => '/validation/ValidationHelper.php');
 ?>

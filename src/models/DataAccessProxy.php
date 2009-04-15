@@ -38,7 +38,7 @@ class DataAccessProxy {
 	public function __construct ($modelProxy, $modelClass) {
 		$this->modelProxy	= $modelProxy;
 		$this->daoClass		= $modelClass . 'Dao';
-		Autoloader::load($this->daoClass);
+		ClassLoader::load($this->daoClass);
 
 		$reflection = new ReflectionClass($modelClass);
 		$this->modelPk = $reflection->getConstant('PK');
@@ -48,7 +48,7 @@ class DataAccessProxy {
 	 * Imports the DAO we are proxying upon wakeup (i.e. if a proxied model is put in the session).
 	 */
 	public function __wakeup () {
-		Autoloader::load($this->daoClass);
+		ClassLoader::load($this->daoClass);
 	}
 
 	/**

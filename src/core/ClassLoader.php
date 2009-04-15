@@ -2,9 +2,9 @@
 /**
  * Loads core framework classes and application models with their DAO classes as required.
  */
-class Autoloader {
+class ClassLoader {
 	/**
-	 * Mapping of class names to files with their definitions.
+	 * Mapping of core class names to the files with their definitions.
 	 * @var array
 	 */
 	private static $classes = array();
@@ -17,13 +17,13 @@ class Autoloader {
 	private static $loaded = array();
 	
 	/**
-	 * Initializes the Autoloader with a mapping of class names to files,
+	 * Initializes the ClassLoader with a mapping of class names to files,
 	 * and registers the autoload function with the PHP runtime.
 	 */
 	public static function initialize ($config) {
 		self::$classes = $config;
 		
-		spl_autoload_register(array('Autoloader', 'load'));
+		spl_autoload_register(array('ClassLoader', 'load'));
 	}
 	
 	/**
@@ -37,15 +37,15 @@ class Autoloader {
 			require(ROOT . self::$classes[$className]);
 		}
 		else if (!isset(self::$loaded[$className])) {
-			// DAO class names in Kolibri consists of the model name with 'Dao' appended.
-			if (substr($className, -3) == 'Dao') {
-				require(MODELS_PATH . "/dao/{$className}.php");
-			}
-			// If it's not a DAO class, see if it's a model class
-			else if (file_exists(MODELS_PATH . "/{$className}.php")) {
+			// Not in autoload mapping, check to see if it's a model first
+			if (file_exists(MODELS_PATH . "/{$className}.php")) {
 				require(MODELS_PATH . "/{$className}.php");
 			}
-			// If it's not a core, model or DAO class we simply use the include_path
+			// If not, might be a DAO class
+			else if (strtolower(substr($className, -3)) == 'dao') {
+				require(MODELS_PATH . "/dao/{$className}.php");
+			}
+			// If it's not a core, model or DAO class we simply try the include_path
 			else {
 				require($className . '.php');
 			}

@@ -1,9 +1,9 @@
 <?php
 /**
- * The HTTP gateway to the Kolibri framework. Essential core files are included, config initialized and
- * processing of the HTTP request is started.
+ * The HTTP gateway to the Kolibri framework. Essential core files are included, config
+ * initialized and processing of the HTTP request is started.
  * The constants defined here, ROOT and APP_PATH, can be changed from their default values by
- * using SetEnv in the .htaccess file or in an appropriate directive in httpd.conf.
+ * using SetEnv in the .htaccess file or in an appropriate Apache config directive.
  */
 
 /*
@@ -18,8 +18,8 @@ else {
 }
 
 /*
- * Defines the root directory for the application's actions, models, views etc. By default this is
- * the same directory as this kolibri.php file.
+ * Defines the root directory for the application. By default this is the same directory as
+ * this kolibri.php file.
  */
 if ($appDir = getenv('KOLIBRI_APP')) {
 	define('APP_PATH', $appDir);
