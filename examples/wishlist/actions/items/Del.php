@@ -1,14 +1,14 @@
 <?php
 /**
- * Action for deleting items. As the item to delete is specified by the last URI element (which does not have 
- * a matching action file), it is implicitly put in the "id" request parameter.
+ * Action for deleting items. As the item to delete is specified by the last URI element (which
+ * does not have a matching action file), it is implicitly put in the "id" request parameter.
  */
 class Del implements MessageAware {
 	/**
-	 * TODO: Should really change to POST via form (and thus doPost()).
+	 * TODO: We should really POST the form (and thus doPost()).
 	 */
 	public function doGet ($request) {
-		// We could also do $this->request->get('id'), whatever you prefer
+		// We could also do $request->get('id'), whatever you prefer
 		$itemName = $request['id'];
 		$item = Models::init('Item');
 
@@ -23,7 +23,7 @@ class Del implements MessageAware {
 			$this->msg->setMessage("Item with name $itemName not found.", false);
 		}
 
-		// Redirect back to front page, notice messages are retained
+		// Redirect back to front page. Messages in $this->msg will be retained.
 		return new RedirectResponse('/');
 	}
 }

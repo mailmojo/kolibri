@@ -1,10 +1,10 @@
 <?php
 /**
- * This class encapsulates information about a HTTP session. The session data is not stored within
- * an instance itself, but the global <code>$_SESSION</code> array is abstracted.
+ * This class encapsulates information about a HTTP session. The session data is not stored
+ * within an instance itself, but the global <code>$_SESSION</code> array is abstracted.
  * 
- * The <code>SessionInterceptor</code> should generally be used when using sessions, as it takes care of
- * instantiating this class and injecting it into the action.
+ * The <code>SessionInterceptor</code> should generally be used when using sessions, as it
+ * takes care of instantiating this class and injecting it into the request.
  */
 class Session implements ArrayAccess, IteratorAggregate {
 	// TODO: Add session settings etc. here
@@ -36,7 +36,7 @@ class Session implements ArrayAccess, IteratorAggregate {
 	 * @return string		Value of the data, or <code>null</code> if not found.
 	 */
 	public function offsetGet ($key) {
-		return (isset($_SESSION[$key]) ? $_SESSION[$key] : null);
+		return $this->get($key);
 	}
 
 	/**
@@ -46,7 +46,7 @@ class Session implements ArrayAccess, IteratorAggregate {
 	 * @param mixed $value	Value to store in the session.
 	 */
 	public function offsetSet ($key, $value) {
-		$_SESSION[$key] = $value;
+		$this->put($key, $value);
 	}
 
 	/**
@@ -55,7 +55,7 @@ class Session implements ArrayAccess, IteratorAggregate {
 	 * @param string $key	Key associated with the value to remove.
 	 */
 	public function offsetUnset ($key) {
-		unset($_SESSION[$key]);
+		$this->remove($key);
 	}
 
 	/**

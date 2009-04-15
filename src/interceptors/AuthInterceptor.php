@@ -49,7 +49,7 @@ class AuthInterceptor extends AbstractInterceptor {
 							the page you requested.', false);
 				}
 
-				return $this->denyAccess($dispatcher);
+				return $this->denyAccess();
 			}
 
 			if ($action instanceof AuthAware) {

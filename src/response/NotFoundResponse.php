@@ -8,10 +8,9 @@ class NotFoundResponse extends XsltResponse {
 	 * Initialize this response.
 	 *
 	 * @param string $stylesheet XSL stylesheet to use.
-	 * @param int $status        HTTP status code. Defaults to 200 OK.
 	 */
-	public function __construct ($stylesheet = '/404', 404) {
-		parent::__construct(null, $stylesheet);
+	public function __construct ($stylesheet = '/404') {
+		parent::__construct(null, $stylesheet, 404);
 	}
 }
 ?>

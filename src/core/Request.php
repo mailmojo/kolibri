@@ -72,7 +72,7 @@ class Request implements ArrayAccess {
 	 * @return mixed			The request parameter, or NULL if not set.
 	 */
 	public function offsetGet ($key) {
-		return (isset($this->params[$key]) ? $this->params[$key] : null);
+		return $this->get($key);
 	}
 
 	/**

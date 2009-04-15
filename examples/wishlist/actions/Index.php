@@ -1,8 +1,8 @@
 <?php
 /**
- * Action for the display of the front page. Retrieves the wishlist items and returns the XSL
- * page as the result. We also implement ModelAware so any validation errors when adding items
- * are displayed.
+ * Action for the display of the front page. Retrieves the wishlist items and returns a XSL
+ * rendered page as the response. We also implement ModelAware so any validation errors when
+ * adding items are displayed.
  */
 class Index implements MessageAware, ModelAware {
 	public $model;
@@ -10,7 +10,7 @@ class Index implements MessageAware, ModelAware {
 
 	/**
 	 * As the name implies, doGet() is called for GET request. It must return an instance of a
-	 * Result class, in this case a XsltResult for a XSL transformation.
+	 * Response class, in this case a XsltResponse for server-side XSL transformation.
 	 */
 	public function doGet () {
 		$dbSetup = new DatabaseSetup();
