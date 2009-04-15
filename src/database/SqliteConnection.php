@@ -9,7 +9,7 @@ require(ROOT . '/database/SqliteResultSet.php');
  *
  *   [database]
  *   type = "Sqlite"
- *   database = "" ; Absolute path to SQLite database file, writable by the PHP process
+ *   name = "" ; Absolute path to SQLite database file, writable by the PHP process
  *
  * A configuration section named 'database' as shown specifies the default database. Others
  * can be configured with sections named 'database.slave1' or similar, where 'slave1' is the
