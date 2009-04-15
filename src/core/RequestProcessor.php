@@ -3,16 +3,14 @@ require(ROOT . '/core/Request.php');
 require(ROOT . '/core/Dispatcher.php');
 
 /**
- * This is the main class of the TURBO framework, which is responsible for initializing the request
- * processing flow.
+ * This is the main class of the Kolibri framework, which is responsible for initializing the
+ * request processing flow.
  * 
  * A <code>Request</code> object is first created, which is passed along to an
- * <code>ActionMapper</code> implementation to map the request to a target action. If a suitable
- * action mapping is found, a <code>Dispatcher</code> is created and invoked to handle the flow
- * of the request. After the dispatcher is done processing the request, any result obtained is
- * rendered to the client.
- * 
- * @version		$Id: RequestProcessor.php 1513 2008-06-21 12:16:05Z anders $
+ * <code>ActionMapper</code> implementation to map the request to a target action. If a
+ * suitable action mapping is found, a <code>Dispatcher</code> is created and invoked to handle
+ * the flow of the request. After the dispatcher is done processing the request, any response
+ * obtained is rendered to the client.
  */	
 class RequestProcessor {
 	/**
@@ -40,8 +38,6 @@ class RequestProcessor {
 	 * Process the request.
 	 */
 	public function process () {
-		//echo "Processing request [uri: $this->uri] => [action: $this->action_path]...\n";
-
 		// Map the request to an action
 		$mapping = $this->mapper->map();
 		if ($mapping === null) {
@@ -99,8 +95,7 @@ class RequestProcessor {
 	 * Renders a 404 Not Found status page to the client.
 	 */
 	private function throw404 () {
-		require_once(ROOT . '/results/NotFoundResult.php');
-		$result = new NotFoundResult($this->request);
+		$result = new NotFoundResponse();
 		$result->render($this->request);
 		exit();
 	}

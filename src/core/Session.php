@@ -1,10 +1,10 @@
 <?php
 /**
- * This class encapsulates information about a HTTP session. The session data is not stored within
- * an instance itself, but the global <code>$_SESSION</code> array is abstracted.
+ * This class encapsulates information about a HTTP session. The session data is not stored
+ * within an instance itself, but the global <code>$_SESSION</code> array is abstracted.
  * 
- * The <code>SessionInterceptor</code> should generally be used when using sessions, as it takes care of
- * instantiating this class and injecting it into the action.
+ * The <code>SessionInterceptor</code> should generally be used when using sessions, as it
+ * takes care of instantiating this class and injecting it into the request.
  */
 class Session implements ArrayAccess, IteratorAggregate {
 	// TODO: Add session settings etc. here
@@ -30,13 +30,13 @@ class Session implements ArrayAccess, IteratorAggregate {
 	}
 
 	/**
-	 * Retrieves a specific session parameter, or NULL if not set.
-	 *
-	 * @param mixed $key	Session parameter to retrieve.
-	 * @return mixed		The session parameter, or NULL if not set.
+	 * Returns the value of the session data with the specified key.
+	 * 
+	 * @param string $key	Key to the value to return.
+	 * @return string		Value of the data, or <code>null</code> if not found.
 	 */
 	public function offsetGet ($key) {
-		return (isset($_SESSION[$key]) ? $_SESSION[$key] : null);
+		return $this->get($key);
 	}
 
 	/**
@@ -46,7 +46,7 @@ class Session implements ArrayAccess, IteratorAggregate {
 	 * @param mixed $value	Value to store in the session.
 	 */
 	public function offsetSet ($key, $value) {
-		$_SESSION[$key] = $value;
+		$this->put($key, $value);
 	}
 
 	/**
@@ -55,7 +55,7 @@ class Session implements ArrayAccess, IteratorAggregate {
 	 * @param string $key	Key associated with the value to remove.
 	 */
 	public function offsetUnset ($key) {
-		unset($_SESSION[$key]);
+		$this->remove($key);
 	}
 
 	/**
@@ -71,10 +71,10 @@ class Session implements ArrayAccess, IteratorAggregate {
 	 * Returns the value of the session data with the specified key.
 	 * 
 	 * @param string $key	Key to the value to return.
-	 * @return string		Value of the data, or <code>FALSE</code> if not found.
+	 * @return string		Value of the data, or <code>null</code> if not found.
 	 */
 	public function get ($key) {
-		return (isset($_SESSION[$key]) ? $_SESSION[$key] : false);
+		return (isset($_SESSION[$key]) ? $_SESSION[$key] : null);
 	}
 	
 	/**
