@@ -27,5 +27,6 @@ putenv('KOLIBRI_MODE=test');
 require(ROOT . '/core/Config.php');
 Config::getInstance();
 
+require(ROOT . '/specs/fixtures/Fixtures.php');
 require(ROOT . '/specs/KolibriTestCase.php');
 ?>
