@@ -1,8 +1,8 @@
 <?php
 // remember to set your own paths here..
-define('APP_PATH', '/home/stian/projects/kolibri-test/examples/articleapp');
+define('APP_PATH', '/home/stian/projects/kolibri-testcase/examples/wishlist');
 define('MODELS_PATH', APP_PATH . '/models');
-define('ROOT', '/home/stian/projects/kolibri-test/src');
+define('ROOT', '/home/stian/projects/kolibri-testcase/src');
 require(ROOT . '/specs/KolibriTestCase.php');
 
 /**

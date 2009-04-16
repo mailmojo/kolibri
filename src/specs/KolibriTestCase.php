@@ -37,7 +37,7 @@ class KolibriTestCase extends PHPSpec_Context {
             // action testing
         }
         else {
-            throw new Exception("KolibriTestCase needs to have either Model og Action in the end of the classname");
+            throw new Exception("KolibriTestCase needs to have either Model or Action in the end of the classname");
         }
         
         $this->setup();

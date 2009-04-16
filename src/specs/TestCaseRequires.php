@@ -1,5 +1,5 @@
 <?php
-define(ROOT, '/home/stian/projects/kolibri-test/src');
+define(ROOT, '/home/stian/projects/kolibri-testcase/src');
 
 require(ROOT . '/core/Config.php');
 
