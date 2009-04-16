@@ -1,8 +1,4 @@
 <?php
-define(ENVIRONMENT, 'test');
-
-require('TestCaseRequires.php');
-
 class KolibriTestCase extends PHPSpec_Context {
     
     public $fixtures;
@@ -15,7 +11,7 @@ class KolibriTestCase extends PHPSpec_Context {
             Fixtures::blankOutTable($this->modelName);
         }
         
-        $this->infront();
+        $this->preSpec();
     }
     
     /**
@@ -27,10 +23,7 @@ class KolibriTestCase extends PHPSpec_Context {
         
         if (substr($className, -5) == 'Model') {
             $this->modelName = substr($className, 8, -5);
-            
-            // TODO: hmm..
-            import($this->modelName);
-            
+                        
             $this->fixtures = Fixtures::populate($this->modelName);
         }
         else if (substr($className, -6) == 'Action') {
@@ -44,13 +37,13 @@ class KolibriTestCase extends PHPSpec_Context {
     }
     
     public function after () {
-        $this->tearDown();
+        $this->postSpec();
     }
     
     public function afterAll () {
         unset($this->fixtures);
         
-        $this->tearDownLast();
+        $this->tearDown();
     }
     
 
@@ -60,8 +53,9 @@ class KolibriTestCase extends PHPSpec_Context {
      */
     public function setup () { }
     public function infront () { }
-    public function tearDown () { }
-    public function tearDownLast () { }
+    public function inback () { }
+	public function tearDown () { }
+    
     
 
 	

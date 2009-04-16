@@ -1,9 +1,5 @@
 <?php
-// remember to set your own paths here..
-define('APP_PATH', '/home/stian/projects/kolibri-testcase/examples/wishlist');
-define('MODELS_PATH', APP_PATH . '/models');
-define('ROOT', '/home/stian/projects/kolibri-testcase/src');
-require(ROOT . '/specs/KolibriTestCase.php');
+require_once('../TestBootstrap.php');
 
 /**
  * Specification for the Article Model. It contains before and after methods from PHPSpec.
@@ -25,7 +21,7 @@ class DescribeItemModel extends KolibriTestCase {
     /**
      * This method acts as before() method from PHPSpec
      */
-    public function infront () {
+    public function preSpec () {
         // This method doesnt have to be here if it doesnt contain anything.
         // echo "this is infront of every spec method\n";
         
@@ -93,14 +89,14 @@ class DescribeItemModel extends KolibriTestCase {
     /**
      * This method acts as after() method from PHPSpec
      */
-    public function tearDown () {
+    public function postSpec () {
         // This method doesnt have to be here if it doesnt contain anything.
     }
     
     /**
      * This method acts as afterAll() method from PHPSpec
      */
-    public function tearDownLast () {
+    public function tearDown () {
         // This method doesnt have to be here if it doesnt contain anything.
     }
     

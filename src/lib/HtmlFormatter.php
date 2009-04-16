@@ -1,5 +1,5 @@
 <?php
-import('strings', 'util');
+Utils::import('strings');
 
 define('HTML_HEADINGS', 1);
 class HtmlFormatter {

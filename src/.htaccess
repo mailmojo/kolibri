@@ -5,4 +5,5 @@ RewriteEngine On
 # static resources (as is recommended), this should be modified.
 RewriteRule ^favicon.ico$ static/favicon.ico [L]
 RewriteCond %{REQUEST_URI} !^/static
+RewriteCond %{REQUEST_URI} !test.php$
 RewriteRule ^(.*)$ kolibri.php

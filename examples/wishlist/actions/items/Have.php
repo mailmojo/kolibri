@@ -2,24 +2,25 @@
 /**
  * Action for marking items as received.
  */
-class Have extends ActionSupport {
-	// TODO: We should really POST instead...
-	public function doGet () {
+class Have implements MessageAware {
+	/**
+	 * TODO: We should really POST the form (and thus doPost()).
+	 */
+	public function doGet ($request) {
 		$item = Models::init('Item');
-		if ($item->objects->load($this->request['id'])) {
-			// Set received date (could of course be done in SQL, but just to show date library in use)
+		if ($item->objects->load($request['id'])) {
+			// Set received date (could be done in SQL, but just to show date library in use)
 			$df = DateFormat::getInstance(DateFormat::ISO_8601_DATE);
 			$item->received = $df->format(new Date());
 
-			if ($item->save()) {
-				$this->msg->setMessage('Item successfully marked as received.');
-			}
+			$item->save();
+			$this->msg->setMessage('Item successfully marked as received.');
 		}
 		else {
-			$this->msg->setMessage("Item with name {$this->request['id']} not found.", false);
+			$this->msg->setMessage("Item with name {$request['id']} not found.", false);
 		}
 
-		return new RedirectResult($this, '/');
+		return new RedirectResponse('/');
 	}
 }
 ?>

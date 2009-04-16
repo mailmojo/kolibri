@@ -1,8 +1,6 @@
 <?php
 /**
  * Interceptor which loads utils listed in a <code>loadUtils</code> config setting.
- * 
- * @version		$Id: UtilsInterceptor.php 1510 2008-06-17 05:45:50Z anders $
  */
 class UtilsInterceptor extends AbstractInterceptor {
 	/**
@@ -12,7 +10,7 @@ class UtilsInterceptor extends AbstractInterceptor {
 		$utils = Config::get('loadUtils');
 		if (is_array($utils)) {
 			foreach ($utils as $util) {
-				import($util, 'util');
+				Utils::import($util);
 			}
 		}
 

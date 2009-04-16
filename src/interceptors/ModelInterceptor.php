@@ -24,6 +24,8 @@ class ModelInterceptor extends AbstractInterceptor {
 		$action = $dispatcher->getAction();
 
 		if ($action instanceof ModelAware) {
+			$request = $dispatcher->getRequest();
+
 			// We depend on a $model-property in ModelAware actions
 			if (!property_exists($action, 'model')) {
 				$class = get_class($action);
@@ -37,11 +39,12 @@ class ModelInterceptor extends AbstractInterceptor {
 			 * take precedence, to stop any invalid model in the session to override the newly
 			 * POSTed.
 			 */
-			if ($dispatcher->getRequest()->getMethod() == 'GET'
-					&& $action instanceof SessionAware && isset($action->session['model'])) {
-				$action->model = $action->session['model'];
+			if ($request->getMethod() == 'GET'
+					&& $request->hasSession()
+					&& isset($request->session['model'])) {
+				$action->model = $request->session['model'];
 				// Model has been extracted, remove it from session
-				$action->session->remove('model');
+				$request->session->remove('model');
 			}
 			// Otherwise prepare a model from request parameters
 			else {
@@ -55,7 +58,7 @@ class ModelInterceptor extends AbstractInterceptor {
 				}
 				
 				if ($model !== null) {
-					foreach ($dispatcher->getRequest()->params as $param => $value) {
+					foreach ($request->params as $param => $value) {
 						if (strpos($param, '::') !== false) {
 							/*
 							 * Parameter is a property path to inner models. Explode the path

@@ -2,7 +2,10 @@
 /**
  * PHPSpec
  * This file will run all specs within this directory and all child-directories.
+ * TODO safeguard sjekke at mode = test
  */
+
+chdir('/specs');
 
 require_once 'PHPSpec.php';
 

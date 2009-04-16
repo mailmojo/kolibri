@@ -11,23 +11,17 @@ abstract class InterceptorFactory {
 	private function __construct () {}
 
 	/**
-	 * Instantiates, initilizes and returns interceptors set to be used.
+	 * Instantiates, initializes and returns interceptors set to be used.
 	 *
-	 * @param array $interceptors	Interceptor classes to instantiate.
-	 * @return array				An array with instantiated interceptors.
+	 * @param array $interceptors Interceptor classes to instantiate.
+	 * @return array An array with instantiated interceptors.
 	 */
-	public static function createInterceptors ($interceptors) {
+	public static function createInterceptors (array $interceptors) {
 		$stack = array(); // To hold instantiated interceptors
-
-		foreach ($interceptors as $class) {
-			if (is_array($class)) {
-				// $class contains parameters to be passed to the constructor
-				$actualClass = key($class);
-				$instance = new $actualClass(current($class));
-			}
-			else {
-				$instance = new $class();
-			}
+		
+		foreach ($interceptors as $name => $class) {
+			$settings = Config::getInterceptorSettings($name);
+			$instance = new $class($settings);
 
 			$instance->init();
 			$stack[] = $instance;

@@ -1,4 +1,6 @@
 <?php
+require(ROOT . '/core/InterceptorFactory.php');
+
 /**
  * This class dispatches the request to the interceptors and action target of the request.
  * 
@@ -39,7 +41,7 @@ class Dispatcher {
 	 * 
 	 * The interceptors mapped to the target action is created and pushed to the dispatcher stack.
 	 *
-	 * @param Request $request				Request object for the interceptors.
+	 * @param Request $request				Request object.
 	 * @param ActionMapping $actionMapping	Mapping to the action to invoke.	
 	 * @return Dispatcher
 	 */
@@ -55,33 +57,23 @@ class Dispatcher {
 
 			if (preg_match($uriMatch, $request->getUri()) == 1) {
 				/*
-				 * Current URI matches the mapping. We loop through each interceptor mapped, find their
-				 * actual classes and sets or unsets their use depending on the current URI mapping.
+				 * Current URI matches the mapping. We loop through each interceptor for the
+				 * matched URI and add or remove from the final stack depending on it's prefix.
 				 */
-				foreach ($interceptors as $name) {
-					// Check whether the current interceptor is to be used or negated
-					if (!($use = (substr($name, 0, 1) != '!'))) {
-						$name = substr($name, 1); // Strip ! from the name
+				foreach ($interceptors as $name => $class) {
+					// Only interceptor classes without a ! prefix should be in the stack
+					if ($class{0} != '!') {
+						$stack[$name] = $class;
 					}
-
-					// Gets the actual classes the name represents
-					$classes = Config::getInterceptorClasses($name);
-
-					// Loop through interceptor classes and set or unset its use
-					foreach ($classes as $class) {
-						if ($use) {
-							$stack[] = $class;
-						}
-						else {
-							unset($stack[array_search($class, $stack)]);
-						}
+					else {
+						unset($stack[$name]);
 					}
 				}
 			}
 		}
 
 		$class = $actionMapping->getActionClass();
-		$this->action = new $class($request);
+		$this->action = new $class();
 		$this->stack = InterceptorFactory::createInterceptors($stack);
 	}
 	
@@ -108,7 +100,7 @@ class Dispatcher {
 				return $result;
 			}
 		}
-		return $this->action->{$this->actionMethod}();
+		return $this->action->{$this->actionMethod}($this->getRequest());
 	}
 
 	public function getRequest () {
