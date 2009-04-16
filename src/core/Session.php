@@ -7,16 +7,32 @@
  * takes care of instantiating this class and injecting it into the request.
  */
 class Session implements ArrayAccess, IteratorAggregate {
+	/**
+	 * Flag indicated whether we have actually started the session.
+	 * @var bool
+	 */
+	private $started;
+
 	// TODO: Add session settings etc. here
 	
 	/**
-	 * Creates an instance of this class, and prepares the PHP session module for use.
+	 * Creates an instance of this class. We support lazy-loading of the session, which means
+	 * that we don't start the session here unless the user is already in an active session
+	 * (determined by a session cookie).
 	 */
 	public function __construct () {
-		if (session_module_name() != 'files') {
-			session_module_name('files');
+		if (isset($_COOKIE['PHPSESSID'])) {
+			$this->start();
 		}
+		else $this->started = false;
+	}
+
+	/**
+	 * Actually starts the session.
+	 */
+	private function start () {
 		session_start();
+		$this->started = true;
 	}
 	
 	/**
@@ -64,7 +80,7 @@ class Session implements ArrayAccess, IteratorAggregate {
 	 * @return ArrayIterator
 	 */
 	public function getIterator () {
-		return new ArrayIterator($_SESSION);
+		return new ArrayIterator($this->started ? $_SESSION : array());
 	}
 
 	/**
@@ -93,6 +109,9 @@ class Session implements ArrayAccess, IteratorAggregate {
 	 * @param mixed $value	Value to store in the session.
 	 */
 	public function put ($key, $value) {
+		if (!$this->started) {
+			$this->start();
+		}
 		$_SESSION[$key] = $value;
 	}
 	
