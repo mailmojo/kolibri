@@ -40,7 +40,12 @@ class DefaultActionMapper {
 	 * 					or <code>NULL</code> if no action could be mapped.
 	 */
 	public function map () {
-		$uri = trim(str_replace(Config::get('webRoot'), '', $this->request->getUri()), '/');
+		/*
+		 * First strip scheme and hostname from webRoot, to ensure webRoot is an URI path like
+		 * the request URI. We then "normalize" the URI to be within the webRoot.
+		 */
+		$absoluteUri = parse_url(Config::get('webRoot'), PHP_URL_PATH);
+		$uri = trim(str_replace($absoluteUri, '', $this->request->getUri()), '/');
 		$uriParts = (empty($uri) ? array() : explode('/', $uri));
 
 		// Map the URI to its target action

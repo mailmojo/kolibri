@@ -15,7 +15,6 @@ if ($rootDir = getenv('KOLIBRI_ROOT')) {
 }
 else {
 	define('ROOT', dirname(__FILE__) . '/kolibri');
-
 }
 
 /*
@@ -28,9 +27,6 @@ if ($appDir = getenv('KOLIBRI_APP')) {
 else {
 	define('APP_PATH', dirname(__FILE__));
 }
-
-
-echo getenv('KOLIBRI_ROOT');
 
 // Require essential files. Others are loaded as needed.
 require(ROOT . '/core/Config.php');

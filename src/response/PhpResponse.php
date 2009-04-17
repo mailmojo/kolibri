@@ -3,7 +3,7 @@
  * Provides the implementation of a response using a PHP file as a template for creating
  * the actual output.
  */	
-class PhpResult extends Response {
+class PhpResponse extends Response {
 	private $phpTemplate;
 
 	/**
