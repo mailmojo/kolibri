@@ -35,6 +35,6 @@ require(ROOT . '/core/RequestProcessor.php');
 // Init configuration
 Config::getInstance();
 
-$kolibri = new RequestProcessor();
+$kolibri = new RequestProcessor($_GET, $_POST);
 $kolibri->process();
 ?>

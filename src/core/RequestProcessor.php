@@ -28,7 +28,7 @@ class RequestProcessor {
 	/**
 	 * Create an instance of this class, and find the action mapper to use for this request. 
 	 */
-	public function __construct () {
+	public function __construct ($get = null, $post = null) {
 		$this->request = new Request($_GET, $_POST);
 		$mapperName = $this->findActionMapper();
 		$this->mapper = new $mapperName($this->request);
@@ -37,7 +37,7 @@ class RequestProcessor {
 	/**
 	 * Process the request.
 	 */
-	public function process () {
+	public function process ($render = true) {
 		// Map the request to an action
 		$mapping = $this->mapper->map();
 		if ($mapping === null) {
@@ -49,11 +49,13 @@ class RequestProcessor {
 		$result = $this->dispatcher->invoke();
 
 		// Render the result
-		if ($result !== null) {
+		if ($result !== null && $render) {
 			ob_start();
 			$result->render($this->request);
 			ob_end_flush();
 		}
+
+		return $result;
 	}
 
 	/**
