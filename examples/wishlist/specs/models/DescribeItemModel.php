@@ -2,9 +2,12 @@
 require_once('../TestBootstrap.php');
 
 /**
- * Specification for the Article Model. It contains before and after methods from PHPSpec.
+ * Specification for the Item Model. It contains before and after methods from PHPSpec.
  * TODO: Alot of the spec methods are too large for their purpose. something needs to be
  * done...
+ *
+ * ellers så prøver $this->spec() metode å loade classen med param navnet til spec... hvorfor aner jeg ikke?
+ * 
  */
 class DescribeItemModel extends KolibriTestCase {
     private $itemName;
@@ -13,7 +16,7 @@ class DescribeItemModel extends KolibriTestCase {
      * This method acts as beforeAll() method from PHPSpec
      */
     public function setup () {
-        // This method doesnt have to be here if it doesnt contain anything.
+        // This method doesnt have to be here if its blank.
         // echo "this is invoked before every spec method\n";
 
     }
@@ -27,7 +30,7 @@ class DescribeItemModel extends KolibriTestCase {
         
         $item = $this->fixtures['ValidItem'];
         $item->save();
-
+        
         $this->itemName = $item->name;
     }
     
@@ -35,10 +38,12 @@ class DescribeItemModel extends KolibriTestCase {
      * This spec will try to load a saved article object
      */
     public function itShouldBeAbleToLoadAnArticle () {
+        spl_autoload_unregister(array('ClassLoader', 'load'));
+        
         $item = Models::init('Item');
         $item->objects->load($this->itemName);
-        
-        $this->spec($item->name)->should()->beEqualTo($this->itemName);
+
+        $this->spec($item->name)->should->beEqualTo($this->itemName);
     }
     
     /**
@@ -46,10 +51,9 @@ class DescribeItemModel extends KolibriTestCase {
      */
     public function itShouldHaveAnItemNameWhenSaved () {
         $item = $this->fixtures['ValidItem'];
-        $this->spec($item)->should()->beValid();
-        $article->save();
-        
-        $this->spec($item->name)->shouldNot()->beNull();
+        $this->spec($item)->should->beValid();
+        $item->save();
+        $this->spec($item->name)->shouldNot->beNull();
     }
     
     /**
@@ -57,20 +61,13 @@ class DescribeItemModel extends KolibriTestCase {
      */
     public function itShouldNotBeAbleToSaveAnInvalidArticle () {
         $item = $this->fixtures['InvalidItem'];
-        $this->spec($item)->shouldNot()->beValid();
+        $this->spec($item)->shouldNot->beValid();
         
-        /*try {
+        try {
             $item->save();
-
-            // if it succeeds to come all this way, the test will fail
-            // and it will output the model validation errors.
-            $this->fail("Not a valid item");
+            $this->fail("This Item model is suspose to not be valid but it is.");
         }
-        catch(SQLException $e) {
-
-        }*/
-
-        $this->spec($item->name)->should()->beNull();
+        catch(SQLException $e) { }
     }
     
     /**
@@ -83,21 +80,21 @@ class DescribeItemModel extends KolibriTestCase {
         
         $item = Models::init('Item');
         $item->objects->load($this->itemName);
-        $this->spec($item->name)->should()->beNull();
+        $this->spec($item->name)->should->beNull();
     }
     
     /**
      * This method acts as after() method from PHPSpec
      */
     public function postSpec () {
-        // This method doesnt have to be here if it doesnt contain anything.
+        unset($this->itemName);
     }
     
     /**
      * This method acts as afterAll() method from PHPSpec
      */
     public function tearDown () {
-        // This method doesnt have to be here if it doesnt contain anything.
+        // This method doesnt have to be here if its blank.
     }
     
 

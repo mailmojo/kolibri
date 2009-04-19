@@ -3,18 +3,19 @@
  * This class loads fixtures
  */
 class Fixtures {
-    /**
-     * Deletes all the datafrom the test-table
-     */
-    public function __construct () { }
-    
+	
+	/**
+	 * This method is used by KolibriTestCase for blanking out the given table
+	 * when each spec is runned.
+	 */
 	public static function blankOutTable ($modelName) {
         $reflection = new ReflectionClass($modelName);
         $table = $reflection->getConstant('RELATION');
         
-		$delete = "DELETE FROM $table";
-        
+		//$delete = "DELETE FROM $table WHERE name = 'sdvsvs'";
+        $delete = "DELETE FROM $table";
         $db = DatabaseFactory::getConnection();
+		
 		$db->query($delete);
 	}
 	
@@ -23,12 +24,13 @@ class Fixtures {
      */
     public static function populate ($modelName) {
         if(!empty($modelName)) {
+			
             $iniFile = APP_PATH . "/specs/fixtures/$modelName.ini";
             
             $models = parse_ini_file($iniFile, true);
 
             foreach($models as $name => $model) {
-    
+
                 if (is_array($model) && !empty($name)) {
                     $newModel = Models::init($modelName);
                     

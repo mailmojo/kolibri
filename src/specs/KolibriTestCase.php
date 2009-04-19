@@ -1,4 +1,8 @@
 <?php
+/**
+ * Kolibri Test framework
+ * 
+ */
 class KolibriTestCase extends PHPSpec_Context {
     
     public $fixtures;

@@ -61,7 +61,7 @@ class Validator {
 						 * Require and cache validator class as we can reuse the same instance for validating
 						 * other properties on the same model.
 						 */
-						require(ROOT . "/validation/$validatorClass.php");
+						require_once(ROOT . "/validation/$validatorClass.php");
 						$instances[$validatorClass] = new $validatorClass($model);
 					}
 
