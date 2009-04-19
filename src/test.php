@@ -5,7 +5,8 @@
  * TODO safeguard sjekke at mode = test
  */
 
-chdir('/specs');
+
+chdir('specs');
 
 require_once 'PHPSpec.php';
 
@@ -15,4 +16,5 @@ $options->specdocs = true;
 $options->reporter = 'html';
 
 PHPSpec_Runner::run($options);
+
 ?>

@@ -1,7 +1,6 @@
 <?php
 /**
  * Kolibri Test framework
- * 
  */
 class KolibriTestCase extends PHPSpec_Context {
     
@@ -9,9 +8,8 @@ class KolibriTestCase extends PHPSpec_Context {
     public $modelName;
     
     public function before () {
-        
         // blanks out the table for the given model.
-        if(!empty($this->modelName)) {
+        if($this->modelName) {
             Fixtures::blankOutTable($this->modelName);
         }
         
@@ -26,15 +24,18 @@ class KolibriTestCase extends PHPSpec_Context {
         $className = get_class($this);
         
         if (substr($className, -5) == 'Model') {
-            $this->modelName = substr($className, 8, -5);
-                        
-            $this->fixtures = Fixtures::populate($this->modelName);
+            if($this->modelName = substr($className, 8, -5)) {
+				$this->fixtures = Fixtures::populate($this->modelName);
+			} 
         }
         else if (substr($className, -6) == 'Action') {
-            // action testing
+            throw new Exception("KolibriTestCase doesn't support action testing yet.");
+        }
+        else if (substr($className, -6) == 'View') {
+            throw new Exception("KolibriTestCase doesn't support view testing yet.");
         }
         else {
-            throw new Exception("KolibriTestCase needs to have either Model or Action in the end of the classname");
+            throw new Exception("KolibriTestCase needs to have either Model, Action or View in the end of the classname");
         }
         
         $this->setup();
@@ -52,18 +53,14 @@ class KolibriTestCase extends PHPSpec_Context {
     
 
     /**
-     * Functions for the TestCase. These metohds are not abtsract because the
-     * TestCase class does not need have them in there.
+     * Functions for your testcase. acts the same as before/All() and after/All() in PHPSpec
      */
     public function setup () { }
-    public function infront () { }
-    public function inback () { }
+    public function preSpec () { }
+    public function postSpec () { }
 	public function tearDown () { }
-    
-    
 
-	
-	
+
 }
 
 ?>

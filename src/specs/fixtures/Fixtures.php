@@ -12,7 +12,6 @@ class Fixtures {
         $reflection = new ReflectionClass($modelName);
         $table = $reflection->getConstant('RELATION');
         
-		//$delete = "DELETE FROM $table WHERE name = 'sdvsvs'";
         $delete = "DELETE FROM $table";
         $db = DatabaseFactory::getConnection();
 		

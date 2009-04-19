@@ -1,5 +1,5 @@
 <?php
-require_once('../TestBootstrap.php');
+require_once(dirname(__FILE__) . '/../TestBootstrap.php');
 
 /**
  * Specification for the Item Model. It contains before and after methods from PHPSpec.
@@ -7,6 +7,7 @@ require_once('../TestBootstrap.php');
  * done...
  *
  * ellers så prøver $this->spec() metode å loade classen med param navnet til spec... hvorfor aner jeg ikke?
+ *  Se etter quick-fix i metoden itShouldBeAbleToLoad
  * 
  */
 class DescribeItemModel extends KolibriTestCase {
@@ -17,8 +18,6 @@ class DescribeItemModel extends KolibriTestCase {
      */
     public function setup () {
         // This method doesnt have to be here if its blank.
-        // echo "this is invoked before every spec method\n";
-
     }
     
     /**
@@ -37,7 +36,8 @@ class DescribeItemModel extends KolibriTestCase {
     /**
      * This spec will try to load a saved article object
      */
-    public function itShouldBeAbleToLoadAnArticle () {
+    public function itShouldBeAbleToLoad () {
+        // QUICK-FIX
         spl_autoload_unregister(array('ClassLoader', 'load'));
         
         $item = Models::init('Item');
@@ -49,11 +49,16 @@ class DescribeItemModel extends KolibriTestCase {
     /**
      * This spec will try to save an article object
      */
-    public function itShouldHaveAnItemNameWhenSaved () {
+    public function itShouldBeAbleToSave () {
         $item = $this->fixtures['ValidItem'];
         $this->spec($item)->should->beValid();
-        $item->save();
-        $this->spec($item->name)->shouldNot->beNull();
+        
+        try {
+            $item->save();
+        }
+        catch(SQLException $e) {
+            $this->fail("This Item model was not able to be saved.");
+        }
     }
     
     /**
@@ -73,7 +78,7 @@ class DescribeItemModel extends KolibriTestCase {
     /**
      * This spec will try to delete a saved article object
      */
-    public function itShouldBeAbleToDeleteAnItem () {
+    public function itShouldBeAbleToDelete () {
         $item = Models::init('Item');
         $item->objects->load($this->itemName);
         $item->delete();
