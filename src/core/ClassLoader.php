@@ -22,7 +22,6 @@ class ClassLoader {
 	 */
 	public static function initialize ($config) {
 		self::$classes = $config;
-		
 		spl_autoload_register(array('ClassLoader', 'load'));
 	}
 	
@@ -47,7 +46,7 @@ class ClassLoader {
 			}
 			// If it's not a core, model or DAO class we simply try the include_path
 			else {
-				require($className . '.php');
+				@include($className . '.php');
 			}
 			self::$loaded[$className] = true;
 		}
