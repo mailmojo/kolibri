@@ -1,8 +1,19 @@
 <?php
+require_once('../TestBootstrap.php');
+
 class DescribeIndexAction extends KolibriActionContext {
+	public function beforeAll () {
+	}
+
 	public function itShouldReturnXsltResponse () {
-		$response = $this->get('/');
-		$this->spec($response)->should->beAnInstanceOf('XsltResult');
+		$this->get('/');
+		$this->spec($this->response)->should->beAnInstanceOf('XsltResponse');
+	}
+
+	public function itShouldHaveModelSetWhenInSession () {
+		$item = Models::getModel(new Item());
+		$this->get('/', array(), array('model' => $item));
+		$this->spec($this->action->model)->should->beAnInstanceOf('ModelProxy');
 	}
 }
 ?>
