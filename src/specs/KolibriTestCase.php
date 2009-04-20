@@ -5,28 +5,32 @@
 class KolibriTestCase extends PHPSpec_Context {
     
     public $fixtures;
-    public $modelName;
+    public $modelName = null;
     
     public function before () {
         // blanks out the table for the given model.
         if($this->modelName) {
-            Fixtures::blankOutTable($this->modelName);
+			$this->fixtures = new Fixtures($this->modelName);
+			$this->fixtures->blankOutTable();
         }
         
         $this->preSpec();
     }
     
     /**
-     * populates fixtures from the specs/fixtures/<ModelName>.ini file
+     * Executes before all spec methods is invoked. When it's a model test, it populates
+     * <code>$fixtures</code> with data. There are currently no other modes available for testing.
      */
     public function beforeAll () {
         
+		if (Config::getMode() != Config::TEST) {
+			throw new Exception("KolibriTestCase requires that the current KOLBRI_MODE is set to TEST.");
+		}
+		
         $className = get_class($this);
         
         if (substr($className, -5) == 'Model') {
-            if($this->modelName = substr($className, 8, -5)) {
-				$this->fixtures = Fixtures::populate($this->modelName);
-			} 
+            $this->modelName = substr($className, 8, -5);
         }
         else if (substr($className, -6) == 'Action') {
             throw new Exception("KolibriTestCase doesn't support action testing yet.");
@@ -47,7 +51,8 @@ class KolibriTestCase extends PHPSpec_Context {
     
     public function afterAll () {
         unset($this->fixtures);
-        
+        unset($this->modelName);
+		
         $this->tearDown();
     }
     

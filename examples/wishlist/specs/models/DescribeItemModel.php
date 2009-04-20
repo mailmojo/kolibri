@@ -1,17 +1,15 @@
 <?php
-require_once(dirname(__FILE__) . '/../TestBootstrap.php');
+require_once(dirname(__FILE__) . '/../SpecHelper.php');
 
 /**
- * Specification for the Item Model. It contains before and after methods from PHPSpec.
- * TODO: Alot of the spec methods are too large for their purpose. something needs to be
- * done...
+ * Specification for the Item Model.
  *
- * ellers så prøver $this->spec() metode å loade classen med param navnet til spec... hvorfor aner jeg ikke?
+ *  prøver $this->spec() metode å loade classen med param navnet til spec... hvorfor aner jeg ikke?
  *  Se etter quick-fix i metoden itShouldBeAbleToLoad
  * 
  */
 class DescribeItemModel extends KolibriTestCase {
-    private $itemName;
+    public $itemName;
     
     /**
      * This method acts as beforeAll() method from PHPSpec
@@ -24,9 +22,7 @@ class DescribeItemModel extends KolibriTestCase {
      * This method acts as before() method from PHPSpec
      */
     public function preSpec () {
-        // This method doesnt have to be here if it doesnt contain anything.
-        // echo "this is infront of every spec method\n";
-        
+        // This method doesnt have to be here if its blank.
         $item = $this->fixtures['ValidItem'];
         $item->save();
         
@@ -34,45 +30,52 @@ class DescribeItemModel extends KolibriTestCase {
     }
     
     /**
-     * This spec will try to load a saved article object
+     * Checks validation for an valid item model.
      */
-    public function itShouldBeAbleToLoad () {
+    public function itShouldBeValid () {
         // QUICK-FIX
         spl_autoload_unregister(array('ClassLoader', 'load'));
         
-        $item = Models::init('Item');
-        $item->objects->load($this->itemName);
-
-        $this->spec($item->name)->should->beEqualTo($this->itemName);
+        $item = $this->fixtures['AnotherItem'];
+        $this->spec($item)->should->beValid();
+    }
+    
+    /**
+     * Checks validation for an invalid item model.
+     */
+    public function itShouldBeInvalid () {
+        $item = $this->fixtures['InvalidItem'];
+        $this->spec($item)->shouldNot->beValid();
     }
     
     /**
      * This spec will try to save an article object
      */
     public function itShouldBeAbleToSave () {
-        $item = $this->fixtures['ValidItem'];
-        $this->spec($item)->should->beValid();
+        $item = $this->fixtures['AnotherItem'];
+        $saved = $item->save();
         
-        try {
-            $item->save();
-        }
-        catch(SQLException $e) {
-            $this->fail("This Item model was not able to be saved.");
-        }
+        $this->spec($saved)->should->beEqualTo(1);
     }
     
     /**
+     * This spec will try to load a saved article object
+     */
+    public function itShouldBeAbleToLoad () {
+        $item = Models::init('Item');
+        $item->objects->load($this->itemName);
+        
+        $this->spec($item->name)->should->beEqualTo($this->itemName);
+    }
+
+    /**
      * This spec will try to save an invalid article object
      */
-    public function itShouldNotBeAbleToSaveAnInvalidArticle () {
+    public function itShouldNotBeAbleToSaveAnInvalidItem () {
         $item = $this->fixtures['InvalidItem'];
-        $this->spec($item)->shouldNot->beValid();
+        $saved = $item->save();
         
-        try {
-            $item->save();
-            $this->fail("This Item model is suspose to not be valid but it is.");
-        }
-        catch(SQLException $e) { }
+        $this->spec($saved)->should->beFalse();
     }
     
     /**
