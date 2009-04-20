@@ -1,36 +1,45 @@
 <?php
+/**
+ * Kolibri Test framework
+ */
 class KolibriTestCase extends PHPSpec_Context {
     
     public $fixtures;
-    public $modelName;
+    public $modelName = null;
     
     public function before () {
-        
         // blanks out the table for the given model.
-        if(!empty($this->modelName)) {
-            Fixtures::blankOutTable($this->modelName);
+        if($this->modelName) {
+			$this->fixtures = new Fixtures($this->modelName);
+			$this->fixtures->blankOutTable();
         }
         
         $this->preSpec();
     }
     
     /**
-     * populates fixtures from the specs/fixtures/<ModelName>.ini file
+     * Executes before all spec methods is invoked. When it's a model test, it populates
+     * <code>$fixtures</code> with data. There are currently no other modes available for testing.
      */
     public function beforeAll () {
         
+		if (Config::getMode() != Config::TEST) {
+			throw new Exception("KolibriTestCase requires that the current KOLBRI_MODE is set to TEST.");
+		}
+		
         $className = get_class($this);
         
         if (substr($className, -5) == 'Model') {
             $this->modelName = substr($className, 8, -5);
-                        
-            $this->fixtures = Fixtures::populate($this->modelName);
         }
         else if (substr($className, -6) == 'Action') {
-            // action testing
+            throw new Exception("KolibriTestCase doesn't support action testing yet.");
+        }
+        else if (substr($className, -6) == 'View') {
+            throw new Exception("KolibriTestCase doesn't support view testing yet.");
         }
         else {
-            throw new Exception("KolibriTestCase needs to have either Model or Action in the end of the classname");
+            throw new Exception("KolibriTestCase needs to have either Model, Action or View in the end of the classname");
         }
         
         $this->setup();
@@ -42,24 +51,21 @@ class KolibriTestCase extends PHPSpec_Context {
     
     public function afterAll () {
         unset($this->fixtures);
-        
+        unset($this->modelName);
+		
         $this->tearDown();
     }
     
 
     /**
-     * Functions for the TestCase. These metohds are not abtsract because the
-     * TestCase class does not need have them in there.
+     * Functions for your testcase. acts the same as before/All() and after/All() in PHPSpec
      */
     public function setup () { }
-    public function infront () { }
-    public function inback () { }
+    public function preSpec () { }
+    public function postSpec () { }
 	public function tearDown () { }
-    
-    
 
-	
-	
+
 }
 
 ?>

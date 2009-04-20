@@ -1,4 +1,13 @@
 <?php
+/**
+ * Loads all the correct files and mode for KolibriTestCase
+ *
+ * REMEMBER to require this file in every spec class you have
+ * <code>require_once(dirname(__FILE__) . '/../TestBootstrap.php')</code>
+ */
+
+
+
 /*
  * Defines the root directory of the Kolibri framework. By default this is a directory named
  * 'kolibri' within the document root.
@@ -29,7 +38,7 @@ require(ROOT . '/core/RequestProcessor.php');
 
 Config::getInstance();
 
+require(ROOT . '/specs/fixtures/Fixtures.php');
 require(ROOT . '/specs/KolibriTestCase.php');
 require(ROOT . '/specs/KolibriActionContext.php');
-require(ROOT . '/specs/fixtures/Fixtures.php');
 ?>
