@@ -20,22 +20,35 @@ class RequestProcessor {
 	private $request;
 
 	/**
+	 * Object dispatching the request through interceptors to the action.
+	 * @var Dispatcher
+	 */
+	private $dispatcher;
+
+	/**
 	 * The action mapper to use for matching this request to an appropriate action.
 	 * @var ActionMapper
 	 */ 
 	private $mapper;
 
 	/**
-	 * Create an instance of this class, and find the action mapper to use for this request. 
+	 * Initializes a <code>RequestProcessor</code> for the supplied request, and the
+	 * action mapper to use during processing.
+	 *
+	 * @param Request The request to process.
 	 */
-	public function __construct ($get = null, $post = null) {
-		$this->request = new Request($_GET, $_POST);
+	public function __construct (Request $request) {
+		$this->request = $request;
 		$mapperName = $this->findActionMapper();
 		$this->mapper = new $mapperName($this->request);
 	}
 
 	/**
-	 * Process the request.
+	 * Process the request and returns the response. The response is also rendered to the
+	 * client, unless <code>$render</code> is <code>false</code>.
+	 *
+	 * @param bool $render Whether the response should be rendered. Defaults to false.
+	 * @return Response
 	 */
 	public function process ($render = true) {
 		// Map the request to an action
@@ -46,16 +59,25 @@ class RequestProcessor {
 
 		// Create the dispatcher and invoke it
 		$this->dispatcher = new Dispatcher($this->request, $mapping);
-		$result = $this->dispatcher->invoke();
+		$response = $this->dispatcher->invoke();
 
-		// Render the result
-		if ($result !== null && $render) {
+		// Render the response
+		if ($response !== null && $render) {
 			ob_start();
-			$result->render($this->request);
+			$response->render($this->request);
 			ob_end_flush();
 		}
 
-		return $result;
+		return $response;
+	}
+
+	/**
+	 * Returns the dispatcher of the current request.
+	 *
+	 * @return Dispatcher
+	 */
+	public function getDispatcher () {
+		return $this->dispatcher;
 	}
 
 	/**
@@ -68,7 +90,7 @@ class RequestProcessor {
 		$actionMappers = Config::getActionMappers();
 		
 		if ($actionMappers === null) {
-			require(ROOT . '/core/DefaultActionMapper.php');
+			require_once(ROOT . '/core/DefaultActionMapper.php');
 			return 'DefaultActionMapper';
 		}
 		
@@ -80,10 +102,10 @@ class RequestProcessor {
 			if (preg_match($uri, $requestUri) == 1) {
 				if ($mapper != 'DefaultActionMapper') {
 					// Mapper is application-specific, rely on include_path for loading it
-					require("$mapper.php");
+					require_once("$mapper.php");
 				}
 				else {
-					require(ROOT . '/core/DefaultActionMapper.php');
+					require_once(ROOT . '/core/DefaultActionMapper.php');
 				}
 				
 				return $mapper;

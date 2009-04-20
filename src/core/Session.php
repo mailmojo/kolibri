@@ -31,7 +31,9 @@ class Session implements ArrayAccess, IteratorAggregate {
 	 * Actually starts the session.
 	 */
 	private function start () {
-		session_start();
+		if (PHP_SAPI != 'cli') {
+			session_start();
+		}
 		$this->started = true;
 	}
 	
