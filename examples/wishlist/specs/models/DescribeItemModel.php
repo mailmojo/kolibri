@@ -3,9 +3,6 @@ require_once(dirname(__FILE__) . '/../SpecHelper.php');
 
 /**
  * Specification for the Item Model.
- *
- *  prøver $this->spec() metode å loade classen med param navnet til spec... hvorfor aner jeg ikke?
- *  Se etter quick-fix i metoden itShouldBeAbleToLoad
  * 
  */
 class DescribeItemModel extends KolibriTestCase {
@@ -49,17 +46,15 @@ class DescribeItemModel extends KolibriTestCase {
     }
     
     /**
-     * This spec will try to save an article object
+     * This spec will try to save an item object
      */
     public function itShouldBeAbleToSave () {
         $item = $this->fixtures['AnotherItem'];
-        $saved = $item->save();
-        
-        $this->spec($saved)->should->beEqualTo(1);
+        $this->spec($item->save())->should->beEqualTo(1);
     }
     
     /**
-     * This spec will try to load a saved article object
+     * This spec will try to load a saved item object
      */
     public function itShouldBeAbleToLoad () {
         $item = Models::init('Item');
@@ -69,17 +64,29 @@ class DescribeItemModel extends KolibriTestCase {
     }
 
     /**
-     * This spec will try to save an invalid article object
+     * This spec will try to save an invalid item object
      */
     public function itShouldNotBeAbleToSaveAnInvalidItem () {
         $item = $this->fixtures['InvalidItem'];
-        $saved = $item->save();
-        
-        $this->spec($saved)->should->beFalse();
+        $this->spec($item->save())->should->beEqualTo(0);
     }
     
     /**
-     * This spec will try to delete a saved article object
+     * This spec will try to update an item object
+     */
+    public function itShouldBeAbleToUpdate () {
+        $item = Models::init('Item');
+        $item->objects->load($this->itemName);
+        $item->description = "Test update";
+        $this->spec($item->save())->should->beEqualTo(1);
+
+        $item = Models::init('Item');
+        $item->objects->load($this->itemName);
+        $this->spec($item->description)->should->beEqualTo("Test update");
+    }
+    
+    /**
+     * This spec will try to delete a saved item object
      */
     public function itShouldBeAbleToDelete () {
         $item = Models::init('Item');
@@ -88,7 +95,7 @@ class DescribeItemModel extends KolibriTestCase {
         
         $item = Models::init('Item');
         $item->objects->load($this->itemName);
-        $this->spec($item->name)->should->beNull();
+        $this->spec($item->name)->should->beEmpty();
     }
     
     /**

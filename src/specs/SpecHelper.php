@@ -3,7 +3,7 @@
  * Loads all the correct files and mode for KolibriTestCase
  *
  * REMEMBER to require this file in every spec class you have
- * require_once(dirname(__FILE__) . '/../TestBootstrap.php')
+ * <code>require_once(dirname(__FILE__) . '/../TestBootstrap.php')</code>
  */
 
 

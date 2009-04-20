@@ -30,7 +30,7 @@ class Fixtures implements ArrayAccess {
      * Parses the <modelName>.ini file and returns an array of the objects.
      */
     public function populate () {
-        if(!empty($this->modelName)) {
+        if($this->modelName) {
             $iniFile = APP_PATH . "/specs/fixtures/$this->modelName.ini";
             
 			if(!file_exists($iniFile)) {

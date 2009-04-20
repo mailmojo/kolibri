@@ -18,7 +18,7 @@ class ItemDao {
 SQL;
 		return $db->getObject('Item', $query, $id); // Gets one object of type Item
 	}
-
+	
 	/**
 	 * findAll() is here used to retrieve, well, all [relevant] objects.
 	 */
@@ -50,7 +50,11 @@ SQL;
 	public static function update ($item) {
 		$db = DatabaseFactory::getConnection();
 		$query = <<<SQL
-			UPDATE items SET received = :received WHERE name = :name
+			UPDATE items SET received = :received,
+							 name = :name,
+							 description = :description,
+							 price = :price
+						WHERE name = :name
 SQL;
 		return $db->query($query, $item);
 	}
