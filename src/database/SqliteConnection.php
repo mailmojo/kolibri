@@ -98,6 +98,7 @@ class SqliteConnection extends DatabaseConnection {
 	public function rollback () {
 		if ($this->inTransaction) {
 			$this->connection->queryExec('ROLLBACK');
+			$this->inTransaction = false;
 		}
 	}
 
