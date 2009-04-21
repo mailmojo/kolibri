@@ -3,7 +3,7 @@
  * Loads all the correct files and mode for KolibriTestCase
  *
  * REMEMBER to require this file in every spec class you have
- * require_once(dirname(__FILE__) . '/../TestBootstrap.php')
+ * <code>require_once(dirname(__FILE__) . '/../SpecHelper.php')</code>
  */
 
 
@@ -41,4 +41,24 @@ Config::getInstance();
 require(ROOT . '/specs/fixtures/Fixtures.php');
 require(ROOT . '/specs/KolibriTestCase.php');
 require(ROOT . '/specs/KolibriActionContext.php');
+
+
+$setupFile = APP_PATH . '/specs/setup.sql';
+$cmd = 0;
+
+if (file_exists($setupFile)) {
+	$dbConf = Config::get('database');
+
+	if ($dbConf['type'] == 'Sqlite') {
+		exec("sqlite " . $dbConf['name'] . " < $setupFile");
+		//echo "sqlite " . $dbConf['name'] . " < $setupFile";
+	}
+	elseif ($dbConf['type'] == 'PotsgreSql') {
+		//exec("psql -h $dbConf['hostname'] -U $dbConf['username'] -d $dbConf['name'] -f $setupFile");
+	}
+	
+}
+
+
+
 ?>

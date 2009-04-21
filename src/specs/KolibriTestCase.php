@@ -6,14 +6,16 @@ class KolibriTestCase extends PHPSpec_Context {
     
     public $fixtures;
     public $modelName = null;
-    
+    private $db = null;
+	
     public function before () {
         // blanks out the table for the given model.
-        if($this->modelName) {
-			$this->fixtures = new Fixtures($this->modelName);
-			$this->fixtures->blankOutTable();
+        if ($this->fixtures) {
+			//$this->fixtures->blankOutTable();
         }
-        
+		
+		$this->db->begin();
+		
         $this->preSpec();
     }
     
@@ -31,6 +33,7 @@ class KolibriTestCase extends PHPSpec_Context {
         
         if (substr($className, -5) == 'Model') {
             $this->modelName = substr($className, 8, -5);
+			$this->fixtures = new Fixtures($this->modelName);
         }
         else if (substr($className, -6) == 'Action') {
             throw new Exception("KolibriTestCase doesn't support action testing yet.");
@@ -42,10 +45,15 @@ class KolibriTestCase extends PHPSpec_Context {
             throw new Exception("KolibriTestCase needs to have either Model, Action or View in the end of the classname");
         }
         
+		$this->db = DatabaseFactory::getConnection();
+		
         $this->setup();
+
     }
     
     public function after () {
+		$this->db->rollback();
+		
         $this->postSpec();
     }
     

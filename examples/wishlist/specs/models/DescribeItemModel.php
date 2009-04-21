@@ -20,10 +20,11 @@ class DescribeItemModel extends KolibriTestCase {
      */
     public function preSpec () {
         // This method doesnt have to be here if its blank.
-        $item = $this->fixtures['ValidItem'];
-        $item->save();
+        //$item = $this->fixtures['ValidItem'];
+        //$item->save();
         
-        $this->itemName = $item->name;
+        //$this->itemName = $item->name;
+        $this->itemName = "Toy house";
     }
     
     /**
@@ -56,7 +57,6 @@ class DescribeItemModel extends KolibriTestCase {
     public function itShouldBeAbleToLoad () {
         $item = Models::init('Item');
         $item->objects->load($this->itemName);
-        
         $this->spec($item->name)->should->beEqualTo($this->itemName);
     }
 
