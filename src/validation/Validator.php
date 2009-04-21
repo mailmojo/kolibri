@@ -5,7 +5,6 @@
  * but rather through the <code>ValidatorInterceptor</code>.
  * 
  * @see			conf/validation.php
- * @version		$Id: Validator.php 1504 2008-06-12 22:22:32Z anders $
  */
 class Validator {
 	/**
@@ -58,8 +57,8 @@ class Validator {
 
 					if (!isset($instances[$validatorClass])) {
 						/*
-						 * Require and cache validator class as we can reuse the same instance for validating
-						 * other properties on the same model.
+						 * Require and cache validator object as we can reuse the same instance
+						 * for validating other properties on the same model.
 						 */
 						require_once(ROOT . "/validation/$validatorClass.php");
 						$instances[$validatorClass] = new $validatorClass($model);

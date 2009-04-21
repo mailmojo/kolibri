@@ -40,7 +40,7 @@ class Request implements ArrayAccess {
 	 */
 	public function __construct ($getParams, $postParams, $uri = null) {
 		$this->params = array_merge($getParams, $postParams);
-		$this->method = strtoupper($_SERVER['REQUEST_METHOD']);
+		$this->method = $_SERVER['REQUEST_METHOD'];
 		
 		// If $uri is empty initialize this request with the URI from the client request
 		if (empty($uri)) {
@@ -52,6 +52,7 @@ class Request implements ArrayAccess {
 			}
 		}
 		
+		// We use rawurldecode() instead of urldecode() to preserve + in URI
 		$this->uri = rawurldecode($uri);
 	}
 	

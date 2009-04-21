@@ -33,10 +33,12 @@ if (!defined('ROOT')) {
 }
 
 putenv('KOLIBRI_MODE=test');
-require_once(ROOT . '/core/Config.php');
+require(ROOT . '/core/Config.php');
+require(ROOT . '/core/RequestProcessor.php');
+
 Config::getInstance();
 
-
-require_once(ROOT . '/specs/fixtures/Fixtures.php');
-require_once(ROOT . '/specs/KolibriTestCase.php');
+require(ROOT . '/specs/fixtures/Fixtures.php');
+require(ROOT . '/specs/KolibriTestCase.php');
+require(ROOT . '/specs/KolibriActionContext.php');
 ?>
