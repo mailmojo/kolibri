@@ -30,9 +30,6 @@ class DescribeItemModel extends KolibriTestCase {
      * Checks validation for an valid item model.
      */
     public function itShouldBeValid () {
-        // QUICK-FIX
-        spl_autoload_unregister(array('ClassLoader', 'load'));
-        
         $item = $this->fixtures['AnotherItem'];
         $this->spec($item)->should->beValid();
     }

@@ -1,5 +1,5 @@
 <?php
-require_once(dirname(__FILE__) . '/../../TestBootstrap.php');
+require_once(dirname(__FILE__) . '/../../SpecHelper.php');
 
 class DescribeItemAddAction extends KolibriActionContext {
 	public function itShouldSetModelInSessionWhenParamsAreInvalid () {

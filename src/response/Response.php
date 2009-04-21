@@ -37,7 +37,7 @@ class Response {
 	 * @param int $status    New HTTP status code to set, if any.
 	 */
 	public final function setHeader ($header, $value, $status = null) {
-		header("$header: $value", true, $status);
+		//header("$header: $value", true, $status);
 	}
 
 	/**

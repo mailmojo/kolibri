@@ -1,10 +1,7 @@
 <?php
-require_once('../TestBootstrap.php');
+require_once(dirname(__FILE__) . '/../SpecHelper.php');
 
 class DescribeIndexAction extends KolibriActionContext {
-	public function beforeAll () {
-	}
-
 	public function itShouldReturnXsltResponse () {
 		$this->get('/');
 		$this->spec($this->response)->should->beAnInstanceOf('XsltResponse');

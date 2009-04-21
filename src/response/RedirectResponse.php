@@ -5,7 +5,7 @@
  * recommended to use a more specific response class where one is availible.
  */
 class RedirectResponse extends Response {
-	private $location;
+	public $location;
 
 	/**
 	 * Initialize this response.
@@ -15,14 +15,14 @@ class RedirectResponse extends Response {
 	 */
 	public function __construct ($location, $status = 302) {
 		parent::__construct(null, $status);
-		$this->location = Config::get('webRoot') . $location;
+		$this->location = $location;
 	}
 
 	/**
 	 * Sends the redirect to the client.
 	 */
 	public function render ($request) {
-		$this->setHeader('Location', $this->location);
+		$this->setHeader('Location', Config::get('webRoot') . $this->location);
 		exit;
 	}
 }
