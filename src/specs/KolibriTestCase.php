@@ -16,8 +16,8 @@ class KolibriTestCase extends PHPSpec_Context {
     }
     
     /**
-     * Executes before all spec methods is invoked. When it's a model test, it populates
-     * <code>$fixtures</code> with data.
+     * Executes before all spec methods are invoked. Distinguishes between model, action and view
+     * testing. It also establishes a database connection.
      */
     public function beforeAll () {
 		if (Config::getMode() != Config::TEST) {
@@ -80,7 +80,7 @@ class KolibriTestCase extends PHPSpec_Context {
 	 *
 	 */
 	public function get ($uri, array $params = null, array $session = null) {
-		if($this->validActionClass()) {
+		if($this->validActionClass('get')) {
 			$this->prepareEnvironment('GET', $uri, $session);
 			$this->request = new Request($params !== null ? $params : array(), array());
 			$this->fireRequest($this->request);
@@ -88,7 +88,7 @@ class KolibriTestCase extends PHPSpec_Context {
 	}
 
 	public function post ($uri, array $params = null, array $session = null) {
-		if($this->validActionClass()) {
+		if($this->validActionClass('post')) {
 			$this->prepareEnvironment('POST', $uri, $session);
 			$this->request = new Request(array(), $params !== null ? $params : array());
 			$this->fireRequest($this->request);
@@ -107,9 +107,15 @@ class KolibriTestCase extends PHPSpec_Context {
 		$_SESSION = $session !== null ? $session : array();
 	}
 	
-	private function validActionClass () {
+	/**
+	 * Does not allow you to use post and/or get in any other testing classes than action.
+	 *
+	 * @param string $method method that are tested for
+	 * @return bool returns true if its allowed to be used
+	 */
+	private function validActionClass ($method) {
 		if(substr(get_class($this), -6) != 'Action'){
-			throw new Exception("You are not allowed to use post or get, except in an action testing class.");
+			throw new Exception("You are not allowed to use $method(), except in an action testing class.");
 		}
 		return true;
 	}

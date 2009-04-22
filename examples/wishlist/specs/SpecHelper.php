@@ -36,7 +36,6 @@ Config::getInstance();
 
 require(ROOT . '/specs/Fixtures.php');
 require(ROOT . '/specs/KolibriTestCase.php');
-require(ROOT . '/specs/KolibriActionContext.php');
 
 
 $setupFile = APP_PATH . '/specs/setup.sql';
