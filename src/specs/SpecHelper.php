@@ -38,24 +38,16 @@ require(ROOT . '/core/RequestProcessor.php');
 
 Config::getInstance();
 
-require(ROOT . '/specs/fixtures/Fixtures.php');
+require(ROOT . '/specs/Fixtures.php');
 require(ROOT . '/specs/KolibriTestCase.php');
 require(ROOT . '/specs/KolibriActionContext.php');
 
 
 $setupFile = APP_PATH . '/specs/setup.sql';
-$cmd = 0;
 
+$db = DatabaseFactory::getConnection();
 if (file_exists($setupFile)) {
-	$dbConf = Config::get('database');
-
-	if ($dbConf['type'] == 'Sqlite') {
-		exec("sqlite " . $dbConf['name'] . " < $setupFile");
-		//echo "sqlite " . $dbConf['name'] . " < $setupFile";
-	}
-	elseif ($dbConf['type'] == 'PotsgreSql') {
-		//exec("psql -h $dbConf['hostname'] -U $dbConf['username'] -d $dbConf['name'] -f $setupFile");
-	}
-	
+	$db->query(file_get_contents($setupFile));
 }
+$db->commit();
 ?>
