@@ -31,7 +31,7 @@ class KolibriTestCase extends PHPSpec_Context {
 			$this->fixtures = new Fixtures($this->modelName);
         }
         elseif (substr($className, -6) == 'Action') {
-            throw new Exception("KolibriTestCase doesn't support action testing yet.");
+            //throw new Exception("KolibriTestCase doesn't support action testing yet.");
         }
         elseif (substr($className, -4) == 'View') {
             throw new Exception("KolibriTestCase doesn't support view testing yet.");
@@ -59,10 +59,12 @@ class KolibriTestCase extends PHPSpec_Context {
     public function afterAll () {
         unset($this->fixtures);
         unset($this->modelName);
-		
+
         $this->tearDown();
+		
+		unset($this->db);
     }
-    
+	
     /**
      * Functions for your testcase. acts the same as before/All() and after/All() in PHPSpec
      */
@@ -70,6 +72,48 @@ class KolibriTestCase extends PHPSpec_Context {
     public function preSpec () { }
     public function postSpec () { }
 	public function tearDown () { }
+	
+	
+	/**
+	 *
+	 * Methods for Action testing
+	 *
+	 */
+	public function get ($uri, array $params = null, array $session = null) {
+		if($this->validActionClass()) {
+			$this->prepareEnvironment('GET', $uri, $session);
+			$this->request = new Request($params !== null ? $params : array(), array());
+			$this->fireRequest($this->request);
+		}
+	}
+
+	public function post ($uri, array $params = null, array $session = null) {
+		if($this->validActionClass()) {
+			$this->prepareEnvironment('POST', $uri, $session);
+			$this->request = new Request(array(), $params !== null ? $params : array());
+			$this->fireRequest($this->request);
+		}
+	}
+
+	private function fireRequest ($request) {
+		$rp = new RequestProcessor($request);
+		$this->response = $rp->process(false);
+		$this->action = $rp->getDispatcher()->getAction();
+	}
+
+	private function prepareEnvironment ($method, $uri, $session) {
+		$_SERVER['REQUEST_METHOD'] = $method;
+		$_SERVER['REQUEST_URI'] = $uri;
+		$_SESSION = $session !== null ? $session : array();
+	}
+	
+	private function validActionClass () {
+		if(substr(get_class($this), -6) != 'Action'){
+			throw new Exception("You are not allowed to use post or get, except in an action testing class.");
+		}
+		return true;
+	}
+
 }
 
 ?>

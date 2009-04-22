@@ -43,7 +43,14 @@ $setupFile = APP_PATH . '/specs/setup.sql';
 
 if (file_exists($setupFile)) {
 	$db = DatabaseFactory::getConnection();
-	$db->batchQuery(file_get_contents($setupFile));
-	$db->commit();
+	$fileContents = file_get_contents($setupFile);
+	
+	if (!empty($fileContents)) {
+		$db->batchQuery($fileContents);
+		$db->commit();
+	}
+	else {
+		throw new Exception("The specs/setup.sql file is blank.");
+	}
 }
 ?>
