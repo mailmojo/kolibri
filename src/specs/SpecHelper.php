@@ -4,11 +4,7 @@
  *
  * REMEMBER to require this file in every spec class you have
  * <code>require_once(dirname(__FILE__) . '/../SpecHelper.php')</code>
- */
-
-
-
-/*
+ * 
  * Defines the root directory of the Kolibri framework. By default this is a directory named
  * 'kolibri' within the document root.
  */
@@ -45,9 +41,9 @@ require(ROOT . '/specs/KolibriActionContext.php');
 
 $setupFile = APP_PATH . '/specs/setup.sql';
 
-$db = DatabaseFactory::getConnection();
 if (file_exists($setupFile)) {
-	$db->query(file_get_contents($setupFile));
+	$db = DatabaseFactory::getConnection();
+	$db->batchQuery(file_get_contents($setupFile));
+	$db->commit();
 }
-$db->commit();
 ?>

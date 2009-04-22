@@ -20,10 +20,6 @@ class DescribeItemModel extends KolibriTestCase {
      */
     public function preSpec () {
         // This method doesnt have to be here if its blank.
-        //$item = $this->fixtures['ValidItem'];
-        //$item->save();
-        
-        //$this->itemName = $item->name;
         $this->itemName = "Toy house";
     }
     
@@ -31,7 +27,7 @@ class DescribeItemModel extends KolibriTestCase {
      * Checks validation for an valid item model.
      */
     public function itShouldBeValid () {
-        $item = $this->fixtures['AnotherItem'];
+        $item = $this->fixtures['ValidItem'];
         $this->spec($item)->should->beValid();
     }
     
@@ -47,7 +43,7 @@ class DescribeItemModel extends KolibriTestCase {
      * This spec will try to save an item object
      */
     public function itShouldBeAbleToSave () {
-        $item = $this->fixtures['AnotherItem'];
+        $item = $this->fixtures['ValidItem'];
         $this->spec($item->save())->should->beEqualTo(1);
     }
     

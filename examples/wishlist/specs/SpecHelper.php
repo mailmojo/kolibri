@@ -38,13 +38,12 @@ require(ROOT . '/specs/Fixtures.php');
 require(ROOT . '/specs/KolibriTestCase.php');
 require(ROOT . '/specs/KolibriActionContext.php');
 
+
 $setupFile = APP_PATH . '/specs/setup.sql';
 
-$db = DatabaseFactory::getConnection();
 if (file_exists($setupFile)) {
-	$db->query(file_get_contents($setupFile));
+	$db = DatabaseFactory::getConnection();
+	$db->batchQuery(file_get_contents($setupFile));
+	$db->commit();
 }
-$db->commit();
-
-
 ?>
