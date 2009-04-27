@@ -12,9 +12,13 @@ require_once 'PHPSpec.php';
 
 $options = new stdClass;
 $options->recursive = true;
-$options->specdocs = true;
+$options->specdoc = true;
 $options->reporter = 'html';
 
+ob_start();
+
 PHPSpec_Runner::run($options);
+
+ob_end_flush();
 
 ?>

@@ -55,10 +55,12 @@ class FileResponse extends Response {
 
 		if ($this->dataIsFile) {
 			$this->setHeader('Content-Length', filesize($this->data));
+			$this->sendHeaders();
 			readfile($this->data);
 		}
 		else {
 			$this->setHeader('Content-Length', mb_strlen($this->data));
+			$this->sendHeaders();
 			echo $this->data;
 		}
 	}

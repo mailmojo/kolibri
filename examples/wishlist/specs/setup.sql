@@ -9,7 +9,7 @@ CREATE TABLE items (
 );
 
 INSERT INTO items (name, description, price, added, received)
-VALUES('Blue Bike', 'My favorites bike in the shop', 299, '2009-04-20', '2009-04-21');
+VALUES('Blue Bike', 'My favorite bike in the shop', 299, '2009-04-20', '2009-04-21');
 
 INSERT INTO items (name, description, price, added, received)
 VALUES('Toy house', 'Garden toy house with several floors', 1199, '2009-04-14', '2009-04-20');

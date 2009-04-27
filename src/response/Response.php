@@ -8,6 +8,7 @@ class Response {
 	protected $status;
 	protected $contentType;
 	protected $charset;
+	protected $headerCache = array();
 	
 	/**
 	 * Initializes this response with the supplied response data and meta data. When using this
@@ -26,18 +27,18 @@ class Response {
 		$this->status      = $status;
 		$this->contentType = $contentType;
 		$this->charset     = $charset;
-		$this->setHeader('Content-Type', "$contentType; charset=$charset", $status);
+		$this->setHeader('Content-Type', "$contentType; charset=$charset");
 	}
 
 	/**
-	 * Sets a header. If $status is supplied, the HTTP status code is changed to its value.
+	 * Sets a header in the headerCache array.
 	 *
 	 * @param string $header The header to set.
 	 * @param string $value  The value to set.
 	 * @param int $status    New HTTP status code to set, if any.
 	 */
-	public final function setHeader ($header, $value, $status = null) {
-		//header("$header: $value", true, $status);
+	public final function setHeader ($header, $value) {
+		$this->headerCache[] = "$header: $value";
 	}
 
 	/**
@@ -72,6 +73,20 @@ class Response {
 		}
 
 		$this->data .= $content . "\n";
+	}
+
+
+	/**
+	 * Adds content to output. Any previously added data and the content supplied must both
+	 * be string values.
+	 *
+	 * @param string $content Content to add.
+	 * @throws Exception      If existing data or content added are not strings.
+	 */
+	protected function sendHeaders() {
+		foreach($this->headerCache as $value) {
+			header($value, true, $this->status);
+		}
 	}
 
 	/**

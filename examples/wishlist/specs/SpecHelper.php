@@ -37,19 +37,20 @@ Config::getInstance();
 require(ROOT . '/specs/Fixtures.php');
 require(ROOT . '/specs/KolibriTestCase.php');
 
-
 $setupFile = APP_PATH . '/specs/setup.sql';
+$schemaFile = APP_PATH . '/config/schema.sql';
 
 if (file_exists($setupFile)) {
 	$db = DatabaseFactory::getConnection();
-	$fileContents = file_get_contents($setupFile);
 	
-	if (!empty($fileContents)) {
-		$db->batchQuery($fileContents);
+	if(file_exists($schemaFile)) {
+		$schemaContents = file_get_contents($schemaFile);
+		$db->batchQuery($schemaContents);
 		$db->commit();
 	}
-	else {
-		throw new Exception("The specs/setup.sql file is blank.");
-	}
+	
+	$setupContents = file_get_contents($setupFile);
+	$db->batchQuery($setupContents);
+	$db->commit();
 }
 ?>

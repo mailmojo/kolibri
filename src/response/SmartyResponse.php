@@ -44,6 +44,9 @@ class SmartyResponse extends Response {
 	 * along with the request object and application configuration is exposed to the template.
 	 */
 	public function render ($request) {
+		
+		$this->sendHeaders();
+		
 		$conf = Config::get('smarty');
 		if ($conf === null) {
 			throw new Exception('Smarty settings missing from application configuration.');

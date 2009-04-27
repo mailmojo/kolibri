@@ -23,6 +23,9 @@ class RedirectResponse extends Response {
 	 */
 	public function render ($request) {
 		$this->setHeader('Location', Config::get('webRoot') . $this->location);
+		
+		$this->sendHeaders();
+		
 		exit;
 	}
 }

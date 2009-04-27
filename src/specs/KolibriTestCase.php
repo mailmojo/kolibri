@@ -7,6 +7,12 @@ class KolibriTestCase extends PHPSpec_Context {
     public $modelName = null;
     private $db = null;
 	
+	const ACTION_TEST = 'action';
+	const VIEW_TEST = 'view';
+	const MODEL_TEST = 'model';
+	
+	private $testType;
+	
 	/**
 	 * Triggers the preSpec() method for doing something _before_ a spec has been invoked. 
 	 */
@@ -25,15 +31,17 @@ class KolibriTestCase extends PHPSpec_Context {
 		}
 		
         $className = get_class($this);
-        
-        if (substr($className, -5) == 'Model') {
+		
+        if (substr(strtolower($className), -5) == self::MODEL_TEST) {
+			$this->testType = self::MODEL_TEST;
             $this->modelName = substr($className, 8, -5);
 			$this->fixtures = new Fixtures($this->modelName);
         }
-        elseif (substr($className, -6) == 'Action') {
-            //throw new Exception("KolibriTestCase doesn't support action testing yet.");
+        elseif (substr(strtolower($className), -6) == self::ACTION_TEST) {
+            $this->testType = self::ACTION_TEST;
         }
-        elseif (substr($className, -4) == 'View') {
+        elseif (substr(strtolower($className), -4) == self::VIEW_TEST) {
+			$this->testType = self::VIEW_TEST;
             throw new Exception("KolibriTestCase doesn't support view testing yet.");
         }
         else {
@@ -63,6 +71,11 @@ class KolibriTestCase extends PHPSpec_Context {
         $this->tearDown();
 		
 		unset($this->db);
+		
+		if ($this->testType == self::ACTION_TEST) {
+			ob_flush();
+		}
+		
     }
 	
     /**
@@ -114,7 +127,7 @@ class KolibriTestCase extends PHPSpec_Context {
 	 * @return bool returns true if its allowed to be used
 	 */
 	private function validActionClass ($method) {
-		if(substr(get_class($this), -6) != 'Action'){
+		if ($this->testType != self::ACTION_TEST){
 			throw new Exception("You are not allowed to use $method(), except in an action testing class.");
 		}
 		return true;
