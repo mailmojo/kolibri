@@ -35,7 +35,7 @@ require(ROOT . '/core/RequestProcessor.php');
 Config::getInstance();
 
 require(ROOT . '/specs/Fixtures.php');
-require(ROOT . '/specs/KolibriTestCase.php');
+require(ROOT . '/specs/KolibriContext.php');
 
 $setupFile = APP_PATH . '/specs/setup.sql';
 $schemaFile = APP_PATH . '/config/schema.sql';

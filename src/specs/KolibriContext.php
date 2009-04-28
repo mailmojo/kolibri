@@ -2,7 +2,7 @@
 /**
  * Kolibri Test framework
  */
-class KolibriTestCase extends PHPSpec_Context {
+class KolibriContext extends PHPSpec_Context {
     public $fixtures;
     public $modelName = null;
     private $db = null;
