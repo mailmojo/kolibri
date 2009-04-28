@@ -160,6 +160,22 @@ class PostgreSqlConnection extends DatabaseConnection {
 
 		throw new DatabaseException('Query could not be sent to the database. Connection lost?');
 	}
+	
+	/**
+	 * Sends several queries to the database after escaping and interpolating the supplied parameters.
+	 *
+	 * If a connection to the database is not yet established, <code>connect()</code> is called
+	 * implicitly. The same is true of transactions; if a transaction has not yet been started on the
+	 * connection, <code>begin()</code> is called.
+	 *
+	 * @param string $query The query to execute.
+	 * @param mixed $params Parameters to interpolate into query.
+	 * @throws Exception    Upon an error when executing the query.
+	 * @return ResultSet    Representing the query results. Implementation-specific.
+	 */
+	public function batchQuery ($query, $params = null) {
+		return $this->query($query, $params);
+	}
 
 	/**
 	 * Escapes a value to make it safe for use in SQL queries.
