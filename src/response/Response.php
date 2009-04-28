@@ -35,7 +35,6 @@ class Response {
 	 *
 	 * @param string $header The header to set.
 	 * @param string $value  The value to set.
-	 * @param int $status    New HTTP status code to set, if any.
 	 */
 	public final function setHeader ($header, $value) {
 		$this->headerCache[] = "$header: $value";
@@ -77,11 +76,7 @@ class Response {
 
 
 	/**
-	 * Adds content to output. Any previously added data and the content supplied must both
-	 * be string values.
-	 *
-	 * @param string $content Content to add.
-	 * @throws Exception      If existing data or content added are not strings.
+	 * Sends out the buffered headers.
 	 */
 	protected function sendHeaders() {
 		foreach($this->headerCache as $value) {

@@ -43,7 +43,7 @@ $schemaFile = APP_PATH . '/config/schema.sql';
 if (file_exists($setupFile)) {
 	$db = DatabaseFactory::getConnection();
 	
-	if(file_exists($schemaFile)) {
+	if (file_exists($schemaFile)) {
 		$schemaContents = file_get_contents($schemaFile);
 		$db->batchQuery($schemaContents);
 		$db->commit();

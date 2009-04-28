@@ -95,7 +95,7 @@ class KolibriContext extends PHPSpec_Context {
 	 *
 	 */
 	public function get ($uri, array $params = null, array $session = null) {
-		if($this->validActionClass('get')) {
+		if ($this->validActionClass('get')) {
 			$this->prepareEnvironment('GET', $uri, $session);
 			$this->request = new Request($params !== null ? $params : array(), array());
 			$this->fireRequest($this->request);
@@ -103,7 +103,7 @@ class KolibriContext extends PHPSpec_Context {
 	}
 
 	public function post ($uri, array $params = null, array $session = null) {
-		if($this->validActionClass('post')) {
+		if ($this->validActionClass('post')) {
 			$this->prepareEnvironment('POST', $uri, $session);
 			$this->request = new Request(array(), $params !== null ? $params : array());
 			$this->fireRequest($this->request);
