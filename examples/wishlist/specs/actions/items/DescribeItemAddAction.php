@@ -1,7 +1,7 @@
 <?php
 require_once(dirname(__FILE__) . '/../../SpecHelper.php');
 
-class DescribeItemAddAction extends KolibriTestCase {
+class DescribeItemAddAction extends KolibriContext {
 	public function itShouldSetModelInSessionWhenParamsAreInvalid () {
 		$this->post('/items/add');
 		$this->spec($this->request->session->get('model'))->should->beAnInstanceOf('ModelProxy');

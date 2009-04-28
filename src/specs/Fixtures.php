@@ -1,12 +1,20 @@
 <?php
 /**
- * This class loads fixtures. Acts as an array
+ * This class loads fixtures for our test-framework. It acts like an array, so you can
+ * access all your fixture by using <code>$this->fixture['fixtureName']</code>. Each
+ * fixture is loaded as their correct model, so you can call the method <code>save()</code>
+ * etc, when ever you like.
  */
 class Fixtures implements ArrayAccess {
-	
 	private $fixtures = array();
 	private $modelName = null;
 	
+	/**
+	 * Creates a new instance of this class. The modelName will be saved for usage in the
+	 * <code>populate()</code> method wich is executed right away to set up the fixtures.
+	 *
+	 * @param string $modelName Name of the model.
+	 */
 	public function __construct($modelName) {
 		$this->modelName = $modelName;
 		$this->populate();

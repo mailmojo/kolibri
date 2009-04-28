@@ -1,7 +1,7 @@
 <?php
 require_once(dirname(__FILE__) . '/../SpecHelper.php');
 
-class DescribeIndexAction extends KolibriTestCase {
+class DescribeIndexAction extends KolibriContext {
 	public function itShouldReturnXsltResponse () {
 		$this->get('/');
 		$this->spec($this->response)->should->beAnInstanceOf('XsltResponse');

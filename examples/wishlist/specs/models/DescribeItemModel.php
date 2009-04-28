@@ -8,7 +8,7 @@ require_once(dirname(__FILE__) . '/../SpecHelper.php');
  * <code>setup()</code>, <code>posteSpec()</code>, <code>preSpec()</code>
  * and <code>tearDown()</code> that you can use in your testcase.
  */
-class DescribeItemModel extends KolibriTestCase {
+class DescribeItemModel extends KolibriContext {
     public $itemName;
     
     /**

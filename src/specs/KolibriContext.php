@@ -1,26 +1,21 @@
 <?php
 /**
- * Kolibri Test framework
+ * This class is the Kolibri Test framework. It serves as an class for Model, Action and View
+ * testing. Right now it support Action and Model testing. You have to extend KolibriContext
+ * to use this test-framework. It reflects the same methods as PHPSpec_Context has, but they
+ * are named differently. The corresponding method names are setup(), preSpec(), postSpec()
+ * and tearDown().
  */
 class KolibriContext extends PHPSpec_Context {
     public $fixtures;
     public $modelName = null;
     private $db = null;
+	private $testType;
 	
 	const ACTION_TEST = 'action';
 	const VIEW_TEST = 'view';
 	const MODEL_TEST = 'model';
 	
-	private $testType;
-	
-	/**
-	 * Triggers the preSpec() method for doing something _before_ a spec has been invoked. 
-	 */
-    public function before () {
-		$this->db->begin();
-        $this->preSpec();
-    }
-    
     /**
      * Executes before all spec methods are invoked. Distinguishes between model, action and view
      * testing. It also establishes a database connection.
@@ -42,23 +37,37 @@ class KolibriContext extends PHPSpec_Context {
         }
         elseif (substr(strtolower($className), -4) == self::VIEW_TEST) {
 			$this->testType = self::VIEW_TEST;
-            throw new Exception("KolibriTestCase doesn't support view testing yet.");
+            throw new Exception("KolibriContext does NOT support view testing yet.");
         }
         else {
             throw new Exception("KolibriTestCase needs to have either Model, Action or View in the end of the classname");
         }
         
 		$this->db = DatabaseFactory::getConnection();
-        $this->setup();
+		if (method_exists($this, 'setup')) {
+			$this->setup();
+		}
     }
-    
+	
+	/**
+	 * Triggers the preSpec() method for doing something _before_ a spec has been invoked. 
+	 */
+    public function before () {
+		$this->db->begin();
+		if (method_exists($this, 'preSpec')) {
+			$this->preSpec();
+		}
+    }
+
 	/**
 	 * Triggers the postSpec() method for doing something _after_ a spec. And it rolls back the current
 	 * changes in the database.
 	 */
     public function after () {
 		$this->db->rollback();
-        $this->postSpec();
+		if (method_exists($this, 'postSpec')) {
+			$this->postSpec();
+		}
     }
     
 	/**
@@ -67,24 +76,17 @@ class KolibriContext extends PHPSpec_Context {
     public function afterAll () {
         unset($this->fixtures);
         unset($this->modelName);
-
-        $this->tearDown();
 		
+		if (method_exists($this, 'tearDown')) {
+			$this->tearDown();
+		}
+
 		unset($this->db);
 		
 		if ($this->testType == self::ACTION_TEST) {
 			ob_flush();
 		}
-		
     }
-	
-    /**
-     * Functions for your testcase. acts the same as before/All() and after/All() in PHPSpec
-     */
-    public function setup () { }
-    public function preSpec () { }
-    public function postSpec () { }
-	public function tearDown () { }
 	
 	
 	/**
