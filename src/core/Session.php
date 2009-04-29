@@ -31,7 +31,13 @@ class Session implements ArrayAccess, IteratorAggregate {
 	 * Actually starts the session.
 	 */
 	private function start () {
-		
+		/*
+		 * Do not actually start the session when in CLI (when testing), nor when no session ID
+		 * is defined. The session ID check is here due to a problem when testing through the
+		 * web server (via test.php), where the same primary HTTP request may create several
+		 * "internal" requests against Kolibri. The session may then already be started by a
+		 * previous internal request, and a new session can thus not be started.
+		 */
 		if (PHP_SAPI != 'cli' && session_id() === '') {
 			session_start();
 		}

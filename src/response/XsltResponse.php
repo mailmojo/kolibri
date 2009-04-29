@@ -25,7 +25,6 @@ class XsltResponse extends Response {
 	 * Generates XML of the data, and performs XSL transformation on it before outputting.
 	 */
 	public function render ($request) {
-		
 		$this->sendHeaders();
 		
 		$xmlGenerator = new XmlGenerator();
@@ -44,8 +43,6 @@ class XsltResponse extends Response {
 		}
 
 		echo $transformer->process($xmlGenerator->getDom());
-		
-		
 	}
 }
 ?>

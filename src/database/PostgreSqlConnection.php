@@ -162,10 +162,11 @@ class PostgreSqlConnection extends DatabaseConnection {
 	}
 	
 	/**
-	 * Sends several queries to the database after escaping and interpolating the supplied parameters.
+	 * Sends several queries (separated by semicolons) to the database after escaping and
+	 * interpolating the supplied parameters.
 	 *
-	 * TODO: we want that every batchQuery will return the same, so this method has to return the number
-	 * of changes in the database.
+	 * TODO: We want every batchQuery implementation to return the same, so this method should
+	 * return the number of changes in the database.
 	 *
 	 * @param string $query The query to execute.
 	 * @param mixed $params Parameters to interpolate into query.

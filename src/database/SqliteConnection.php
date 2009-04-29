@@ -152,8 +152,8 @@ class SqliteConnection extends DatabaseConnection {
 	
 	
 	/**
-	 * Sends several queries to the database after escaping and interpolating the supplied parameters, and
-	 * returns number of changes in the database.
+	 * Sends several queries (separated by semicolons) to the database after escaping and
+	 * interpolating the supplied parameters, and returns number of changes in the database.
 	 *
 	 * If a connection to the database is not yet established, <code>connect()</code> is called
 	 * implicitly. The same is true of transactions; if a transaction has not yet been started on the
@@ -171,6 +171,7 @@ class SqliteConnection extends DatabaseConnection {
 		if ($this->resultSet !== null) {
 			$this->resultSet = null;
 		}
+
 		if (!$this->autocommit) {
 			if ($this->transactionInError) {
 				return false;
@@ -180,13 +181,13 @@ class SqliteConnection extends DatabaseConnection {
 				$this->begin();
 			}
 		}
+
 		$preparedQuery = $this->prepareQuery($query, $params);
 		
 		$error = null;
-		
 		// returns number of changes to the database
 		if (@$this->connection->queryExec($preparedQuery, $error)) {
-			return @$this->connection->changes();
+			return $this->connection->changes();
 		}
 		
 		$this->rollback();

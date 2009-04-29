@@ -19,7 +19,6 @@ class JsonResponse extends Response {
 	 */
 	public function render ($request) {
 		$this->sendHeaders();
-		
 		echo json_encode($this->data);
 	}
 }

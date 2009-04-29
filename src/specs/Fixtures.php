@@ -7,7 +7,7 @@
  */
 class Fixtures implements ArrayAccess {
 	private $fixtures = array();
-	private $modelName = null;
+	private $modelName;
 	
 	/**
 	 * Creates a new instance of this class. The modelName will be saved for usage in the
@@ -15,7 +15,7 @@ class Fixtures implements ArrayAccess {
 	 *
 	 * @param string $modelName Name of the model.
 	 */
-	public function __construct($modelName) {
+	public function __construct ($modelName) {
 		$this->modelName = $modelName;
 		$this->populate();
 	}
@@ -23,7 +23,7 @@ class Fixtures implements ArrayAccess {
     /**
      * Parses the <modelName>.ini file and returns an array of the objects.
      */
-    public function populate () {
+    private function populate () {
         if ($this->modelName) {
             $iniFile = APP_PATH . "/specs/fixtures/$this->modelName.ini";
             
@@ -45,9 +45,9 @@ class Fixtures implements ArrayAccess {
         }
     }
 	
-	/**
-	 * Methods needed for ArrayAccess
-	 */
+	//
+	// Methods needed for ArrayAccess
+	//
     public function offsetSet ($offset, $value) {
         $this->fixtures[$offset] = $value;
     }

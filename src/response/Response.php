@@ -31,7 +31,8 @@ class Response {
 	}
 
 	/**
-	 * Sets a header in the headerCache array.
+	 * Sets a header to send to the client. The header is cached and not actually sent until
+	 * this response is rendered.
 	 *
 	 * @param string $header The header to set.
 	 * @param string $value  The value to set.
@@ -41,14 +42,14 @@ class Response {
 	}
 
 	/**
-	 * Checks whether the supplied header has been sent or is about to be sent to the client.
+	 * Checks whether the supplied header has been set on this response.
 	 *
 	 * @param string $header The header to check for.
 	 * @return bool
 	 */
 	public final function isHeaderSet ($header) {
-		foreach (headers_list() as $headerSent) {
-			if (substr($headerSent, 0, strpos($headerSent, ':')) == $header) {
+		foreach ($this->headerCache as $h) {
+			if (substr($h, 0, strpos($h, ':')) == $header) {
 				return true;
 			}
 		}
@@ -76,10 +77,11 @@ class Response {
 
 
 	/**
-	 * Sends out the buffered headers.
+	 * Sends out the buffered headers. Currently, if more headers of the same name is set,
+	 * the last one will "override" any previously set.
 	 */
-	protected function sendHeaders() {
-		foreach($this->headerCache as $value) {
+	protected function sendHeaders () {
+		foreach ($this->headerCache as $value) {
 			header($value, true, $this->status);
 		}
 	}
@@ -88,6 +90,7 @@ class Response {
 	 * Outputs the response body.
 	 */
 	public function render ($request) {
+		$this->sendHeaders();
 		echo $this->data;
 	}
 }

@@ -1,7 +1,12 @@
+# The following enviroment variables should be defined to point to your Kolibri installation
+# and application directory.
+# SetEnv KOLIBRI_ROOT ...
+# SetEnv KOLIBRI_APP ...
+
 RewriteEngine On
 
 # Redirects favicon-requests to static directory and makes sure static requests
-# are not routed to the framework. If you are using a separate hostname for
+# nor test.php are routed to the framework. If you are using a separate hostname for
 # static resources (as is recommended), this should be modified.
 RewriteRule ^favicon.ico$ static/favicon.ico [L]
 RewriteCond %{REQUEST_URI} !^/static

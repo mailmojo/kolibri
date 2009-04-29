@@ -8,12 +8,11 @@ require('Smarty/Smarty.class.php');
  * application configuration, which defines compileDir at the very least. An example of the
  * configuration section:
  *
- *   'smarty' => array(
- *     'compileDir'  => '', // Full path to a PHP-writeable dir
- *     'cacheDir'    => '', // Full path to a PHP-writeable dir, if you want to use Smarty caching
- *     'configDir'   => '', // Full path to a dir containing Smarty-specific configuration files
- *     'templateDir' => ''  // Full path to a dir overriding the default Kolibri view directory
- *   )
+ *   [smarty]
+ *   compileDir  = "" ; Full path to a PHP-writeable dir
+ *   cacheDir    = "" ; Full path to a PHP-writeable dir, if you want to use Smarty caching
+ *   configDir   = "" ; Full path to a dir containing Smarty-specific configuration files
+ *   templateDir = "" ; Full path to a dir overriding the default Kolibri view directory
  *
  * All configurable directories corresponds to similar Smarty directories, ie. compile_dir and
  * cache_dir.
@@ -44,7 +43,6 @@ class SmartyResponse extends Response {
 	 * along with the request object and application configuration is exposed to the template.
 	 */
 	public function render ($request) {
-		
 		$this->sendHeaders();
 		
 		$conf = Config::get('smarty');

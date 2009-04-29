@@ -1,12 +1,16 @@
 <?php
 /**
- * Loads all the correct files and mode for KolibriTestCase
+ * This helper file loads all the correct files and prepares Kolibri for testing.
  *
- * REMEMBER to require this file in every spec class you have
+ * IMPORTANT! Remember to copy this file to your applications /specs directory, and require
+ * it in every spec class you have:
  * <code>require_once(dirname(__FILE__) . '/../SpecHelper.php')</code>
- *
- * Defines the root directory of the Kolibri framework. By default this is a directory named
- * 'kolibri' within the document root.
+ */
+
+/*
+ * Defines the root directory of the Kolibri framework. For testing we can't easily guess where
+ * the framework is installed, so we throw an exception if KOLIBRI_ROOT environment variable
+ * is not set.
  */
 if (!defined('ROOT')) {
 	if (!$rootDir = getenv('KOLIBRI_ROOT')) {
@@ -16,34 +20,36 @@ if (!defined('ROOT')) {
 	define('ROOT', $rootDir);
 
 	/*
-	 * Defines the root directory for the application. By default this is the same directory as
-	 * this kolibri.php file.
+	 * Defines the root directory for the application. By default this is above the directory
+	 * of this file (meaning above /specs), unless the KOLIBRI_APP environment variable is
+	 * set.
 	 */
-	$dirname = dirname(__FILE__);
-	if (basename($dirname) == 'specs') {
-		$path = dirname(__FILE__) . '/..';
+	if (!$dirname = getenv('KOLIBRI_APP')) {
+		$dirname = dirname(__FILE__) . '/..';
 	}
-	else $path = dirname(__FILE__) . '/../..';
-
-	define('APP_PATH', $path);
+	define('APP_PATH', $dirname);
 }
 
+// Initialize Kolibri in test mode
 putenv('KOLIBRI_MODE=test');
 require(ROOT . '/core/Config.php');
 require(ROOT . '/core/RequestProcessor.php');
-
 Config::getInstance();
 
 require(ROOT . '/specs/Fixtures.php');
 require(ROOT . '/specs/KolibriContext.php');
 
-$setupFile = APP_PATH . '/specs/setup.sql';
+$setupFile  = APP_PATH . '/specs/setup.sql';
 $schemaFile = APP_PATH . '/config/schema.sql';
 
 if (file_exists($setupFile)) {
 	$db = DatabaseFactory::getConnection();
 	
-	if(file_exists($schemaFile)) {
+	/*
+	 * If a setup SQL file is defined, we also support the use of a general application
+	 * schema file to set up the database.
+	 */
+	if (file_exists($schemaFile)) {
 		$schemaContents = file_get_contents($schemaFile);
 		$db->batchQuery($schemaContents);
 		$db->commit();

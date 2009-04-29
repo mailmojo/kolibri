@@ -93,7 +93,5 @@ class DescribeItemModel extends KolibriContext {
     public function tearDown () {
         unset($this->itemName);
     }
-    
-
 }
 ?>
