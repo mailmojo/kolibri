@@ -160,6 +160,22 @@ class PostgreSqlConnection extends DatabaseConnection {
 
 		throw new DatabaseException('Query could not be sent to the database. Connection lost?');
 	}
+	
+	/**
+	 * Sends several queries (separated by semicolons) to the database after escaping and
+	 * interpolating the supplied parameters.
+	 *
+	 * TODO: We want every batchQuery implementation to return the same, so this method should
+	 * return the number of changes in the database.
+	 *
+	 * @param string $query The query to execute.
+	 * @param mixed $params Parameters to interpolate into query.
+	 * @throws Exception    Upon an error when executing the query.
+	 * @return ResultSet    Representing the query results. Implementation-specific.
+	 */
+	public function batchQuery ($query, $params = null) {
+		return $this->query($query, $params);
+	}
 
 	/**
 	 * Escapes a value to make it safe for use in SQL queries.

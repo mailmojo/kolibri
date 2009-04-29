@@ -32,6 +32,8 @@ class PhpResponse extends Response {
 	 * thus used as the results output.
 	 */
 	public function render ($request) {
+		$this->sendHeaders();
+		
 		$data = array();
 		foreach ($this->data as $key => $value) {
 			$data[$key] = $value;

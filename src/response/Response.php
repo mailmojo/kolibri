@@ -8,6 +8,7 @@ class Response {
 	protected $status;
 	protected $contentType;
 	protected $charset;
+	protected $headerCache = array();
 	
 	/**
 	 * Initializes this response with the supplied response data and meta data. When using this
@@ -26,29 +27,29 @@ class Response {
 		$this->status      = $status;
 		$this->contentType = $contentType;
 		$this->charset     = $charset;
-		$this->setHeader('Content-Type', "$contentType; charset=$charset", $status);
+		$this->setHeader('Content-Type', "$contentType; charset=$charset");
 	}
 
 	/**
-	 * Sets a header. If $status is supplied, the HTTP status code is changed to its value.
+	 * Sets a header to send to the client. The header is cached and not actually sent until
+	 * this response is rendered.
 	 *
 	 * @param string $header The header to set.
 	 * @param string $value  The value to set.
-	 * @param int $status    New HTTP status code to set, if any.
 	 */
-	public final function setHeader ($header, $value, $status = null) {
-		header("$header: $value", true, $status);
+	public final function setHeader ($header, $value) {
+		$this->headerCache[] = "$header: $value";
 	}
 
 	/**
-	 * Checks whether the supplied header has been sent or is about to be sent to the client.
+	 * Checks whether the supplied header has been set on this response.
 	 *
 	 * @param string $header The header to check for.
 	 * @return bool
 	 */
 	public final function isHeaderSet ($header) {
-		foreach (headers_list() as $headerSent) {
-			if (substr($headerSent, 0, strpos($headerSent, ':')) == $header) {
+		foreach ($this->headerCache as $h) {
+			if (substr($h, 0, strpos($h, ':')) == $header) {
 				return true;
 			}
 		}
@@ -74,10 +75,22 @@ class Response {
 		$this->data .= $content . "\n";
 	}
 
+
+	/**
+	 * Sends out the buffered headers. Currently, if more headers of the same name is set,
+	 * the last one will "override" any previously set.
+	 */
+	protected function sendHeaders () {
+		foreach ($this->headerCache as $value) {
+			header($value, true, $this->status);
+		}
+	}
+
 	/**
 	 * Outputs the response body.
 	 */
 	public function render ($request) {
+		$this->sendHeaders();
 		echo $this->data;
 	}
 }

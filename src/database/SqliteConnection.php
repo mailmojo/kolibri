@@ -149,7 +149,52 @@ class SqliteConnection extends DatabaseConnection {
 		// XXX: Should perhaps pass some kind of SQL error state as code
 		throw new SqlException($error, $preparedQuery);
 	}
+	
+	
+	/**
+	 * Sends several queries (separated by semicolons) to the database after escaping and
+	 * interpolating the supplied parameters, and returns number of changes in the database.
+	 *
+	 * If a connection to the database is not yet established, <code>connect()</code> is called
+	 * implicitly. The same is true of transactions; if a transaction has not yet been started on the
+	 * connection, <code>begin()</code> is called.
+	 *
+	 * @param string $query The query to execute.
+	 * @param mixed $params Parameters to interpolate into query.
+	 * @throws Exception    Upon an error when executing the query.
+	 * @return ResultSet    Representing the query results. Implementation-specific.
+	 */
+	public function batchQuery ($query, $params = null) {
+		if (!$this->connection) {
+			$this->connect();
+		}
+		if ($this->resultSet !== null) {
+			$this->resultSet = null;
+		}
 
+		if (!$this->autocommit) {
+			if ($this->transactionInError) {
+				return false;
+			}
+			else if (!$this->inTransaction) {
+				// No transaction yet started, let's begin one
+				$this->begin();
+			}
+		}
+
+		$preparedQuery = $this->prepareQuery($query, $params);
+		
+		$error = null;
+		// returns number of changes to the database
+		if (@$this->connection->queryExec($preparedQuery, $error)) {
+			return $this->connection->changes();
+		}
+		
+		$this->rollback();
+		// XXX: Should perhaps pass some kind of SQL error state as code
+		throw new SqlException($error, $preparedQuery);
+	}
+	
 	/**
 	 * Returns the native database connection. Used internally by <code>SqlResultSet</code> which
 	 * required the connection for some of its functionality.
