@@ -164,9 +164,8 @@ class PostgreSqlConnection extends DatabaseConnection {
 	/**
 	 * Sends several queries to the database after escaping and interpolating the supplied parameters.
 	 *
-	 * If a connection to the database is not yet established, <code>connect()</code> is called
-	 * implicitly. The same is true of transactions; if a transaction has not yet been started on the
-	 * connection, <code>begin()</code> is called.
+	 * TODO: we want that every batchQuery will return the same, so this method has to return the number
+	 * of changes in the database.
 	 *
 	 * @param string $query The query to execute.
 	 * @param mixed $params Parameters to interpolate into query.

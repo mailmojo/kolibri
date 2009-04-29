@@ -22,7 +22,7 @@ class DescribeItemModel extends KolibriContext {
     /**
      * Checks validation for an valid item model.
      */
-    public function itShouldBeValid () {
+    public function itShouldValidateWithValidData () {
         $item = $this->fixtures['ValidItem'];
         $this->spec($item)->should->beValid();
     }
@@ -30,7 +30,7 @@ class DescribeItemModel extends KolibriContext {
     /**
      * Checks validation for an invalid item model.
      */
-    public function itShouldBeInvalid () {
+    public function itShouldInvalidateWithInvalidData () {
         $item = $this->fixtures['InvalidItem'];
         $this->spec($item)->shouldNot->beValid();
     }

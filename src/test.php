@@ -10,6 +10,12 @@ chdir('specs');
 
 require_once 'PHPSpec.php';
 
+/*
+ * We start the session here because the action tests are randomly executed
+ * and in some cases the session has not been initialized before the output.
+ */
+session_start();
+
 $options = new stdClass;
 $options->recursive = true;
 $options->specdoc = true;

@@ -83,16 +83,14 @@ class KolibriContext extends PHPSpec_Context {
 
 		unset($this->db);
 		
-		if ($this->testType == self::ACTION_TEST) {
+		if (ob_get_level > 0) {
 			ob_flush();
 		}
     }
 	
 	
-	/**
-	 *
+	/*
 	 * Methods for Action testing
-	 *
 	 */
 	public function get ($uri, array $params = null, array $session = null) {
 		if ($this->validActionClass('get')) {
