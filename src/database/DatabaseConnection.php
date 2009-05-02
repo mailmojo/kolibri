@@ -83,7 +83,21 @@ abstract class DatabaseConnection {
 	 * @throws Exception    Upon an error when executing the query.
 	 * @return ResultSet    Representing the query results. Implementation-specific.
 	 */
-	abstract public function query ($query, $params = null);
+	abstract public function query ($query, $params = array());
+
+	/**
+	 * Sends several queries (separated by semicolons) to the database, and returns the number
+	 * of rows affected.
+	 *
+	 * This method doesn't support parameters, and thus will not automatically protect the
+	 * queries from SQL injection. For dynamic queries with user-supplied values,
+	 * <code>query()</code> should be used.
+	 *
+	 * @param string $query The query to execute.
+	 * @throws Exception    Upon an error when executing the query.
+	 * @return int          Number of rows affected by the queries.
+	 */
+	abstract public function batchQuery ($query);
 
 	/**
 	 * Escapes a value to make it safe for use in SQL queries. Only used internally.
@@ -106,7 +120,7 @@ abstract class DatabaseConnection {
 	 *                       not specified.
 	 * @return mixed         The data found, or <code>NULL</code> if no rows were found.
 	 */
-	public function getColumn ($query, $params = null, $column = null) {
+	public function getColumn ($query, $params = array(), $column = null) {
 		$result = $this->query($query, $params);
 		if ($result->valid()) {
 			$row = $result->current();
@@ -124,7 +138,7 @@ abstract class DatabaseConnection {
 	 * @param mixed $params  Parameters to interpolate into query.
 	 * @return object        The populated object, or <code>NULL</code> if no rows were found.
 	 */
-	public function getObject ($classes, $query, $params = null) {
+	public function getObject ($classes, $query, $params = array()) {
 		if (is_array($classes)) {
 			// The first element is the main class name
 			$mainClass = array_shift($classes);
@@ -153,7 +167,7 @@ abstract class DatabaseConnection {
 	 * @return array         Array with the populated objects, or <code>FALSE</code> if an error
 	 *                       occured.
 	 */
-	public function getObjects ($classes, $query, $params = null) {
+	public function getObjects ($classes, $query, $params = array()) {
 		$result = $this->query($query, $params);
 		$sofa = new ObjectBuilder($result);
 		return $sofa->build($classes);
@@ -204,10 +218,16 @@ abstract class DatabaseConnection {
 		}
 
 		/*
-		 * We cast $params to an array in order to wrap any scalar or null value passed as a
-		 * single parameter in an array.
+		 * A single NULL parameter must be "manually" wrapped in an array, otherwise we cast
+		 * $params to an array in order to wrap any scalar value passed as a single parameter
+		 * in an array.
 		 */
-		$escapedParams = array_map(array($this, 'escapeValue'), (array) $params);
+		if ($params === null) {
+			$escapedParams = array('NULL');
+		}
+		else {
+			$escapedParams = array_map(array($this, 'escapeValue'), (array) $params);
+		}
 
 		/*
 		 * With $params as a simple array, we expect ?-placeholders. Convert them to %s in order

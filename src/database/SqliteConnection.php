@@ -116,26 +116,9 @@ class SqliteConnection extends DatabaseConnection {
 	 * @throws Exception    Upon an error when executing the query.
 	 * @return ResultSet    Representing the query results. Implementation-specific.
 	 */
-	public function query ($query, $params = null) {
-		if (!$this->connection) {
-			$this->connect();
-		}
-
-		// We must discard any previous results to free up any locks still held
-		if ($this->resultSet !== null) {
-			$this->resultSet = null;
-		}
-
-		if (!$this->autocommit) {
-			if ($this->transactionInError) {
-				return false;
-			}
-			else if (!$this->inTransaction) {
-				// No transaction yet started, let's begin one
-				$this->begin();
-			}
-		}
-
+	public function query ($query, $params = array()) {
+		$this->prepareConnection();
+		
 		// Interpolate any parameters into query
 		$preparedQuery = $this->prepareQuery($query, $params);
 
@@ -152,47 +135,28 @@ class SqliteConnection extends DatabaseConnection {
 	
 	
 	/**
-	 * Sends several queries (separated by semicolons) to the database after escaping and
-	 * interpolating the supplied parameters, and returns number of changes in the database.
+	 * Sends several queries (separated by semicolons) to the database, and returns the number
+	 * of rows affected.
 	 *
-	 * If a connection to the database is not yet established, <code>connect()</code> is called
-	 * implicitly. The same is true of transactions; if a transaction has not yet been started on the
-	 * connection, <code>begin()</code> is called.
+	 * This method doesn't support parameters, and thus will not automatically protect the
+	 * queries from SQL injection. For dynamic queries with user-supplied values,
+	 * <code>query()</code> should be used.
 	 *
 	 * @param string $query The query to execute.
-	 * @param mixed $params Parameters to interpolate into query.
 	 * @throws Exception    Upon an error when executing the query.
-	 * @return ResultSet    Representing the query results. Implementation-specific.
+	 * @return int          Number of rows affected by the queries.
 	 */
-	public function batchQuery ($query, $params = null) {
-		if (!$this->connection) {
-			$this->connect();
-		}
-		if ($this->resultSet !== null) {
-			$this->resultSet = null;
-		}
+	public function batchQuery ($query) {
+		$this->prepareConnection();
 
-		if (!$this->autocommit) {
-			if ($this->transactionInError) {
-				return false;
-			}
-			else if (!$this->inTransaction) {
-				// No transaction yet started, let's begin one
-				$this->begin();
-			}
-		}
-
-		$preparedQuery = $this->prepareQuery($query, $params);
-		
 		$error = null;
-		// returns number of changes to the database
-		if (@$this->connection->queryExec($preparedQuery, $error)) {
+		if (@$this->connection->queryExec($query, $error)) {
 			return $this->connection->changes();
 		}
 		
 		$this->rollback();
 		// XXX: Should perhaps pass some kind of SQL error state as code
-		throw new SqlException($error, $preparedQuery);
+		throw new SqlException($error, $query);
 	}
 	
 	/**
@@ -231,6 +195,30 @@ class SqliteConnection extends DatabaseConnection {
 			$value = stripslashes($value);
 		}
 		return "'" . sqlite_escape_string($value) . "'";
+	}
+
+	/**
+	 * Prepares the connection before a query is sent.
+	 */
+	private function prepareConnection () {
+		if (!$this->connection) {
+			$this->connect();
+		}
+
+		// We must discard any previous results to free up any locks still held
+		if ($this->resultSet !== null) {
+			$this->resultSet = null;
+		}
+
+		if (!$this->autocommit) {
+			if ($this->transactionInError) {
+				return false;
+			}
+			else if (!$this->inTransaction) {
+				// No transaction yet started, let's begin one
+				$this->begin();
+			}
+		}
 	}
 }
 ?>

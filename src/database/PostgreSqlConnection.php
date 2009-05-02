@@ -124,22 +124,8 @@ class PostgreSqlConnection extends DatabaseConnection {
 	 * @throws Exception    Upon an error when executing the query.
 	 * @return ResultSet    Representing the query results. Implementation-specific.
 	 */
-	public function query ($query, $params = null) {
-		if (!$this->connection) {
-			$this->connect();
-		}
-
-		if (!$this->autocommit) {
-			$status = pg_transaction_status($this->connection);
-			if ($status === PGSQL_TRANSACTION_UNKNOWN || $status === PGSQL_TRANSACTION_INERROR) {
-				// We can't query when the connection status is bad
-				return false;
-			}
-			else if ($status === PGSQL_TRANSACTION_IDLE) {
-				// No transaction yet started, let's begin one
-				$this->begin();
-			}
-		}
+	public function query ($query, $params = array()) {
+		$this->prepareConnection();
 
 		// Interpolate any parameters into query
 		$preparedQuery = $this->prepareQuery($query, $params);
@@ -162,19 +148,27 @@ class PostgreSqlConnection extends DatabaseConnection {
 	}
 	
 	/**
-	 * Sends several queries (separated by semicolons) to the database after escaping and
-	 * interpolating the supplied parameters.
+	 * Sends several queries (separated by semicolons) to the database, and returns the number
+	 * of rows affected.
 	 *
-	 * TODO: We want every batchQuery implementation to return the same, so this method should
-	 * return the number of changes in the database.
+	 * This method doesn't support parameters, and thus will not automatically protect the
+	 * queries from SQL injection. For dynamic queries with user-supplied values,
+	 * <code>query()</code> should be used.
 	 *
 	 * @param string $query The query to execute.
-	 * @param mixed $params Parameters to interpolate into query.
 	 * @throws Exception    Upon an error when executing the query.
-	 * @return ResultSet    Representing the query results. Implementation-specific.
+	 * @return int          Number of rows affected by the queries.
 	 */
-	public function batchQuery ($query, $params = null) {
-		return $this->query($query, $params);
+	public function batchQuery ($query) {
+		$this->prepareConnection();
+
+		if (!($result = pg_query($this->connection, $query))) {
+			$lastError = pg_last_error();
+			$this->rollback();
+			throw new SqlException($lastError, $query);
+		}
+
+		return pg_affected_rows($result);
 	}
 
 	/**
@@ -206,6 +200,27 @@ class PostgreSqlConnection extends DatabaseConnection {
 			$value = stripslashes($value);
 		}
 		return "'" . pg_escape_string($value) . "'";
+	}
+
+	/**
+	 * Prepares the connection before a query is sent.
+	 */
+	private function prepareConnection () {
+		if (!$this->connection) {
+			$this->connect();
+		}
+
+		if (!$this->autocommit) {
+			$status = pg_transaction_status($this->connection);
+			if ($status === PGSQL_TRANSACTION_UNKNOWN || $status === PGSQL_TRANSACTION_INERROR) {
+				// We can't query when the connection status is bad
+				return false;
+			}
+			else if ($status === PGSQL_TRANSACTION_IDLE) {
+				// No transaction yet started, let's begin one
+				$this->begin();
+			}
+		}
 	}
 }
 ?>

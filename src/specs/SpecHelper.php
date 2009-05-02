@@ -40,7 +40,7 @@ require(ROOT . '/specs/Fixtures.php');
 require(ROOT . '/specs/KolibriContext.php');
 
 $setupFile  = APP_PATH . '/specs/setup.sql';
-$schemaFile = APP_PATH . '/config/schema.sql';
+$schemaFile = APP_PATH . '/conf/schema.sql';
 
 if (file_exists($setupFile)) {
 	$db = DatabaseFactory::getConnection();
