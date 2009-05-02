@@ -83,6 +83,8 @@ class XmlGenerator {
 	 *                          directly to the document root.
 	 */
 	public function append ($data, $container = null) {
+		if ($data === null) return;
+		
 		// If no container element name is specified, append directly to the root element
 		if ($container === null) {
 			$container = $this->document->documentElement;
