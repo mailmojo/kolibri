@@ -4,7 +4,7 @@
  * before outputting it.
  */
 class XsltResponse extends Response {
-	private $stylesheet;
+	public $stylesheet;
 
 	/**
 	 * Initialize this response.
@@ -18,7 +18,7 @@ class XsltResponse extends Response {
 	public function __construct ($data, $stylesheet, $status = 200,
 			$contentType = 'text/html') {
 		parent::__construct($data, $status, $contentType);
-		$this->stylesheet = VIEW_PATH . "$stylesheet.xsl";
+		$this->stylesheet = $stylesheet;
 	}
 
 	/**
@@ -27,13 +27,15 @@ class XsltResponse extends Response {
 	public function render ($request) {
 		$this->sendHeaders();
 		
+		$stylesheetFile = VIEW_PATH . $this->stylesheet . '.xsl';
 		$xmlGenerator = new XmlGenerator();
+
 		// Wrap request data in a containing element, <request />
 		$xmlGenerator->append($request, 'request');
 		// Append all data directly to the root result element
 		$xmlGenerator->append($this->data);
 
-		$transformer = new XslTransformer($this->stylesheet);
+		$transformer = new XslTransformer($stylesheetFile);
 
 		// Add scalar config params to XSLT as parameters
 		foreach (Config::get() as $key => $value) {

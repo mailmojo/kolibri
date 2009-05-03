@@ -52,27 +52,23 @@ class DataAccessProxy {
 	}
 
 	/**
-	 * Proxies <code>load()</code> to set the result back into the model proxy before. The result
-	 * as-is is returned. This makes it possible to do this to populate a $user proxy:
-	 *
-	 *   $user->objects->load($someId);
-	 *
-	 * As well as the following if you simply want a plain model object.
-	 *
-	 *   $notProxiedModel = $user->objects->load($someId);
+	 * Proxies <code>load()</code> to set the result back into the model proxy before returning
+	 * the proxy containing the loaded model. If no object was loaded, null is returned.
 	 *
 	 * @param mixed $args Variable number of arguments passed to the DAO method.
-	 * @return mixed      The results as returned from the DAO method.
+	 * @return object     Proxy containing the model, or null.
 	 */
 	public function load ($args) {
 		$arguments = func_get_args();
 		$result = $this->invokeCall('load', $arguments);
 
 		if (is_object($result)) {
-			// Set the result back into the proxy
+			// Set the result back into the proxy and returns it
 			$this->modelProxy->setModel($result);
+			return $this->modelProxy;
 		}
-		return $result;
+
+		return null;
 	}
 
 	/**
