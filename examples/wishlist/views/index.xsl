@@ -49,9 +49,9 @@
 				<span class="price">Price: <xsl:value-of select="price" /></span>
 			</xsl:if>
 			<p class="actions">
-				<a href="{$webRoot}/items/have/{name}">Got it!</a>
+				<a href="{$webRoot}/items/{name}/have">Got it!</a>
 				/
-				<a href="{$webRoot}/items/del/{name}">Nah, don't want anymore</a>
+				<a href="{$webRoot}/items/{name}/del">Nah, don't want anymore</a>
 			</p>
 		</div>
 	</xsl:template>
@@ -62,7 +62,7 @@
 			<h3><xsl:value-of select="name" /></h3>
 			<p><xsl:value-of select="description" /></p>
 			<p class="actions">
-				<a href="{$webRoot}/items/del/{name}">I lost it :-(</a>
+				<a href="{$webRoot}/items/{name}/del">I lost it :-(</a>
 			</p>
 		</div>
 	</xsl:template>

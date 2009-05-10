@@ -3,13 +3,13 @@
  * Action for deleting items. As the item to delete is specified by the last URI element (which
  * does not have a matching action file), it is implicitly put in the "id" request parameter.
  */
-class Del implements MessageAware {
+class ItemsDel implements MessageAware {
 	/**
 	 * TODO: We should really POST the form (and thus doPost()).
 	 */
 	public function doGet ($request) {
 		// We could also do $request->get('id'), whatever you prefer
-		$itemName = $request['id'];
+		$itemName = $request['itemsid'];
 		$item = Models::init('Item');
 
 		// Tries to load the item (notice that this calls load() in the ItemDao class)
