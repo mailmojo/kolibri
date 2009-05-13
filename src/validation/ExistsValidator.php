@@ -8,7 +8,8 @@ class ExistsValidator {
 
 	public function validate ($property, $rules) {
 		if (!isset($rules['condition'])) {
-			if ($this->model->$property === null || $this->model->$property == '') {
+			if ($this->model->$property === null || $this->model->$property === ''
+					|| $this->model->$property === array()) {
 				return array('exists' => $rules['name']);
 			}
 		}

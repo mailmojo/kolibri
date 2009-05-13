@@ -184,7 +184,7 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 			if (property_exists($model, $name)) {
 				if ($model->$name !== $value) {
 					$model->$name = $value;
-					$this->modelChanged($model);
+					$this->modelChanged($model, $value);
 				}
 			}
 		}
@@ -238,7 +238,7 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 		if (is_object($value)) {
 			if ($offset !== null) {
 				$this->models[$offset] = $value;
-				$this->modelChanged($this->models[$offset]);
+				$this->modelChanged($this->models[$offset], $value);
 			}
 			else {
 				$this->models[] = $value;
@@ -315,10 +315,17 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 	/**
 	 * Flag the model as dirty, as changes have been made to its state.
 	 *
-	 * @param object $model	The model whose state has changed.
+	 * @param object $model   The model whose state has changed.
+	 * @param mixed $newValue Optional value that was set on a property of the model. If
+	 *                        <code>NULL</code>, an object or an array we assume proxifying
+	 *                        inner models may be required.
 	 */
-	protected function modelChanged ($model) {
+	protected function modelChanged ($model, $newValue = null) {
 		$model->isDirty = true;
+		
+		if ($newValue === null || is_array($newValue) || is_object($newValue)) {
+			$this->isInnerProxied = false;
+		}
 	}
 	
 	/**
