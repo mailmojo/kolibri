@@ -73,7 +73,7 @@ class Dispatcher {
 		}
 
 		$class = $actionMapping->getActionClass();
-		$this->action = new $class();
+		$this->action = new $class($this->request);
 		$this->stack = InterceptorFactory::createInterceptors($stack);
 	}
 	

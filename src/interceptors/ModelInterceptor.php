@@ -51,6 +51,15 @@ class ModelInterceptor extends AbstractInterceptor {
 				if (method_exists($action, 'getModel')) {
 					// The action supplies an already instantiated model
 					$model = $action->getModel();
+
+					/*
+					 * During population of the model, we perform a property_exists() to
+					 * ensure that a parameter is indeed a property on the model. For this
+					 * to work the model must be a plain model; so we extract any proxy.
+					 */
+					if ($model instanceof ModelProxy) {
+						$model = $model->extract();
+					}
 				}
 				else {
 					// The action supplies model class name(s), so we must instantiate
@@ -70,6 +79,7 @@ class ModelInterceptor extends AbstractInterceptor {
 						else {
 							if (property_exists($model, $param) || $param == 'original') {
 								$model->$param = $this->convertType($value);
+								$model->isDirty = true;
 							}
 						}
 					}
@@ -122,7 +132,6 @@ class ModelInterceptor extends AbstractInterceptor {
 		}
 		else return null;
 		
-		$model->isDirty = true;
 		return $model;
 	}
 
@@ -167,6 +176,7 @@ class ModelInterceptor extends AbstractInterceptor {
 			}
 
 			$model->$currentProp = $this->convertType($value);
+			$model->isDirty = true;
 		}
 	}
 
