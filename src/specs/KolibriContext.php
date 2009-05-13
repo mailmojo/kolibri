@@ -30,11 +30,11 @@ class KolibriContext extends PHPSpec_Context {
 	 * @var string
 	 */
 	private $testType;
-	
+
 	const ACTION_TEST = 'action';
 	const VIEW_TEST   = 'view';
 	const MODEL_TEST  = 'model';
-	
+
     /**
      * Executes before all spec methods are invoked, and triggers the setup() method if
 	 * present. Distinguishes between model, action and view testing. It also establishes a
@@ -45,13 +45,12 @@ class KolibriContext extends PHPSpec_Context {
 			throw new Exception('KolibriTestCase requires that the current KOLIBRI_MODE is set
 					to TEST.');
 		}
-		
+
         $className = get_class($this);
-		
+
         if (substr(strtolower($className), -5) == self::MODEL_TEST) {
 			$this->testType = self::MODEL_TEST;
             $this->modelName = substr($className, 8, -5);
-			$this->fixtures = new Fixtures($this->modelName);
         }
         elseif (substr(strtolower($className), -6) == self::ACTION_TEST) {
             $this->testType = self::ACTION_TEST;
@@ -64,18 +63,24 @@ class KolibriContext extends PHPSpec_Context {
             throw new Exception('KolibriTestCase needs to have either Model, Action or View
 					in the end of the class name.');
         }
-        
+
 		$this->db = DatabaseFactory::getConnection();
 		if (method_exists($this, 'setup')) {
 			$this->setup();
 		}
     }
-	
+
 	/**
-	 * Triggers the preSpec() method for doing something _before_ a spec has been invoked. 
+	 * Starts a new database transaction before each spec and refreshes any fixtures for
+	 * models specs.
+	 * Also triggers a preSpec() method, if defined, for doing something _before_ a spec
+	 * has been invoked.
 	 */
     public function before () {
 		$this->db->begin();
+		if ($this->testType == self::MODEL_TEST) {
+			$this->fixtures = new Fixtures($this->modelName);
+		}
 		if (method_exists($this, 'preSpec')) {
 			$this->preSpec();
 		}
@@ -91,9 +96,9 @@ class KolibriContext extends PHPSpec_Context {
 		}
 		$this->db->rollback();
     }
-    
+
 	/**
-	 * Triggers the tearDown() method for doing something _after all_ specs has runned. 
+	 * Triggers the tearDown() method for doing something _after all_ specs has runned.
 	 */
     public function afterAll () {
 		if (method_exists($this, 'tearDown')) {
@@ -112,7 +117,7 @@ class KolibriContext extends PHPSpec_Context {
 			ob_flush();
 		}
     }
-	
+
 	/**
 	 * Fires a GET request for testing an action. Any supplied parameteres and session
 	 * data are passed along to the request. This provides access to the <code>$request</code>,
@@ -161,7 +166,7 @@ class KolibriContext extends PHPSpec_Context {
 		$_SERVER['REQUEST_URI'] = $uri;
 		$_SESSION = ($session !== null ? $session : array());
 	}
-	
+
 	/**
 	 * Does not allow you to use post and/or get in any other testing classes than action.
 	 *
