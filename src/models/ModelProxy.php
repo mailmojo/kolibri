@@ -346,9 +346,9 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 	}
 	
 	/**
-	 * Saves the supplied model by calling the <code>update()</code> DAO method if the model isn't
-	 * new and changes have been made on its data, or the <code>insert()</code> DAO method if it's
-	 * new.
+	 * Saves the supplied model by calling the <code>update()</code> DAO method if the model
+	 * isn't new and changes have been made on its data, or the <code>insert()</code> DAO
+	 * method if it's new.
 	 *
 	 * @param object $model	The model to save.
 	 * @return int			Number of rows affected in the database.
@@ -357,7 +357,14 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 		$numAffected = 0;
 		
 		if (!empty($model->original)) {
-			if (property_exists($model, 'isDirty') && $model->isDirty) {
+			/*
+			 * We assume the model is dirty unless explicitly flagged as non-dirty. This is a
+			 * change from earlier Kolibri snapshots where we assumed it was NOT dirty without
+			 * the flag. This was changed based on the fact that we sometimes instantiate our
+			 * own plain models, whereby we had to manually set isDirty = true if we were
+			 * editing, which is not something the user should be concerned about.
+			 */
+			if (!property_exists($model, 'isDirty') || $model->isDirty) {
 				 $numAffected = $this->objects->update($model);
 			}
 		}
