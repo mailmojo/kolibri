@@ -100,6 +100,10 @@ class Config {
 		 * values. They are instead merged with the default configuration and compiled
 		 * internally for use with the Dispatcher.
 		 */
+		if (isset($this->config['interceptors.classes'])) {
+			$helper->addInterceptorClasses($this->config['interceptors.classes']);
+			unset($this->config['interceptors.classes']);
+		}
 		if (isset($this->config['interceptors.stacks'])) {
 			$appInterceptorStacks = $this->config['interceptors.stacks'];
 			unset($this->config['interceptors.stacks']);

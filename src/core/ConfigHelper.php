@@ -11,20 +11,20 @@ class ConfigHelper {
 	 * @var string
 	 */
 	private $runMode;
-	
+
 	/**
 	 * Pure mapping of interceptor names to classes.
 	 * @var array
 	 */
 	private $interceptorClasses;
-	
+
 	/**
 	 * Extended mapping of interceptors, prepared from core and application configurations
 	 * and including interceptor stacks.
 	 * @var array
 	 */
 	private $interceptors;
-	
+
 	/**
 	 * Creates a new ConfigHelper for a specific environment mode and list of
 	 * interceptors that exist.
@@ -37,10 +37,10 @@ class ConfigHelper {
 		$this->runMode = $mode;
 		$this->interceptorClasses = $interceptorClasses;
 	}
-	
+
 	/**
 	 * Loads and returns and array with all application configuration for the current
-	 * environment mode. Configuration files are loaded for each environment in a 
+	 * environment mode. Configuration files are loaded for each environment in a
 	 * cascading hierarchy:
 	 *   Production -> Development -> Test
 	 * The production configuration will always be loaded, but overridden where
@@ -56,16 +56,16 @@ class ConfigHelper {
 		$configStack = array(Config::PRODUCTION);
 		if ($this->runMode != Config::PRODUCTION) {
 			$configStack[] = Config::DEVELOPMENT;
-			
+
 			if ($this->runMode == Config::TEST) {
 				$configStack[] = Config::TEST;
 			}
 		}
-		
+
 		$config = array();
 		foreach ($configStack as $configMode) {
 			$modeConfig = $this->loadMode($configMode);
-			
+
 			/*
 			 * We want to prevent accidental use of the development or production database
 			 * in the test environment where all data is volatile.
@@ -76,11 +76,11 @@ class ConfigHelper {
 						. 'development database.');
 				}
 			}
-			
+
 			// Merge config for a specific mode with previously loaded configuration recursively
 			$config = array_merge_recursive_distinct($config, $modeConfig);
 		}
-		
+
 		/*
 		 * The 'app' section in configuration files are automatically flattened to global
 		 * configuration values for convenience.
@@ -91,10 +91,10 @@ class ConfigHelper {
 			}
 			unset($config['app']);
 		}
-		
+
 		return $config;
 	}
-	
+
 	/**
 	 * Loads and returns an array with application configuration for a specific environment
 	 * mode.
@@ -110,15 +110,24 @@ class ConfigHelper {
 			throw new Exception("Application configuration file missing for "
 				. "{$mode} environment: $file");
 		}
-		
+
 		$config = @parse_ini_file($file, true);
 		if ($config === false) {
 			// Raise the PHP warning from syntax errors in configuration file to an Exception
 			$error = error_get_last();
 			throw new Exception($error['message']);
 		}
-		
+
 		return $config;
+	}
+
+	/**
+	 * Adds custom interceptor classes to Kolibri's core interceptors.
+	 *
+	 * @param array $classes Array with interceptor class names, indexed on their shortname.
+	 */
+	public function addInterceptorClasses (array $classes) {
+		$this->interceptorClasses = array_merge($this->interceptorClasses, $classes);
 	}
 
 	/**
@@ -135,12 +144,12 @@ class ConfigHelper {
 	 */
 	public function prepareInterceptors (array $defaultStacks, array $applicationStacks) {
 		$this->interceptors = $this->interceptorClasses;
-		
+
 		// Parse stacks defined in application ini files
 		foreach ($applicationStacks as $name => $stack) {
 			$applicationStacks[$name] = preg_split('/,\s*/', $stack);
 		}
-		
+
 		$stacks = array_merge($defaultStacks, $applicationStacks);
 		foreach ($stacks as $name => $stack) {
 			/*
@@ -163,10 +172,10 @@ class ConfigHelper {
 				}
 			}
 		}
-		
+
 		return $this->interceptors;
 	}
-	
+
 	/**
 	 * Parses and validates application specific interceptor settings, and merges them with
 	 * the default interceptor settings. Each application specific setting must have a name
@@ -183,7 +192,7 @@ class ConfigHelper {
 	 */
 	public function prepareInterceptorSettings (array $defaultSettings, array $appSettings) {
 		$parsedAppSettings = array();
-		
+
 		foreach ($appSettings as $setting => $value) {
 			/*
 			 * Make sure setting name contains one, and only one, period. We depend on the
@@ -204,7 +213,7 @@ class ConfigHelper {
 				throw new Exception("Invalid key '$setting' in interceptor settings ($file)");
 			}
 		}
-		
+
 		/*
 		 * Both the default settings and parsed application settings are arrays indexed
 		 * on interceptor names with sub-arrays containing settings for each interceptor.
@@ -213,7 +222,7 @@ class ConfigHelper {
 		 */
 		return array_merge_recursive_distinct($defaultSettings, $parsedAppSettings);
 	}
-	
+
 	/**
 	 * Prepares interceptor mappings by flattening interceptor stacks and translating
 	 * interceptor names to class names. Must be run after prepareInterceptors() for stacks
@@ -241,7 +250,7 @@ class ConfigHelper {
 					$name = substr($name, 1);
 				}
 				$prefix = ($exclude ? '!' : '');
-				
+
 				/*
 				 * An array represents a stack of interceptors which we optimize by
 				 * flattening to simple interceptor class names.
@@ -255,7 +264,7 @@ class ConfigHelper {
 					$classes[$name] = $prefix . $this->interceptors[$name];
 				}
 			}
-			
+
 			/*
 			 * Replace string from application config with optimized array of
 			 * interceptor class names.
