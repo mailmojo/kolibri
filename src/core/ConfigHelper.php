@@ -77,6 +77,20 @@ class ConfigHelper {
 				}
 			}
 
+			/*
+			 * Perform string concatenation of interceptor mappings before merging.
+			 * This enables ammending a stack of interceptors for a URI in development.ini
+			 * or test.ini, instead of just overriding the complete stack.
+			 */
+			if (isset($config['interceptors']) && isset($modeConfig['interceptors'])) {
+				foreach ($modeConfig['interceptors'] as $uri => $interceptors) {
+					if (isset($config['interceptors'][$uri])) {
+						$config['interceptors'][$uri] .= ",{$interceptors}";
+						unset($modeConfig['interceptors'][$uri]);
+					}
+				}
+			}
+
 			// Merge config for a specific mode with previously loaded configuration recursively
 			$config = array_merge_recursive_distinct($config, $modeConfig);
 		}
