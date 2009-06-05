@@ -190,8 +190,11 @@ class ModelInterceptor extends AbstractInterceptor {
 	 * Sets a property value on the model, if the value is different from the current value.
 	 */
 	private function setProperty ($model, $property, $value) {
+		// Convert empty value to null
+		if ($value === '') $value = null;
+
 		if ($model->$property !== $value) {
-			$model->$property = $value;
+			$model->$property = (is_scalar($value) ? trim($value) : $value);
 			$model->isDirty = true;
 		}
 	}

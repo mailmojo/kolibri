@@ -71,8 +71,8 @@ class KolibriContext extends PHPSpec_Context {
 				$parentDir !== 'integration'
 			);
 
-		// If class name contains 'model' or we are within the models dir; model testing
-        if (($inName = substr(strtolower($className), -5)) == self::MODEL_TEST
+		// If class name ends with 'model' or we are within the models dir; model testing
+        if (($inName = (substr(strtolower($className), -5) == self::MODEL_TEST))
 				|| $parentDir == 'models') {
 			$this->testType = self::MODEL_TEST;
 			if ($inName) {
@@ -80,7 +80,7 @@ class KolibriContext extends PHPSpec_Context {
 			}
 			else $this->modelName = ucfirst($mainDir);
         }
-		// Else if class name contains 'action' or we are within actions dir; action testing
+		// Else if class name ends with 'action' or we are within actions dir; action testing
         else if ($mainDir == 'actions'
 				|| $parentDir == 'actions'
 				|| substr(strtolower($className), -6) == self::ACTION_TEST) {
@@ -111,6 +111,16 @@ class KolibriContext extends PHPSpec_Context {
      */
     public function beforeAll () {
 		$this->init();
+
+		/*
+		 * For integration tests, we re-prepare the database for each test class, as we
+		 * can't roll back to reset state (given that integration tests are run through an
+		 * external browser).
+		 * XXX: We /might/ want to put this in before(), but it's heavy, so let's ponder...
+		 */
+		if ($this->testType == self::INTEGRATION_TEST) {
+			prepare_database();
+		}
 		if (method_exists($this, 'setUp')) {
 			$this->setUp();
 		}
@@ -122,10 +132,15 @@ class KolibriContext extends PHPSpec_Context {
 	 * _before_ a spec has been invoked.
 	 */
     public function before () {
-		$this->db->begin();
 		if ($this->testType == self::MODEL_TEST) {
 			$this->fixtures = new Fixtures($this->modelName);
 		}
+		
+		// No use wrapping examples in a transaction for integration tests
+		if ($this->testType != self::INTEGRATION_TEST) {
+			$this->db->begin();
+		}
+
 		if (method_exists($this, 'preSpec')) {
 			$this->preSpec();
 		}
@@ -139,7 +154,11 @@ class KolibriContext extends PHPSpec_Context {
 		if (method_exists($this, 'postSpec')) {
 			$this->postSpec();
 		}
-		$this->db->rollback();
+
+		// No use wrapping examples in a transaction for integration tests
+		if ($this->testType != self::INTEGRATION_TEST) {
+			$this->db->rollback();
+		}
     }
 
 	/**
