@@ -95,7 +95,8 @@ class AuthInterceptor extends AbstractInterceptor {
 	private function denyAccess ($target = null) {
 		$redirectTo = $this->loginUri;
 		if (!empty($target)) {
-			$redirectTo .= "?target=$target";
+			$paramSeparator = (strpos($redirectTo, '?') === false ? '?' : '&');
+			$redirectTo .= "{$paramSeparator}target={$target}";
 		}
 
 		return new RedirectResponse($redirectTo);

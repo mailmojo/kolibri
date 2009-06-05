@@ -71,22 +71,23 @@ class KolibriContext extends PHPSpec_Context {
 				$parentDir !== 'integration'
 			);
 
-		// If class name ends with 'model' or we are within the models dir; model testing
-        if (($inName = (substr(strtolower($className), -5) == self::MODEL_TEST))
-				|| $parentDir == 'models') {
+		// If class is within models dir we are model testing
+        if ($mainDir == 'models' || $parentDir == 'models') {
 			$this->testType = self::MODEL_TEST;
-			if ($inName) {
+
+			// If the class name ends with 'model', discard it from the actual model name
+			if (substr(strtolower($className), -5) == self::MODEL_TEST) {
 	            $this->modelName = substr($className, 8, -5);
 			}
-			else $this->modelName = ucfirst($mainDir);
+			else {
+				$this->modelName = ucfirst($mainDir);
+			}
         }
-		// Else if class name ends with 'action' or we are within actions dir; action testing
-        else if ($mainDir == 'actions'
-				|| $parentDir == 'actions'
-				|| substr(strtolower($className), -6) == self::ACTION_TEST) {
+		// Else if class is within actions dir we are action testing
+        else if ($mainDir == 'actions' || $parentDir == 'actions') {
             $this->testType = self::ACTION_TEST;
         }
-		// Else if we are within the integration dir; integration testing
+		// Else if we are within the integration dir we are integration testing
         else if ($mainDir == 'integration' || $parentDir == 'integration') {
 			$this->testType = self::INTEGRATION_TEST;
 			$this->browser = self::getBrowserInstance();

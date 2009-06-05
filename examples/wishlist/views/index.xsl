@@ -29,7 +29,7 @@
 				<xsl:if test="count($have) = 0">
 					<p>My life is empty. :-(</p>
 				</xsl:if>
-				<xsl:apply-templates select="items/Item[received]" mode="have" />
+				<xsl:apply-templates select="$have" mode="have" />
 			</div>
 		</div>
 

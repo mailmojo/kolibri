@@ -54,7 +54,7 @@ class DefaultActionMapper {
 	 */
 	public function map () {
 		// Remove any prepending / and explode URI into its parts
-		$uri = ltrim($this->request->getUri());
+		$uri = ltrim($this->request->getUri(), '/');
 		$uriParts = (empty($uri) ? array() : explode('/', $uri));
 
 		// Map the URI to its target action
@@ -138,7 +138,7 @@ class DefaultActionMapper {
 				 * matched a directory, and we can set the current as an id related to that
 				 * "section".
 				 */
-				else if ($previousPart !== null) {
+				else if ($previousPart != '') {
 					$this->params[$previousPart . 'id'] = $part;
 
 					// Reset previous part, to disallow several ids for same "section"
