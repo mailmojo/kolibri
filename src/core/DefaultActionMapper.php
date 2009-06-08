@@ -104,7 +104,7 @@ class DefaultActionMapper {
 	protected function mapAction (&$uri) {
 		$actionClassPath = ACTIONS_PATH . '/';
 		$actionClass = '';
-		$previousPart = '';
+		$previousPart = null;
 
 		// Loop through the URI parts and look for a suitable action
 		foreach ($uri as $part) {
@@ -138,7 +138,7 @@ class DefaultActionMapper {
 				 * matched a directory, and we can set the current as an id related to that
 				 * "section".
 				 */
-				else if ($previousPart != '') {
+				else if ($previousPart !== null) {
 					$this->params[$previousPart . 'id'] = $part;
 
 					// Reset previous part, to disallow several ids for same "section"
