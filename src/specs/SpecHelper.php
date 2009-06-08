@@ -39,24 +39,37 @@ Config::getInstance();
 require(ROOT . '/specs/Fixtures.php');
 require(ROOT . '/specs/KolibriContext.php');
 
+// Make the following variables global so prepare_database() can be called from other contexts
+global $setupFile, $schemaFile;
 $setupFile  = APP_PATH . '/specs/setup.sql';
-$schemaFile = APP_PATH . '/conf/schema.sql';
+$schemaFile= APP_PATH . '/conf/schema.sql';
 
-if (file_exists($setupFile)) {
-	$db = DatabaseFactory::getConnection();
-	
-	/*
-	 * If a setup SQL file is defined, we also support the use of a general application
-	 * schema file to set up the database.
-	 */
-	if (file_exists($schemaFile)) {
-		$schemaContents = file_get_contents($schemaFile);
-		$db->batchQuery($schemaContents);
+prepare_database();
+
+/**
+ * Function to initialize the database if a setup and optionally schema file is present.
+ * This is defined as a function in order to set up the database in a consistent state for
+ * each integration test, where simple rollback() like we otherwise do won't suffice (as
+ * integration tests are run through an external browser).
+ */
+function prepare_database () {
+	global $setupFile, $schemaFile;
+
+	if (file_exists($setupFile)) {
+		$db = DatabaseFactory::getConnection();
+
+		/*
+		 * If a setup SQL file is defined, we also support the use of a general application
+		 * schema file to set up the database.
+		 */
+		if (file_exists($schemaFile)) {
+			$schemaContents = file_get_contents($schemaFile);
+			$db->batchQuery($schemaContents);
+			$db->commit();
+		}
+
+		$setupContents = file_get_contents($setupFile);
+		$db->batchQuery($setupContents);
 		$db->commit();
 	}
-	
-	$setupContents = file_get_contents($setupFile);
-	$db->batchQuery($setupContents);
-	$db->commit();
 }
-?>

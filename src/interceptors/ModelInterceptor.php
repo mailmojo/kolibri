@@ -190,8 +190,10 @@ class ModelInterceptor extends AbstractInterceptor {
 	 * Sets a property value on the model, if the value is different from the current value.
 	 */
 	private function setProperty ($model, $property, $value) {
-		if ($model->$property !== $value) {
-			$model->$property = $value;
+		$nativeValue = $this->convertType($value);
+
+		if ($model->$property !== $nativeValue) {
+			$model->$property = $nativeValue;
 			$model->isDirty = true;
 		}
 	}
@@ -204,6 +206,8 @@ class ModelInterceptor extends AbstractInterceptor {
 	 * @return mixed			Converted value.
 	 */
 	private function convertType ($value) {
+		if (is_scalar($value)) $value = trim($value);
+
 		if ($value == 'true' || $value == 'false') {
 			return ($value == 'true' ? true : false);
 		}
