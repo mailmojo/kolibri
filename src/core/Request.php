@@ -44,12 +44,20 @@ class Request implements ArrayAccess {
 		
 		// If $uri is empty initialize this request with the URI from the client request
 		if (empty($uri)) {
-			$uri = $_SERVER['REQUEST_URI'];
-			
+            /*
+             * First strip scheme and hostname from webRoot, to ensure webRoot is an URI path
+             * like the request URI. We then "normalize" the URI to be within the webRoot.
+             */
+            $absoluteUri = parse_url(Config::get('webRoot'), PHP_URL_PATH);
+            $uri = str_replace($absoluteUri, '', $_SERVER['REQUEST_URI']);
+
 			// Strip any ?-type GET parameters from the URI (they are in the parameters)
 			if (($paramPos = strpos($uri, '?')) !== false) {
 				$uri = substr($uri, 0, $paramPos);
 			}
+
+            // Strip ending / to ensure URIs with or without are handles alike
+		    $uri = rtrim($uri, '/');
 		}
 		
 		// We use rawurldecode() instead of urldecode() to preserve + in URI

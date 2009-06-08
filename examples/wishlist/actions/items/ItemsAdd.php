@@ -3,7 +3,7 @@
  * Action for adding new item. We implement ModelAware to have the model object populated by
  * request data, and ValidationAware to have it automatically validated.
  */
-class Add implements MessageAware, ModelAware, ValidationAware {
+class ItemsAdd implements MessageAware, ModelAware, ValidationAware {
 	/**
 	 * Defines the model class to instantiate, which will be populated with request data and
 	 * put back into this property.

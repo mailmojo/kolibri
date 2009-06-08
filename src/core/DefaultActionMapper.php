@@ -4,13 +4,20 @@ require(ROOT . '/core/ActionMapping.php');
 /**
  * This class is responsible for mapping a request URI to a target action.
  * 
- * This implementation maps the
- * request URI to an action by first traversing the URI parts (the strings between the / characters)
- * and looking for an action handler ........
- * 
- * TODO: Complete comment
- * 
- * @version		$Id: DefaultActionMapper.php 1530 2008-07-21 15:10:08Z anders $
+ * This implementation maps the URI to an action by traversing the URI parts (the strings
+ * between the / characters) and searching the application's /actions directory for matching
+ * directories and files. Parts not explicitly matched are assumed to be IDs unless we have
+ * already set an ID for the current URI "section". URI parts after the part that matched
+ * a file are also mapped to parameters. The request method determines the actual method
+ * to call on the action class, either <code>doGet()</code> or <code>doPost()</code>. This is
+ * all easier to explain with a couple of examples:
+ *
+ *   Given the URI: /lists
+ *   Matches the action class: Lists.php <em>or</em> /lists/ListsIndex.php
+ *
+ *   Given the URI: /lists/1/contacts/4
+ *   Matches the action class: /lists/contacts/ListsContactsView.php
+ *   And sets request parameters: listsid=1 <em>and</em> contactsid=4
  */	
 class DefaultActionMapper {
 	/**
@@ -26,6 +33,12 @@ class DefaultActionMapper {
 	protected $mapping;
 
 	/**
+	 * Parts of the URI which we map into request parameters are temporarily stored here.
+	 * @var array
+	 */
+	protected $params;
+
+	/**
 	 * Create an instance of this class and initialize an <code>ActionMapping</code>.
 	 */
 	public function __construct ($request) {
@@ -36,30 +49,25 @@ class DefaultActionMapper {
 	 * Maps the request to its target action and returns the <code>ActionMapping</code>.
 	 * If the request could not be mapped to an action, <code>NULL</code> is returned.
 	 *
-	 * @return object	<code>ActionMapping</code> representing the action mapped to the request,
-	 * 					or <code>NULL</code> if no action could be mapped.
+	 * @return object <code>ActionMapping</code> representing the action mapped to the
+	 *                request, or <code>null</code> if no action could be mapped.
 	 */
 	public function map () {
-		/*
-		 * First strip scheme and hostname from webRoot, to ensure webRoot is an URI path like
-		 * the request URI. We then "normalize" the URI to be within the webRoot.
-		 */
-		$absoluteUri = parse_url(Config::get('webRoot'), PHP_URL_PATH);
-		$uri = trim(str_replace($absoluteUri, '', $this->request->getUri()), '/');
+		// Remove any prepending / and explode URI into its parts
+		$uri = ltrim($this->request->getUri(), '/');
 		$uriParts = (empty($uri) ? array() : explode('/', $uri));
 
 		// Map the URI to its target action
 		$actionPath = $this->mapAction($uriParts);
 
 		/*
-		 * If actionPath is not null, then the URI matched a PHP file. We can then map the action method
-		 * and parameters and create the action mapping.
+		 * If actionPath is not null, then the URI matched a PHP file. We can then map the
+		 * action method and parameters and create the action mapping.
 		 */
 		if ($actionPath !== null) {
 			$actionMethod = $this->mapMethod($this->request->getMethod());
 			$this->mapping = new ActionMapping($actionPath, $actionMethod);
 			$this->mapParams($uriParts);
-
 			return $this->mapping;
 		}
 
@@ -71,8 +79,8 @@ class DefaultActionMapper {
 	 * Maps the request method to an action method. We currently only support GET and POST.
 	 *
 	 * @param string $method	Request method.
-	 * @throws Exception		If the request method is unsupported.
 	 * @return string			Action method to use.
+	 * @throws Exception		If the request method is unsupported.
 	 */
 	protected function mapMethod ($method) {
 		if ($method == 'GET') {
@@ -87,49 +95,72 @@ class DefaultActionMapper {
 	}
 
 	/**
-	 * Maps the action handler to handle the request specified by the supplied URI.
+	 * Maps the action class to handle the request specified by the supplied URI.
 	 * 
 	 * @param array $uri	The request URI in an array.
-	 * @return string		The full file system path to the action which is to handle the
-	 * 						request.
+	 * @return string		The absolute file system path to the action which is to handle the
+	 *                      request.
 	 */
 	protected function mapAction (&$uri) {
-		// Get the initial path to the handlers directory
-		$actionPath = ACTIONS_PATH . '/';
-		$index = 0;
+		$actionClassPath = ACTIONS_PATH . '/';
+		$actionClass = '';
+		$previousPart = null;
 
 		// Loop through the URI parts and look for a suitable action
 		foreach ($uri as $part) {
-			if ($part != '' && is_dir($actionPath . $part)) {
-				// Current part is a directory, append to action path and shift directory off the URI
-				$actionPath .= $part . '/';
+			// "CamelCase"-fix for action class name
+			$cameledPart = implode(array_map('ucfirst', explode('_', $part)));
+
+			// Check if the classpath + part is a directory
+			if ($part != '' && is_dir($actionClassPath . $part)) {
+				$actionClassPath .= $part . '/';
+				$actionClass .= $cameledPart;
+				$previousPart = $part; // Remember this part for next iteration
+
 				array_shift($uri);
 			}
 			else {
-				// "CamelCase"-fix for action name.
-				$actionName = implode(array_map('ucfirst', explode('_', $part)));
-				$actionFile = $actionName . '.php';
+				// For convenience, fix basename of possible action file at this point
+				$actionFile = $actionClass . $cameledPart . '.php';
 
-				if (is_file($actionPath . $actionFile)) {
-					// Element is specific action. Append element to action path.
-					$actionPath .= $actionFile;
+				// Check if the classpath + part is a file
+				if (is_file($actionClassPath . $actionFile)) {
+					$actionClassPath .= $actionFile;
+					$actionClass .= $cameledPart;
 					
-					// Shift the action name off URI
 					array_shift($uri);
-					return $actionPath;
-				}
 
-				break; // Current part was not found as action, break out of loop to try default action
+					// This part did indeed lead to a specific file, so we return with
+					return $actionClassPath;
+				}
+				/*
+				 * Else if a previous part has been set, that means that the previous part
+				 * matched a directory, and we can set the current as an id related to that
+				 * "section".
+				 */
+				else if ($previousPart !== null) {
+					$this->params[$previousPart . 'id'] = $part;
+
+					// Reset previous part, to disallow several ids for same "section"
+					$previousPart = null;
+					array_shift($uri);
+				}
+				/*
+				 * Otherwise, the current part could not be matched or set as an id, so we
+				 * break out of loop to try a default action.
+				 */
+				else break;
 			}
 		}
 
 		/*
-		 * We are here if the latest URI part that was matched is an existing directory. Check to see
-		 * if a default action within that directory exists.
+		 * We are here if the URI didn't match a specific action class file. If no "previous
+		 * part" is present, it means we have an id of which to view a single "item", otherwise
+		 * no specific "item" is requested and we look for an index action.
 		 */
-		$actionPath .= 'Index.php';
-		if (is_file($actionPath)) {
-			return $actionPath;
+		$actionClassPath .= $actionClass . ($previousPart === null ? 'View.php' : 'Index.php');
+		if (is_file($actionClassPath)) {
+			return $actionClassPath;
 		}
 
 		return null;
@@ -138,27 +169,25 @@ class DefaultActionMapper {
 	/**
 	 * Maps any URI-specified parameters to the request.
 	 * 
-	 * @param array $uri	The remaining elements of the request URI (action has been sliced away),
-	 *						specifying the parameters to put in the request.
+	 * @param array $uri	The remaining elements of the request URI (action has been sliced
+	 *                      away), specifying the parameters to put in the request.
 	 */
 	protected function mapParams ($uri) {
-		$params = array();
-
 		// Step through parameters in the URI, two params at a time (as we map key/value pairs)
 		for ($i = 0; $i < count($uri); $i += 2) {
 			if (isset($uri[$i + 1])) {
 				// There is a next param, take current as key and next as value
-				$params[urldecode($uri[$i])] = urldecode($uri[$i + 1]);
+				$this->params[urldecode($uri[$i])] = urldecode($uri[$i + 1]);
 			}
 			else {
 				// No next param availible, use the current param as a value with "id" as key
-				$params['id'] = urldecode($uri[$i]);
+				$this->params['id'] = urldecode($uri[$i]);
 			}
 		}
 
-		if (!empty($params)) {
+		if (!empty($this->params)) {
 			// TODO: Do we want URI-params to overwrite GET-params as now, or not?
-			$this->request->putAll($params);
+			$this->request->putAll($this->params);
 		}
 	}
 }

@@ -51,6 +51,15 @@ class ModelInterceptor extends AbstractInterceptor {
 				if (method_exists($action, 'getModel')) {
 					// The action supplies an already instantiated model
 					$model = $action->getModel();
+
+					/*
+					 * During population of the model, we perform a property_exists() to
+					 * ensure that a parameter is indeed a property on the model. For this
+					 * to work the model must be a plain model; so we extract any proxy.
+					 */
+					if ($model instanceof ModelProxy) {
+						$model = $model->extract();
+					}
 				}
 				else {
 					// The action supplies model class name(s), so we must instantiate
@@ -68,8 +77,12 @@ class ModelInterceptor extends AbstractInterceptor {
 							$this->populate($model, $exploded, $value);
 						}
 						else {
+							/*
+							 * "original" is usually not actually defined, but we still want
+							 * it set when availible.
+							 */
 							if (property_exists($model, $param) || $param == 'original') {
-								$model->$param = $this->convertType($value);
+								$this->setProperty($model, $param, $value);
 							}
 						}
 					}
@@ -84,11 +97,12 @@ class ModelInterceptor extends AbstractInterceptor {
 	}
 
 	/**
-	 * Instantiates the model as specified by the action and passed to this method. The model name specified
-	 * may either be a single string with the model name, or an array structure where the main model
-	 * contains other models.
+	 * Instantiates the model as specified by the action and passed to this method. The model
+	 * name specified may either be a single string with the model name, or an array structure
+	 * where the main model contains other models.
 	 *
-	 * @param array $structure	Model name (along with any inner model structure) to instantiate.
+	 * @param array $structure Model name (along with any inner model structure) to
+	 *                         instantiate.
 	 * @return object
 	 */
 	private function instantiateModel ($structure) {
@@ -96,7 +110,10 @@ class ModelInterceptor extends AbstractInterceptor {
 			$model = new $structure();
 		}
 		else if (is_array($structure)) {		
-			// With an array structure for models, the first array element must be the main model class
+			/*
+			 * With an array structure for models, the first array element must be the main
+			 * model class.
+			 */
 			$mainModel = array_shift($structure);
 			$model = new $mainModel();
 
@@ -122,17 +139,16 @@ class ModelInterceptor extends AbstractInterceptor {
 		}
 		else return null;
 		
-		$model->isDirty = true;
 		return $model;
 	}
 
 	/**
-	 * Populates a specific property of a model with a value. The property is a <em>property path</em>
-	 * of the form <code>outerProperty::innerProperty</code> in which case <code>outerProperty</code> in
-	 * the model must be another model with the an <code>innerProperty</code> property to be populated
-	 * with the value.
+	 * Populates a specific property of a model with a value. The property is a
+	 * <em>property path</em> of the form <code>outerProperty::innerProperty</code> in which
+	 * case <code>outerProperty</code> in the model must be another model with the an
+	 * <code>innerProperty</code> property to be populated with the value.
 	 * 
-	 * TODO: This must be better documented and possibly add property_exists()-checks
+	 * TODO: This must be better documented internally.
 	 *
 	 * @param object $model		Model object to populate.
 	 * @param string $property	Property to populate.
@@ -164,20 +180,34 @@ class ModelInterceptor extends AbstractInterceptor {
 					}
 					break;
 				}
-			}
 
-			$model->$currentProp = $this->convertType($value);
+				$this->setProperty($model, $currentProp, $value);
+			}
 		}
 	}
 
 	/**
-	 * Converts textual values from the input to actual PHP types. Currently booleans and empty strings to
-	 * nulls are implemented.
+	 * Sets a property value on the model, if the value is different from the current value.
+	 */
+	private function setProperty ($model, $property, $value) {
+		$nativeValue = $this->convertType($value);
+
+		if ($model->$property !== $nativeValue) {
+			$model->$property = $nativeValue;
+			$model->isDirty = true;
+		}
+	}
+	
+	/**
+	 * Converts textual values from the input to actual PHP types. Currently booleans and empty
+	 * strings to nulls are implemented.
 	 * 
 	 * @param string $value		Value from input.
 	 * @return mixed			Converted value.
 	 */
 	private function convertType ($value) {
+		if (is_scalar($value)) $value = trim($value);
+
 		if ($value == 'true' || $value == 'false') {
 			return ($value == 'true' ? true : false);
 		}

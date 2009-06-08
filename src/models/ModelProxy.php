@@ -184,7 +184,7 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 			if (property_exists($model, $name)) {
 				if ($model->$name !== $value) {
 					$model->$name = $value;
-					$this->modelChanged($model);
+					$this->modelChanged($model, $value);
 				}
 			}
 		}
@@ -238,7 +238,7 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 		if (is_object($value)) {
 			if ($offset !== null) {
 				$this->models[$offset] = $value;
-				$this->modelChanged($this->models[$offset]);
+				$this->modelChanged($this->models[$offset], $value);
 			}
 			else {
 				$this->models[] = $value;
@@ -315,10 +315,17 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 	/**
 	 * Flag the model as dirty, as changes have been made to its state.
 	 *
-	 * @param object $model	The model whose state has changed.
+	 * @param object $model   The model whose state has changed.
+	 * @param mixed $newValue Optional value that was set on a property of the model. If
+	 *                        <code>NULL</code>, an object or an array we assume proxifying
+	 *                        inner models may be required.
 	 */
-	protected function modelChanged ($model) {
+	protected function modelChanged ($model, $newValue = null) {
 		$model->isDirty = true;
+		
+		if ($newValue === null || is_array($newValue) || is_object($newValue)) {
+			$this->isInnerProxied = false;
+		}
 	}
 	
 	/**
@@ -339,9 +346,9 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 	}
 	
 	/**
-	 * Saves the supplied model by calling the <code>update()</code> DAO method if the model isn't
-	 * new and changes have been made on its data, or the <code>insert()</code> DAO method if it's
-	 * new.
+	 * Saves the supplied model by calling the <code>update()</code> DAO method if the model
+	 * isn't new and changes have been made on its data, or the <code>insert()</code> DAO
+	 * method if it's new.
 	 *
 	 * @param object $model	The model to save.
 	 * @return int			Number of rows affected in the database.
@@ -350,7 +357,14 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 		$numAffected = 0;
 		
 		if (!empty($model->original)) {
-			if (property_exists($model, 'isDirty') && $model->isDirty) {
+			/*
+			 * We assume the model is dirty unless explicitly flagged as non-dirty. This is a
+			 * change from earlier Kolibri snapshots where we assumed it was NOT dirty without
+			 * the flag. This was changed based on the fact that we sometimes instantiate our
+			 * own plain models, whereby we had to manually set isDirty = true if we were
+			 * editing, which is not something the user should be concerned about.
+			 */
+			if (!property_exists($model, 'isDirty') || $model->isDirty) {
 				 $numAffected = $this->objects->update($model);
 			}
 		}

@@ -43,13 +43,12 @@ class AuthInterceptor extends AbstractInterceptor {
 			$user = $request->session[$this->userKey];
 
 			if (!$this->isUserAuthenticated($user)) {
-				$request->session['target'] = $request->getUri();
 				if ($action instanceof MessageAware) {
 					$action->msg->setMessage('You must log in to access
 							the page you requested.', false);
 				}
 
-				return $this->denyAccess();
+				return $this->denyAccess($request->getUri());
 			}
 
 			if ($action instanceof AuthAware) {
@@ -89,9 +88,18 @@ class AuthInterceptor extends AbstractInterceptor {
 
 	/**
 	 * Denies access by redirecting to the configured login URI.
+	 *
+	 * @param string $target Optional target of the request; the resource where access was
+	 *                       denied.
 	 */
-	private function denyAccess () {
-		return new RedirectResponse($this->loginUri);
+	private function denyAccess ($target = null) {
+		$redirectTo = $this->loginUri;
+		if (!empty($target)) {
+			$paramSeparator = (strpos($redirectTo, '?') === false ? '?' : '&');
+			$redirectTo .= "{$paramSeparator}target={$target}";
+		}
+
+		return new RedirectResponse($redirectTo);
 	}
 }
 ?>

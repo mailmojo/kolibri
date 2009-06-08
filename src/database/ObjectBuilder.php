@@ -298,8 +298,12 @@ class ObjectBuilder {
 		}
 
 		if ($isPopulated) {
-			// Set the "original"-property to PK value so we know this object can be UPDATEd
+			/*
+			 * Set the "original"-property to PK value so we know this object can be UPDATEd,
+			 * but in a non-dirty state unless modified.
+			 */
 			$object->original = $row[$this->primaryKeys[$objClass]];
+			$object->isDirty = false;
 		}
 
 		return $isPopulated;
