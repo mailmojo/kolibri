@@ -104,7 +104,7 @@ class DefaultActionMapper {
 	protected function mapAction (&$uri) {
 		$actionClassPath = ACTIONS_PATH . '/';
 		$actionClass = '';
-		$previousPart = null;
+		$previousPart = '';
 
 		// Loop through the URI parts and look for a suitable action
 		foreach ($uri as $part) {
