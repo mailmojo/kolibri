@@ -19,13 +19,13 @@ class Config {
 	const PRODUCTION = 'production';
 	const DEVELOPMENT = 'development';
 	const TEST = 'test';
-	
+
 	/**
 	 * Current environment mode.
 	 * @var string
 	 */
 	private $mode;
-	
+
 	/**
 	 * General configuration settings.
 	 * @var array
@@ -38,7 +38,7 @@ class Config {
 	 * @var array
 	 */
 	private $autoloadClasses;
-	
+
 	/**
 	 * Name of interceptors and interceptor stacks mapped to interceptor classes.
 	 * @var array
@@ -50,13 +50,13 @@ class Config {
 	 * @var array
 	 */
 	private $interceptorSettings;
-	
+
 	/**
 	 * Prepared list of URIs to unique set of interceptors.
 	 * @var array
 	 */
 	private $interceptorMappings;
-	
+
 	/**
 	 * Defines the validation classes.
 	 * @var array
@@ -68,7 +68,7 @@ class Config {
 	 * @var array
 	 */
 	private $validationMessages;
-	
+
 	/**
 	 * Singleton instance of this class.
 	 * @var Config
@@ -81,31 +81,35 @@ class Config {
 	 */
 	private function __construct ($mode) {
 		$this->mode = $mode;
-		
+
 		require(ROOT . '/conf/autoload.php');
 		require(ROOT . '/conf/interceptors.php');
 		require(ROOT . '/conf/validation.php');
 		require(ROOT . '/core/ConfigHelper.php');
-		
+
 		// Cache the autoload class index
 		$this->autoloadClasses = $autoloadClasses;
-		
+
 		// Load relevant app configuration depending on current environment mode
 		$helper = new ConfigHelper($this->mode, $interceptors);
 		$this->config = $helper->loadApp();
-		
+
 		/*
 		 * Extract all interceptor configurations from the loaded application
 		 * configuration. These configurations are irrelevant as normal configuration
 		 * values. They are instead merged with the default configuration and compiled
 		 * internally for use with the Dispatcher.
 		 */
+		if (isset($this->config['interceptors.classes'])) {
+			$helper->addInterceptorClasses($this->config['interceptors.classes']);
+			unset($this->config['interceptors.classes']);
+		}
 		if (isset($this->config['interceptors.stacks'])) {
 			$appInterceptorStacks = $this->config['interceptors.stacks'];
 			unset($this->config['interceptors.stacks']);
 		}
 		else $appInterceptorStacks = array();
-		
+
 		if (isset($this->config['interceptors.settings'])) {
 			$appInterceptorSettings = $this->config['interceptors.settings'];
 			unset($this->config['interceptors.settings']);
@@ -117,7 +121,7 @@ class Config {
 			unset($this->config['interceptors']);
 		}
 		else $appInterceptorMappings = array();
-		
+
 		// Compile single index of interceptor classes, default stacks and application stacks
 		$this->interceptorClasses = $helper->prepareInterceptors($interceptorStacks,
 				$appInterceptorStacks);
@@ -127,12 +131,12 @@ class Config {
 		// Flatten stacks and filter down to a unique list of interceptors for each URI
 		$this->interceptorMappings =
 				$helper->prepareInterceptorMappings($appInterceptorMappings);
-		
+
 		// Store validation configuration from conf/validation.php
 		$this->validationClasses = $validators;
 		$this->validationMessages = $validationMessages;
 	}
-	
+
 	/**
 	 * Initializes PHP settings based on the current configuration. This is done separately
 	 * from the constructor to support initalization after loading a stored instance
@@ -144,7 +148,7 @@ class Config {
 		 * conf/autoload.php
 		 */
 		ClassLoader::initialize($this->autoloadClasses);
-		
+
 		$incPath = ROOT . '/lib';
 		if (file_exists(APP_PATH . '/lib')) {
 			$incPath .= PATH_SEPARATOR . APP_PATH . '/lib';
@@ -154,7 +158,7 @@ class Config {
 			$incPath .= PATH_SEPARATOR . implode(PATH_SEPARATOR, $paths);
 		}
 		ini_set('include_path', ini_get('include_path') . PATH_SEPARATOR . $incPath);
-		
+
 		/*
 		 * Sets the current locale for date formatting et cetera
 		 * XXX: We leave LC_NUMERIC at default, as locales with comma as decimal seperator
@@ -167,11 +171,11 @@ class Config {
 			setlocale(LC_NUMERIC, $envLocale);
 		}
 	}
-	
+
 	/**
 	 * Returns an instance of this class. An existing instance is returned if one exists, else
 	 * a new instance is created.
-	 * 
+	 *
 	 * @return Config
 	 */
 	public static function getInstance () {
@@ -209,15 +213,15 @@ class Config {
 
 			return self::DEVELOPMENT;
 		}
-		
+
 		$instance = Config::getInstance();
 		return $instance->mode;
 	}
-	
+
 	/**
 	 * Returns the value of the configuration setting with the specified key, or
 	 * <code>NULL</code> if not found. If no key is supplied, all settings are returned.
-	 * 
+	 *
 	 * @param string $key Key of the configuration value to return, or <code>NULL</code> to
 	 *                    retrieve all.
 	 * @return mixed Configuration variable, <code>NULL</code> og array of all variables.

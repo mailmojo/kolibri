@@ -27,7 +27,7 @@ class FileResponse extends Response {
 
 		if ($isFile) {
 			if (!file_exists($data)) {
-				throw new Exeption("File $data to return to user does not exist.");
+				throw new Exception("File $data to return to user does not exist.");
 			}
 		}
 
