@@ -58,12 +58,12 @@ class KolibriContext extends PHPSpec_Context {
         $className = get_class($this);
 		$reflection = new ReflectionClass($className);
 		$classFilename = $reflection->getFileName();
-		
+
 		// Figure out which "testing type directory" we are within
 		do {
-			$currentPath = (isset($currentPath) ? $currentPath . '/..' : $classFilename);
-			$mainDir = basename(dirname(realpath($currentPath)));
-			$parentDir = basename(dirname(realpath($currentPath . '/..')));
+			$currentPath = (isset($currentPath) ? $currentPath . '/..' : dirname($classFilename));
+			$mainDir = basename(realpath($currentPath));
+			$parentDir = basename(realpath($currentPath . '/..'));
 		} while (
 				$parentDir !== 'specs' &&
 				$parentDir !== 'actions' &&
