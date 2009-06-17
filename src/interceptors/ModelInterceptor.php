@@ -186,6 +186,9 @@ class ModelInterceptor extends AbstractInterceptor {
 
 				$this->setProperty($model, $currentProp, $value);
 			}
+			else if ($currentProp === 'original') {
+				$model->original = $value;
+			}
 		}
 	}
 
