@@ -81,8 +81,11 @@ class ModelInterceptor extends AbstractInterceptor {
 							 * "original" is usually not actually defined, but we still want
 							 * it set when availible.
 							 */
-							if (property_exists($model, $param) || $param == 'original') {
+							if (property_exists($model, $param)) {
 								$this->setProperty($model, $param, $value);
+							}
+							else if ($param === 'original') {
+								$model->original = $this->convertType($value);
 							}
 						}
 					}

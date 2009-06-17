@@ -20,45 +20,50 @@ class Fixtures implements ArrayAccess {
 		$this->populate();
 	}
 	
-    /**
-     * Parses the <modelName>.ini file and returns an array of the objects.
-     */
-    private function populate () {
-        if ($this->modelName) {
-            $iniFile = APP_PATH . "/specs/fixtures/$this->modelName.ini";
-            
+	/**
+	 * Parses the <modelName>.ini file and returns an array of the objects.
+	 */
+	private function populate () {
+		if ($this->modelName) {
+			$iniFile = APP_PATH . "/specs/fixtures/$this->modelName.ini";
+			
 			if (!file_exists($iniFile)) {
 				return null;
 			}
 
-            $models = parse_ini_file($iniFile, true);
-            foreach ($models as $name => $model) {
-                if (is_array($model) && !empty($name)) {
-                    $newModel = Models::init($this->modelName);
-                    
-                    foreach ($model as $key => $value) {
-                        $newModel->$key = $value;
-                    }
-                    $this->fixtures[$name] = $newModel;
-                }
+			$models = parse_ini_file($iniFile, true);
+			foreach ($models as $name => $model) {
+				if (is_array($model) && !empty($name)) {
+					/*
+					 * We instantiate the plain model first before proxifying below, in order
+					 * to allow properties that are not actually instance variables to be set
+					 * on the model.
+					 */
+					$newModel = new $this->modelName();
+					
+					foreach ($model as $key => $value) {
+						$newModel->$key = $value;
+					}
+					$this->fixtures[$name] = Models::getModel($newModel);
+				}
 			}
-        }
-    }
+		}
+	}
 	
 	//
 	// Methods needed for ArrayAccess
 	//
-    public function offsetSet ($offset, $value) {
-        $this->fixtures[$offset] = $value;
-    }
-    public function offsetExists ($offset) {
-        return isset($this->fixtures[$offset]);
-    }
-    public function offsetUnset ($offset) {
-        unset($this->fixtures[$offset]);
-    }
-    public function offsetGet ($offset) {
-        return isset($this->fixtures[$offset]) ? $this->fixtures[$offset] : null;
-    }
+	public function offsetSet ($offset, $value) {
+		$this->fixtures[$offset] = $value;
+	}
+	public function offsetExists ($offset) {
+		return isset($this->fixtures[$offset]);
+	}
+	public function offsetUnset ($offset) {
+		unset($this->fixtures[$offset]);
+	}
+	public function offsetGet ($offset) {
+		return isset($this->fixtures[$offset]) ? $this->fixtures[$offset] : null;
+	}
 }
 ?>
