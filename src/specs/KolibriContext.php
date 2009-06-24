@@ -113,15 +113,6 @@ class KolibriContext extends PHPSpec_Context {
     public function beforeAll () {
 		$this->init();
 
-		/*
-		 * For integration tests, we re-prepare the database for each test class, as we
-		 * can't roll back to reset state (given that integration tests are run through an
-		 * external browser).
-		 * XXX: We /might/ want to put this in before(), but it's heavy, so let's ponder...
-		 */
-		if ($this->testType == self::INTEGRATION_TEST) {
-			prepare_database();
-		}
 		if (method_exists($this, 'setUp')) {
 			$this->setUp();
 		}
@@ -168,6 +159,17 @@ class KolibriContext extends PHPSpec_Context {
     public function afterAll () {
 		if (method_exists($this, 'tearDown')) {
 			$this->tearDown();
+		}
+
+		/*
+		 * For integration tests, we re-prepare the database for each test class, as we
+		 * can't roll back to reset state (given that integration tests are run through an
+		 * external browser). This is done here in afterAll() to avoid any changes in the
+		 * database to carry over to model tests when all tests are run together.
+		 * XXX: We /might/ want to put this in after(), but it's heavy, so let's ponder...
+		 */
+		if ($this->testType == self::INTEGRATION_TEST) {
+			prepare_database();
 		}
 
         unset($this->fixtures);
