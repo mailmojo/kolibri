@@ -15,7 +15,7 @@ require(ROOT . '/database/ObjectBuilder.php');
  * parameters is an array, the query must use ? as placeholders. If however the parameters is an
  * object, you map placeholders to properties in the object as the following example shows:
  *
- *   SELECT username, name FROM users WHERE username = :username AND password = :password
+ *	 SELECT username, name FROM users WHERE username = :username AND password = :password
  * 
  * Methods accepting class names to specify object nesting conforms to the rules of
  * <code>ObjectBuilder</code>. See its class documentation for details and examples.
@@ -45,7 +45,7 @@ abstract class DatabaseConnection {
 	 * could not be established.
 	 *
 	 * @throws Exception If a connection could not be established.
-	 * @return bool      <code>TRUE</code> upon successful connection.
+	 * @return bool		 <code>TRUE</code> upon successful connection.
 	 */
 	abstract public function connect ();
 
@@ -53,7 +53,7 @@ abstract class DatabaseConnection {
 	 * Begins a new transaction.
 	 *
 	 * @return bool <code>TRUE</code> if a transaction was started, <code>FALSE</code> if not (i.e.
-	 *              the connection is in an error state.
+	 *				the connection is in an error state.
 	 */
 	abstract public function begin ();
 
@@ -80,8 +80,8 @@ abstract class DatabaseConnection {
 	 *
 	 * @param string $query The query to execute.
 	 * @param mixed $params Parameters to interpolate into query.
-	 * @throws Exception    Upon an error when executing the query.
-	 * @return ResultSet    Representing the query results. Implementation-specific.
+	 * @throws Exception	Upon an error when executing the query.
+	 * @return ResultSet	Representing the query results. Implementation-specific.
 	 */
 	abstract public function query ($query, $params = array());
 
@@ -94,8 +94,8 @@ abstract class DatabaseConnection {
 	 * <code>query()</code> should be used.
 	 *
 	 * @param string $query The query to execute.
-	 * @throws Exception    Upon an error when executing the query.
-	 * @return int          Number of rows affected by the queries.
+	 * @throws Exception	Upon an error when executing the query.
+	 * @return int			Number of rows affected by the queries.
 	 */
 	abstract public function batchQuery ($query);
 
@@ -106,7 +106,7 @@ abstract class DatabaseConnection {
 	 * databases having native boolean support.
 	 *
 	 * @param mixed $value Data value to escape and/or convert.
-	 * @return string      The value prepared for insertion into a SQL query.
+	 * @return string	   The value prepared for insertion into a SQL query.
 	 */
 	abstract protected function escapeValue ($value);
 
@@ -117,8 +117,8 @@ abstract class DatabaseConnection {
 	 * @param string $query  The query to execute.
 	 * @param mixed $params  Parameters to interpolate into query.
 	 * @param string $column Name of column to retrieve values from. Defaults to first column if
-	 *                       not specified.
-	 * @return mixed         The data found, or <code>NULL</code> if no rows were found.
+	 *						 not specified.
+	 * @return mixed		 The data found, or <code>NULL</code> if no rows were found.
 	 */
 	public function getColumn ($query, $params = array(), $column = null) {
 		$result = $this->query($query, $params);
@@ -130,13 +130,29 @@ abstract class DatabaseConnection {
 	}
 
 	/**
+	 * Executes a query and returns the first row as an array. If no rows are found, an empty
+	 * array is returned.
+	 *
+	 * @param string $query The query to execute.
+	 * @param mixed $params Parameters to interpolate into query.
+	 * @return array		First row of the result where the keys equal the columns.
+	 */
+	public function getRow ($query, $params = array()) {
+		$result = $this->query($query, $params);
+		if ($result->valid()) {
+			return $result->current();
+		}
+		return array();
+	}
+
+	/**
 	 * Executes a query and returns an object populated with data from the result.
 	 *
 	 * @param mixed $classes Class name of the object to create, or array structure specifying the
-	 *                       object hierarchy to create. See <code>ObjectBuilder</code> for details.
+	 *						 object hierarchy to create. See <code>ObjectBuilder</code> for details.
 	 * @param string $query  The query to execute.
 	 * @param mixed $params  Parameters to interpolate into query.
-	 * @return object        The populated object, or <code>NULL</code> if no rows were found.
+	 * @return object		 The populated object, or <code>NULL</code> if no rows were found.
 	 */
 	public function getObject ($classes, $query, $params = array()) {
 		if (is_array($classes)) {
@@ -161,11 +177,11 @@ abstract class DatabaseConnection {
 	 * Executes a query and returns an array of objects populated with data from the result.
 	 *
 	 * @param mixed $classes Class name of the objects to create, or array structure specifying the
-	 *                       object hierarchy to create. See <code>ObjectBuilder</code> for details.
+	 *						 object hierarchy to create. See <code>ObjectBuilder</code> for details.
 	 * @param string $query  The query to execute.
 	 * @param mixed $params  Parameters to interpolate into query.
-	 * @return array         Array with the populated objects, or <code>FALSE</code> if an error
-	 *                       occured.
+	 * @return array		 Array with the populated objects, or <code>FALSE</code> if an error
+	 *						 occured.
 	 */
 	public function getObjects ($classes, $query, $params = array()) {
 		$result = $this->query($query, $params);
@@ -178,7 +194,7 @@ abstract class DatabaseConnection {
 	 *
 	 * @param string $query The query to prepare.
 	 * @param mixed $params Parameters to escape and interpolate into query.
-	 * @return string       The query prepared to be executed.
+	 * @return string		The query prepared to be executed.
 	 */
 	protected function prepareQuery ($query, $params) {
 		if (is_object($params)) {
@@ -251,7 +267,7 @@ abstract class DatabaseConnection {
 	 * number but a string of digits. Ie. telephone numbers, hexadecimal strings, postal codes etc.
 	 *
 	 * @param string $value The value to check.
-	 * @return bool         <code>TRUE</code> if the value is a pure number.
+	 * @return bool			<code>TRUE</code> if the value is a pure number.
 	 */
 	protected function isPureNumber ($value) {
 		// Only values considered numeric by PHP are pure numbers
