@@ -48,17 +48,17 @@ class AuthInterceptor extends AbstractInterceptor {
 							the page you requested.', false);
 				}
 
-				return $this->denyAccess($request->getUri());
+				return $this->denyAccess($request, $request->getUri());
 			}
 
 			if ($action instanceof AuthAware) {
 				if (method_exists($action, 'allowedAccess')) {
 					if (!$action->allowedAccess($user)) {
 						if (method_exists($action, 'denyAccess')) {
-							return $action->denyAccess($user);
+							return $action->denyAccess($request, $user);
 						}
 
-						return $this->denyAccess();
+						return $this->denyAccess($request);
 					}
 				}
 			}
@@ -89,12 +89,19 @@ class AuthInterceptor extends AbstractInterceptor {
 	/**
 	 * Denies access by redirecting to the configured login URI.
 	 *
-	 * @param string $target Optional target of the request; the resource where access was
-	 *                       denied.
+	 * @param Request $request The HTTP request.
+	 * @param string $target   Optional target of the request; the resource where access was
+	 *                         denied.
 	 */
-	private function denyAccess ($target = null) {
+	private function denyAccess ($request, $target = null) {
 		$redirectTo = $this->loginUri;
-		if (!empty($target)) {
+
+		/*
+		 * Adds a target-parameter with the originally requested URI, so the login action can
+		 * redirect to the requested page after login. However, only do this for GET-requests
+		 * as redirect themselves are always GET.
+		 */
+		if (!empty($target) && $request->getUri() === 'GET') {
 			$paramSeparator = (strpos($redirectTo, '?') === false ? '?' : '&');
 			$redirectTo .= "{$paramSeparator}target={$target}";
 		}
