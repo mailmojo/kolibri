@@ -101,7 +101,7 @@ class AuthInterceptor extends AbstractInterceptor {
 		 * redirect to the requested page after login. However, only do this for GET-requests
 		 * as redirect themselves are always GET.
 		 */
-		if (!empty($target) && $request->getUri() === 'GET') {
+		if (!empty($target) && $request->getMethod() === 'GET') {
 			$paramSeparator = (strpos($redirectTo, '?') === false ? '?' : '&');
 			$redirectTo .= "{$paramSeparator}target={$target}";
 		}
