@@ -10,11 +10,12 @@ define('IS_NUM', 8);
 define('IS_TEXT', 16);
 define('IS_ALPHANUM', 32);
 define('IS_EMAIL', 64);
-define('IS_DATE', 128);
-define('IS_DATETIME', 256);
-define('IS_HEX', 512);
-define('IS_FILE', 1024);
-define('IN_DB', 2048);
+define('IS_URL', 128);
+define('IS_DATE', 256);
+define('IS_DATETIME', 512);
+define('IS_HEX', 1024);
+define('IS_FILE', 2048);
+define('IN_DB', 4096);
 
 /*
  * Maps validation rules to validator classes used to perform the validation.
@@ -27,6 +28,7 @@ $validators = array(
 	IS_TEXT     => 'TextValidator',
 	IS_ALPHANUM => 'AlphaNumValidator',
 	IS_EMAIL    => 'EmailValidator',
+	IS_URL      => 'UrlValidator',
 	IS_DATE     => 'DateValidator',
 	IS_DATETIME	=> 'DateTimeValidator',
 	IS_HEX      => 'HexValidator',
@@ -51,6 +53,7 @@ $validationMessages = array(
 	'length'        => '%s must consist of exactly %d characters.',
 	'minlength'     => '%s can\'t consist of less than %d characters.',
 	'maxlength'     => '%s can\'t consist of more than %d characters.',
+	'url'           => '%s must be a valid URL.',
 	'date'          => '%s must be a valid date.',
 	'hex'           => '%s must be a hexidecimal number.',
 	'file'          => '%s must be a file.',
