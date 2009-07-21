@@ -304,6 +304,7 @@ class ObjectBuilder {
 			 */
 			$object->original = $row[$this->primaryKeys[$objClass]];
 			$object->isDirty = false;
+			$object->isValid = true;
 		}
 
 		return $isPopulated;

@@ -24,14 +24,14 @@ class ValidateableModelProxy extends ModelProxy {
 	 * Overrides ModelProxy::save() by making sure contained models are valid before they
 	 * are saved. Contained models that have already been validated are not validated again.
 	 *
-	 * @return mixed	Number of saved rows in the database, or <code>false</code> if a
-	 *					a model contains invalid data or a preSave() method on a model returned
-	 *					false.
+	 * @return mixed	 Number of saved rows in the database, or <code>false</code> if a
+	 *					 a preSave() method on a model returned false.
+	 * @throws Exception If a model is invalid.
 	 *
 	 */
 	public function save () {
 		if (!$this->validate()) {
-			return false;
+			throw new Exception('Attempted to save an invalid model.');
 		}
 		return parent::save();
 	}
