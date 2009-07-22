@@ -13,6 +13,11 @@ class ValidationInterceptor extends AbstractInterceptor {
 	 * Invokes and processes the interceptor.
 	 */
 	public function intercept ($dispatcher) {
+		// We never validate GET-requests, to allow actions with both GET and POST handlers
+		if ($dispatcher->getRequest()->getMethod() === 'GET') {
+			return $dispatcher->invoke();
+		}
+
 		$action = $dispatcher->getAction();
 		$valid = true;
 		

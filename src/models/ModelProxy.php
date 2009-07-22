@@ -77,8 +77,9 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 	 */
 	public function save () {
 		if (!isset($this->objects)) {
-			$type = get_class($this->current);
-			throw new Exception("Model $type is not DataProvided and cannot be saved.");
+			// Gracefully return when model is not DataProvided
+			// XXX: Do we want to post-pone this for saveModel, ie if inner models could be DP?
+			return 0;
 		}
 		
 		$this->proxifyInnerModels();

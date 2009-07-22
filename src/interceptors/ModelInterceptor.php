@@ -39,7 +39,7 @@ class ModelInterceptor extends AbstractInterceptor {
 			 * take precedence, to stop any invalid model in the session to override the newly
 			 * POSTed.
 			 */
-			if ($request->getMethod() == 'GET'
+			if ($request->getMethod() === 'GET'
 					&& $request->hasSession()
 					&& isset($request->session['model'])) {
 				$action->model = $request->session['model'];
@@ -47,7 +47,7 @@ class ModelInterceptor extends AbstractInterceptor {
 				$request->session->remove('model');
 			}
 			// Otherwise prepare a model from request parameters
-			else {
+			else if ($request->getMethod() === 'POST') {
 				if (method_exists($action, 'getModel')) {
 					// The action supplies an already instantiated model
 					$model = $action->getModel();
@@ -201,6 +201,7 @@ class ModelInterceptor extends AbstractInterceptor {
 		if ($model->$property !== $nativeValue) {
 			$model->$property = $nativeValue;
 			$model->isDirty = true;
+			unset($model->isValid);
 		}
 	}
 	
