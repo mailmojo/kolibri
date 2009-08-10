@@ -73,7 +73,7 @@ class File {
 			return $finfo->file($this->filename);
 		}
 		else if (strtoupper(substr(PHP_OS, 0, 3)) != 'WIN') {
-			return trim(exec('file -bi ' . escapeshellarg($this->filename)));
+			return trim(exec('file --brief --mime ' . escapeshellarg($this->filename)));
 		}
 
 		return false;
