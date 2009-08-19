@@ -5,17 +5,18 @@
  */
 define('EXISTS', 1);
 define('UNIQUE', 2);
-define('MATCHES', 4);
-define('IS_NUM', 8);
-define('IS_TEXT', 16);
-define('IS_ALPHANUM', 32);
-define('IS_EMAIL', 64);
-define('IS_URL', 128);
-define('IS_DATE', 256);
-define('IS_DATETIME', 512);
-define('IS_HEX', 1024);
-define('IS_FILE', 2048);
-define('IN_DB', 4096);
+define('EQUALS', 4);
+define('MATCHES', 8);
+define('IS_NUM', 16);
+define('IS_TEXT', 32);
+define('IS_ALPHANUM', 64);
+define('IS_EMAIL', 128);
+define('IS_URL', 256);
+define('IS_DATE', 512);
+define('IS_DATETIME', 1024);
+define('IS_HEX', 2048);
+define('IS_FILE', 4096);
+define('IN_DB', 8192);
 
 /*
  * Maps validation rules to validator classes used to perform the validation.
@@ -23,6 +24,7 @@ define('IN_DB', 4096);
 $validators = array(
 	EXISTS      => 'ExistsValidator',
 	UNIQUE      => 'UniqueValidator',
+	EQUALS      => 'EqualsValidator',
 	MATCHES     => 'MatchesValidator',
 	IS_NUM      => 'NumberValidator',
 	IS_TEXT     => 'TextValidator',
@@ -41,7 +43,8 @@ $validators = array(
  */
 $validationMessages = array(
 	'exists'        => '%s is required.',
-	'match'         => '%s must match %s.',
+	'equals'        => '%s must equal %s.',
+	'matches'       => '%s does not contain expected content.',
 	'unique'        => '%s «%s» already exists.',
 	'num'           => '%s must be a number.',
 	'size'          => '%s must be between %s and %s.',

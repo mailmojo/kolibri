@@ -1,4 +1,7 @@
 <?php
+/**
+ * Validator for constraining a propertys value to match a certain regular expression.
+ */
 class MatchesValidator {
 	private $model;
 
@@ -7,11 +10,9 @@ class MatchesValidator {
 	}
 
 	public function validate ($property, $rules) {
-		$matchProperty = (isset($rules['match']) ? $rules['match'] : null);
-		if ($matchProperty !== null && $this->model->$property != $this->model->$matchProperty) {
-			$allRules = $this->model->rules();
-			$matchPropertyName = $allRules[$matchProperty]['name'];
-			return array('match' => array($rules['name'], $matchPropertyName));
+		$matchPattern = (isset($rules['matches']) ? $rules['matches'] : null);
+		if ($matchPattern !== null && preg_match($matchPattern, $this->model->$property) == 0) {
+			return array('matches' => array($rules['name']));
 		}
 
 		return true;
