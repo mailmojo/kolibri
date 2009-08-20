@@ -172,6 +172,23 @@ class PostgreSqlConnection extends DatabaseConnection {
 	}
 
 	/**
+	 * Inserts records into $table from $rows, using the PostgreSQL specific COPY FROM feature.
+	 *
+	 * This method is an abstraction of pg_copy_from(), and its behaviour and arguments are
+	 * thus alike.
+	 *
+	 * @param string $table     Name of table to insert rows into.
+	 * @param array $rows       Array of data, where columns must be delimited by $delimiter.
+	 * @param string $delimiter Token for delimiting columns in $rows. Defaults to \t (TAB).
+	 * @param string $nulls     How SQL NULL values are represented in $rows. Defaults to
+	 *                          \\N (for correct escaping).
+	 */
+	public function copyFrom ($table, $rows, $delimiter = "\t", $nulls = "\\N") {
+		$this->prepareConnection();
+		return pg_copy_from($this->connection, $table, $rows, $delimiter, $nulls);
+	}
+
+	/**
 	 * Escapes a value to make it safe for use in SQL queries.
 	 * 
 	 * Converts null to SQL NULL string, boolean values to accepted string representations, and
