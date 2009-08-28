@@ -31,7 +31,7 @@ class ClassLoader {
 	 * of application model and DAO classes.
 	 */
 	public static function load ($className) {
-		// We optimize for core classes and check if that's what needs loading first.
+		// We optimize for core classes and check if that's what needs loading first
 		if (isset(self::$classes[$className])) {
 			require(ROOT . self::$classes[$className]);
 		}
@@ -44,9 +44,14 @@ class ClassLoader {
 			else if (strtolower(substr($className, -3)) == 'dao') {
 				require(MODELS_PATH . "/dao/{$className}.php");
 			}
-			// If it's not a core, model or DAO class we simply try the include_path
+			/*
+			 * If it's not a core, model or DAO class we simply try the include_path. This
+			 * used @include(...) previously, but this supresses errors within the included
+			 * file. But was there a specific reason why we originally wanted include()
+			 * and/or supressing?
+			 */
 			else {
-				@include($className . '.php');
+				require($className . '.php');
 			}
 			self::$loaded[$className] = true;
 		}

@@ -42,7 +42,7 @@ class UniqueValidator {
 			$sensitive = (isset($rules['sensitive']) ? $rules['sensitive'] : true);
 
 			// Prepare value placeholder, taking any database type specs into account
-			$valuePlaceholder = (isset($rules['dbType']) ? "?::" . $rules['dbType'] : '?');
+			$valuePlaceholder = (isset($rules['type']) ? "?::" . $rules['type'] : '?');
 
 			// If additional WHERE-requirements are defined, prepare them for query
 			if (isset($rules['where']) && is_array($rules['where'])) {
