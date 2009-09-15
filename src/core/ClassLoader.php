@@ -51,7 +51,7 @@ class ClassLoader {
 			 * and/or supressing?
 			 */
 			else {
-				require($className . '.php');
+				@include($className . '.php');
 			}
 			self::$loaded[$className] = true;
 		}

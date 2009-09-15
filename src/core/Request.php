@@ -105,6 +105,16 @@ class Request implements ArrayAccess {
 	}
 
 	/**
+	 * Checks whether this request is an XML HTTP request, determined by looking for a
+	 * X-Requested-With header.
+	 *
+	 * @return bool
+	 */
+	public function isXhr () {
+		return ($this->getHeader("X-Requested-With") === "XMLHttpRequest");
+	}
+
+	/**
 	 * Returns the value of the parameter with the specified key, or <code>null</code> if the
 	 * parameter is not found.
 	 * 
@@ -119,14 +129,12 @@ class Request implements ArrayAccess {
 	 * Returns the value of the specified request header, or <code>null</code> if the header
 	 * isn't set set.
 	 *
-	 * Note that this is currently only a wrapper for $_SERVER, and thus contains more than
-	 * only the request headers.
-	 *
 	 * @param string $header Header to look for.
 	 * @param string         Value of header, or <code>null</code>.
 	 */
 	public function getHeader ($header) {
-		return (isset($_SERVER[$header]) ? $_SERVER[$header] : null);
+		$normalized = str_replace("-", "_", "HTTP_" . strtoupper($header));
+		return (isset($_SERVER[$normalized]) ? $_SERVER[$normalized] : null);
 	}
 
 	/**
