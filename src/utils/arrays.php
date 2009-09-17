@@ -10,7 +10,7 @@
  * @param array $array       Array with objects.
  * @param string $methodName Name of object method to invoke.
  */
-function object_array_walk (array &$array, string $methodName) {
+function object_array_walk (array &$array, $methodName) {
 	foreach ($array as $obj) {
 		$obj->$methodName();
 	}
@@ -24,7 +24,7 @@ function object_array_walk (array &$array, string $methodName) {
  * @param array $array       Array with objects.
  * @return array Array with return values from invoking the method on each object.
  */
-function object_array_map (string $methodName, array $array) {
+function object_array_map ($methodName, array $array) {
 	$newArray = array();
 	foreach ($array as $key => $obj) {
 		$newArray[$key] = $obj->$methodName();
