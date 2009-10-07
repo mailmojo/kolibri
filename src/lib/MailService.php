@@ -1,97 +1,98 @@
 <?php
-require(ROOT . '/lib/phpmailer/class.phpmailer.php');
+require("class.phpmailer.php");
 
 /**
- * <code>MailService</code> provides an interface to send e-mail messages over a SMTP connection.
- * <code>turbo-conf.php</code> must contain the following configuration settings for this service to work:
+ * This class provides an interface to send e-mail messages, using the PHPMailer library which
+ * must be located in your include_path before this class is used.
  *
- *   'mail' => array(
- *     'from'          => '',		// E-mail address of the sender
- *     'from_name'     => '',		// Name of the sender
- *     'smtp_auth'     => true,	// A boolean indicating if the SMTP connection is authenticated
- *     'smtp_host'     => '',		// Host of the SMTP server
- *     'smtp_port'     => '',   // Port to the SMTP server, if different from default 25
- *     'smtp_username' => '',		// Username, if SMTP authentication is in use
- *     'smtp_password' => ''		// Password, if SMTP authentication is in use
- *	)
+ * The following configuration settings under a [mail] section is supported:
  *
- * This service is designed to be used in conjunction with the <code>Mail</code> class. An instance of that
- * class represents a complete e-mail message, which can then be sent by passing it to this class'
- * <code>send()</code> method.
+ *   from.email
+ *   from.name
+ *   smtp.auth
+ *   smtp.host
+ *   smtp.username
+ *   smtp.password
+ * 
+ * The from.* configs will only be used if specific e-mail messages don't specify their from
+ * address. smtp.host can be left empty if you want to use PHPs built-in mail() function as
+ * opposed to regular SMTP.
+ *
+ * This service is designed to be used in conjunction with the Email class. An instance of that
+ * class represents a complete e-mail message, which can then be sent by passing it to this
+ * class' send() method.
  */
 class MailService extends PHPMailer {
 
 	/**
-	 * Creates an instance of the mail service, set up using the values of the <code>'mail'</code>
-	 * configuration setting.
+	 * Creates an instance of the mail service, set up using the values of the mail
+	 * configuration settings.
+	 *
+	 * @param bool $exceptions Whether or not to throw external exceptions. We default to
+	 *                         true even though PHPMailer defaults to false.
+	 * @param bool $persistent Whether or not to keep the connection to the SMTP server alive
+	 *                         after sending a mail. Useful if sending multiple messages. Only
+	 *                         applies if SMTP sending is used.
 	 */
-	public function __construct ($persistent = false) {
+	public function __construct ($exceptions = true, $persistent = false) {
+		parent::__construct($exceptions);
 		$conf = Config::get('mail');
 
-		$this->IsSmtp();
-		$this->PluginDir = ROOT . '/lib/phpmailer/';
-		$this->Host      = $conf['smtp.host'];
-		$this->SMTPAuth  = $conf['smtp.auth'];
+		if (!empty($conf['smtp.auth'])) {
+			$this->IsSmtp();
+			$this->SMTPAuth = ($conf['smtp.auth'] ? true : false);
+			$this->Host = $conf['smtp.host'];
 
-		if (isset($conf['smtp.port'])) {
-			$this->Port = $conf['smtp.port'];
-		}
+			if ($this->SMTPAuth) {
+				$this->Username = $conf['smtp.username'];
+				$this->Password = $conf['smtp.password'];
+			}
 
-		if ($this->SMTPAuth) {
-			$this->Username = $conf['smtp.username'];
-			$this->Password = $conf['smtp.password'];
+			if (isset($conf['smtp.port'])) {
+				$this->Port = $conf['smtp.port'];
+			}
+
+			$this->SMTPKeepAlive = $persistent;
 		}
 
 		$this->CharSet  = 'utf-8';
-		$this->Encoding = 'quoted-printable';
-		$this->WordWrap = 76;
 
-		// Set whether the SMTP connection should be persistent or closed after one mail is sent
-		$this->SMTPKeepAlive = $persistent;
-
-//		if (!empty($conf['sender'])) {
-//			/*
-//			 * Set the Sender address (Return-Path) of the message. Will be sent as MAIL FROM to the SMTP
-//			 * server.
-//			 */
-//			$this->Sender = $conf['sender'];
-
+		if (!empty($conf['sender'])) {
 			/*
-			 * We must set a manual Sender header in addition to the sender above. This address must be set,
-			 * and must match the sender address (Return-Path), or else external images in HTML emails does
-			 * not work in Outlook (possibly among others).
+			 * Set the Sender address (Return-Path) of the message. Will be sent as MAIL FROM
+			 * to the SMTP server.
 			 */
-//			if (!empty($conf['sender_name'])) {
-//				$sender_header = '"' . $conf['sender_name'] . '" <' . $this->Sender . '>';
-//			}
-//			else {
-//				$sender_header = $this->Sender;
-//			}
-//			
-//			$this->AddCustomHeader('Sender: ' . $sender_header);
-//		}
+			$this->Sender = $conf['sender'];
+		}
 	}
 
 	/**
-	 * Sends a specific e-mail message. If a from address isn't specified by the e-mail, the sender
-	 * (Return-Path) address configured for this mail service is used.
+	 * Destructor which closes the SMTP connection, if any.
+	 */
+	public function __destruct () {
+		if ($this->Mailer == 'smtp') {
+			$this->SmtpClose();
+		}
+	}
+
+	/**
+	 * Sends a specific e-mail message. If a from address isn't specified by the e-mail, the
+	 * sender (Return-Path) address configured for this mail service is used.
 	 *
-	 * @param Email $mail	The e-mail message to send.
-	 * @return bool <code>TRUE</code> if the e-mail was sent successfully, <code>FALSE</code> if not.
+	 * @param Email $mail The e-mail message to send.
+	 * @return bool       TRUE if the e-mail was sent successfully, FALSE if not.
 	 */
 	public function send ($mail) {
 		if (empty($mail->from)) {
 			$conf = Config::get('mail');
-			$mail->from     = $conf['from.email'];
+			$mail->from = $conf['from.email'];
 			$mail->fromName = $conf['from.name'];
 		}
 
-		$this->From     = $mail->from;
-		$this->FromName = $mail->fromName;
+		$this->SetFrom($mail->from, $mail->fromName);
 
 		if (!empty($mail->sender)) {
 			$this->Sender = $mail->sender;
-			$this->SetSenderHeader($mail->sender, $mail->senderName);
 		}
 
 		if (!empty($mail->replyTo)) {
@@ -135,7 +136,7 @@ class MailService extends PHPMailer {
 				$this->AddAttachment($attachment['file'], $attachment['name']);
 			}
 		}
-		
+
 		$status = parent::Send();
 		$this->reset();
 		return $status;

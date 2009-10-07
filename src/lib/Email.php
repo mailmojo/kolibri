@@ -1,7 +1,8 @@
 <?php
 /**
- * This class represents an e-mail message. When a complete e-mail message object has been constructed,
- * the object should be passed to the <code>send()</code> method of a <code>MailService</code> instance.
+ * This class represents an e-mail message. When a complete e-mail message object has been
+ * constructed and it should be sent, pass the object to the send() method of a
+ * MailService instance.
  */
 class Email {
 	public $from;
@@ -20,7 +21,8 @@ class Email {
 	/**
 	 * Initialize.
 	 */
-	public function __construct ($from = null, $fromName = null, $sender = null, $senderName = null) {
+	public function __construct ($from = null, $fromName = null,
+			$sender = null, $senderName = null) {
 		$this->from       = $from;
 		$this->fromName   = $fromName;
 		$this->sender     = $sender;
@@ -28,8 +30,8 @@ class Email {
 	}
 
 	/**
-	 * Clears the list of recipients for the message. Ie. for sending the same e-mail with slight
-	 * modifications to separate recipients.
+	 * Clears the list of recipients for the message. Ie. for sending the same e-mail with
+	 * slight modifications to separate recipients.
 	 */
 	public function clearRecipients () {
 		$this->recipients = array();
@@ -64,11 +66,11 @@ class Email {
 	}
 
 	/**
-	 * Sets the body of the message. $body can either be the actual body content, or a path to a file
-	 * with the content if $isFile is TRUE.
+	 * Sets the body of the message. $body can either be the actual body content, or a path to
+	 * a file with the content if $isFile is TRUE.
 	 *
 	 * @param string $body Body content or path to file.
-	 * @param bool $isFile <code>TRUE</code> of $body is a file path, <code>FALSE</code> if not (default).
+	 * @param bool $isFile TRUE if $body is a file path, FALSE if not (default).
 	 */
 	public function setBody ($body, $isFile = false) {
 		if ($isFile) {
@@ -80,13 +82,13 @@ class Email {
 	}
 
 	/**
-	 * Sets the alternate body of the message. $body can either be the actual body content, or a path to
-	 * a file with the content if $isFile is TRUE.
+	 * Sets the alternate body of the message. $body can either be the actual body content, or
+	 * a path to a file with the content if $isFile is TRUE.
 	 *
 	 * Setting an alternate body implicetly sets the content type of the message to text/html.
 	 *
 	 * @param string $body Alternate body content or path to file.
-	 * @param bool $isFile <code>TRUE</code> of $body is a file path, <code>FALSE</code> if not (default).
+	 * @param bool $isFile TRUE if $body is a file path, FALSE if not (default).
 	 */
 	public function setAltBody ($body, $isFile = false) {
 		if ($isFile) {
