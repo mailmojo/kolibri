@@ -6,40 +6,41 @@
                 xmlns:func="http://exslt.org/functions"
                 xmlns:k="http://kolibriproject.com/xml"
                 extension-element-prefixes="exsl func">
-		
+
 	<!--
 		Executes the current form template, retrieving the Kolibri form definition which is subsequently
 		parsed into an XHTML form.
-		
+
 		@return NodeSet	The XHTML form described by the current form template.
 	-->
 	<func:function name="k:form">
 		<xsl:variable name="structure">
 			<xsl:call-template name="form" />
 		</xsl:variable>
-		
+
 		<func:result>
 			<xsl:apply-templates select="exsl:node-set($structure)/k:form" />
 		</func:result>
 	</func:function>
-	
+
 	<!--
 		Simple function to check if a context node is one of the supported Kolibri form field
 		elements.
-		
+
 		@return Boolean	true() if the context node is a Kolibri form field.
 	-->
 	<func:function name="k:is-form-field">
 		<func:result select="self::k:input or self::k:radio or self::k:checkbox or self::k:textarea
 			or self::k:select or self::k:hidden" />
 	</func:function>
-	
+
 	<!--
 		Generates attributes on the surrounding element of a form field.
 		A named template is used to create attributes conditionally.
 	-->
 	<xsl:template name="form-element-attributes">
 		<xsl:variable name="classes">
+			<class>field</class>
 			<!-- Add descriptive class names if the form field is required or contains errors -->
 			<xsl:if test="not(@required) or @required != 'false'">
 				<class>required</class>
@@ -54,16 +55,26 @@
 			<xsl:if test="position() mod 2 = 0">
 				<class>even</class>
 			</xsl:if>
+			<xsl:if test="@class">
+				<class><xsl:value-of select="@class" /></class>
+			</xsl:if>
 		</xsl:variable>
-		
+
 		<!-- Only create the attribute if $classes contains a string with nodes -->
 		<xsl:if test="string($classes)">
 			<xsl:attribute name="class">
 				<xsl:value-of select="k:string-list(exsl:node-set($classes)/*, ' ', ' ')" />
 			</xsl:attribute>
 		</xsl:if>
+
+		<!--
+			Add any custom attributes defined on k:div, except for the special
+			attributes we handle internally
+		-->
+		<xsl:variable name="internalAttrs" select="'id,type,class,for,label,required,selected,autofocus'" />
+		<xsl:copy-of select="@*[not(contains($internalAttrs, name()))]" />
 	</xsl:template>
-	
+
 	<!--
 		Generates attributes on a form field, from the more general attributes like id and name to
 		the more specific like size or value.
@@ -85,7 +96,7 @@
 			</xsl:choose>
 		</xsl:variable>
 		<xsl:attribute name="name"><xsl:value-of select="$name" /></xsl:attribute>
-		
+
 		<!-- Set type attribute automatically for radio buttons, check boxes and hidden fields. -->
 		<xsl:if test="self::k:radio or self::k:checkbox or self::k:hidden">
 			<xsl:attribute name="type"><xsl:value-of select="substring-after(name(), ':')" /></xsl:attribute>
@@ -118,7 +129,7 @@
 				<xsl:attribute name="multiple">multiple</xsl:attribute>
 			</xsl:if>
 		</xsl:if>
-		
+
 		<!--
 			Set value attribute conditionally, it is required for radio buttons and check boxes.
 			For textareas we set the content of the generated element.
@@ -131,7 +142,7 @@
 						<xsl:otherwise>true</xsl:otherwise>
 					</xsl:choose>
 				</xsl:variable>
-				
+
 				<!--
 					Default value of a check box is simply 'true', which is also
 					supported as value of model property to automatically select the check box.
@@ -176,14 +187,23 @@
 				</xsl:choose>
 			</xsl:when>
 		</xsl:choose>
-		
+
 		<!-- Set disabled status if specified -->
 		<xsl:if test="not(self::k:hidden) and (@disabled = 'disabled' or @disabled = 'true')">
 			<xsl:attribute name="disabled">disabled</xsl:attribute>
 		</xsl:if>
-		
+
+		<xsl:if test="not(self::k:hidden) and (@readonly = 'readonly' or @readonly = 'true')">
+			<xsl:attribute name="readonly">readonly</xsl:attribute>
+		</xsl:if>
+
+		<xsl:if test="@autofocus">
+			<xsl:attribute name="autofocus">autofocus</xsl:attribute>
+		</xsl:if>
+
 		<!-- Set custom class attribute if specified -->
 		<xsl:variable name="cssClasses">
+			<!-- TODO: Do we want to wrap selects with the same css class as the outer div? -->
 			<xsl:if test="@class">
 				<class><xsl:value-of select="@class" /></class>
 			</xsl:if>
@@ -224,7 +244,7 @@
 			</xsl:choose>
 		</xsl:for-each>
 	</xsl:template>
-	
+
 	<!--
 		Prints out error messages for a form field. Radio buttons are a special case, where
 		errors will only be printed after the last radio button in a button group.
@@ -262,28 +282,20 @@
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
-	
+
 	<!--
 		Template for parsing <k:form> elements, describing the structure of an XHTML form, optionally
 		representing a Kolibri model.
 	-->
 	<xsl:template match="k:form">
 		<form action="{@action}" method="post">
-			<xsl:if test="@id">
-				<xsl:attribute name="id"><xsl:value-of select="@id" /></xsl:attribute>
-			</xsl:if>
-			<xsl:if test="@method">
-				<xsl:attribute name="method"><xsl:value-of select="@method" /></xsl:attribute>
-			</xsl:if>
-			<xsl:if test="@enctype">
-				<xsl:attribute name="enctype"><xsl:value-of select="@enctype" /></xsl:attribute>
-			</xsl:if>
-			
+			<xsl:copy-of select="@*" />
+
 			<!-- Generate form fields with k:form templates -->
 			<xsl:apply-templates select="*" />
 		</form>
 	</xsl:template>
-	
+
 	<!--
 		Simple fieldset template. Supports adding a legend through using a legend attribute on
 		k:fieldset (when no separate legend element exists). Also supports adding error class attribute
@@ -300,12 +312,12 @@
 			<xsl:if test="@legend and not(*[name() = 'legend'])">
 				<legend><xsl:value-of select="@legend" /></legend>
 			</xsl:if>
-			
+
 			<!-- Generate form fields with k:form templates -->
 			<xsl:apply-templates select="*|text()" />
 		</fieldset>
 	</xsl:template>
-	
+
 	<!--
 		Template for k:div elements. Creates a div with a label element. The label will be linked to
 		the form field if it's the only field inside the k:div, otherwise a 'for' attribute will need
@@ -314,10 +326,10 @@
 	<xsl:template match="k:div">
 		<xsl:variable name="fields" select="descendant::*[self::k:input or self::k:textarea or
 			self::k:select or self::k:radio or self::k:checkbox]" />
-		
+
 		<div>
 			<xsl:call-template name="form-element-attributes" />
-			
+
 			<xsl:choose>
 				<xsl:when test="count($fields) > 1 and @label">
 					<label>
@@ -338,7 +350,7 @@
 						<xsl:value-of select="$fields/@label" />
 					</label>
 				</xsl:when>
-			</xsl:choose>	
+			</xsl:choose>
 
 			<!-- Create the actual form element(s) -->
 			<xsl:call-template name="form-element-content" />
@@ -347,7 +359,7 @@
 			<xsl:call-template name="field-errors" />
 		</div>
 	</xsl:template>
-	
+
 	<!--
 		Template for all Kolibri form fields not wrapped in a k:div, except hidden fields.
 	-->
@@ -356,14 +368,14 @@
 		<xsl:variable name="labelContent">
 			<xsl:choose>
 				<xsl:when test="@label"><xsl:value-of select="@label" /></xsl:when>
-				<xsl:when test="string(text())"><xsl:value-of select="text()" /></xsl:when>
+				<xsl:when test="boolean(text())"><xsl:value-of select="text()" /></xsl:when>
 			</xsl:choose>
 		</xsl:variable>
 		<div>
 			<xsl:call-template name="form-element-attributes" />
-			
+
 			<!-- Only create label if there's defined content for it -->
-			<xsl:if test="$labelContent">
+			<xsl:if test="string-length($labelContent) > 0">
 				<label>
 					<xsl:if test="@id">
 						<xsl:attribute name="for"><xsl:value-of select="@id" /></xsl:attribute>
@@ -375,7 +387,7 @@
 					<xsl:value-of select="$labelContent" />
 				</label>
 			</xsl:if>
-			
+
 			<!--
 				Generate form field outside label for fields other than radio buttons and check boxes,
 				or for radio buttons and check boxes without a label
@@ -383,19 +395,19 @@
 			<xsl:if test="not($labelContent) or (not(self::k:radio) and not(self::k:checkbox))">
 				<xsl:apply-templates select="." mode="standalone" />
 			</xsl:if>
-			
+
 			<!-- List all validation errors if there are any -->
 			<xsl:call-template name="field-errors" />
 		</div>
 	</xsl:template>
-	
+
 	<!--
 		Simple template for creating a hidden form element outside k:div.
 	-->
 	<xsl:template match="k:hidden">
 		<xsl:apply-templates select="." mode="standalone" />
 	</xsl:template>
-	
+
 	<!--
 		Creates a select box from a k:select element with either Kolibri's k:option element
 		or a simple custom XML structure as data for the option elements.
@@ -411,11 +423,16 @@
 				<xsl:otherwise><xsl:value-of select="@id" /></xsl:otherwise>
 			</xsl:choose>
 		</xsl:variable>
-		<xsl:variable name="selected" select="k:model-value($name)" />
+		<xsl:variable name="selected">
+			<xsl:choose>
+				<xsl:when test="@selected"><xsl:value-of select="@selected" /></xsl:when>
+				<xsl:otherwise><xsl:value-of select="k:model-value($name)" /></xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
 
 		<select>
 			<xsl:call-template name="input-field-attributes" />
-			
+
 			<xsl:choose>
 				<xsl:when test="k:optgroup or k:option">
 					<!-- Explicit k:option elements defined -->
@@ -431,7 +448,7 @@
 					-->
 					<xsl:variable name="valueNode" select="@value" />
 					<xsl:variable name="textNode" select="@text" />
-					
+
 					<xsl:for-each select="*">
 						<xsl:variable name="value">
 							<xsl:choose>
@@ -449,7 +466,7 @@
 								<xsl:otherwise><xsl:value-of select="text()" /></xsl:otherwise>
 							</xsl:choose>
 						</xsl:variable>
-						
+
 						<option value="{$value}">
 							<xsl:if test="$value = $selected">
 								<xsl:attribute name="selected">selected</xsl:attribute>
@@ -461,7 +478,7 @@
 			</xsl:choose>
 		</select>
 	</xsl:template>
-	
+
 	<xsl:template match="k:select/k:optgroup">
 		<xsl:param name="selected" />
 		<optgroup label="{@label}">
@@ -470,7 +487,7 @@
 			</xsl:apply-templates>
 		</optgroup>
 	</xsl:template>
-	
+
 	<xsl:template match="k:option">
 		<xsl:param name="selected" />
 		<option value="{@value}">
@@ -485,7 +502,7 @@
 			</xsl:choose>
 		</option>
 	</xsl:template>
-	
+
 	<!--
 		Creates a textarea from k:textarea.
 	-->
@@ -506,10 +523,19 @@
 		Creates input elements for text/password fields, check boxes, radio buttons and hidden fields from
 		k:input, k:checkbox, k:radio and k:hidden fields.
 	-->
-	<xsl:template match="k:input|k:checkbox|k:radio|k:hidden" mode="standalone">
+	<xsl:template match="k:input|k:checkbox|k:hidden" mode="standalone">
 		<input>
 			<xsl:call-template name="input-field-attributes" />
 		</input>
+	</xsl:template>
+
+	<xsl:template match="k:radio" mode="standalone">
+		<label>
+			<input>
+				<xsl:call-template name="input-field-attributes" />
+			</input>
+			<xsl:value-of select="@label" />
+		</label>
 	</xsl:template>
 
 	<!--
@@ -534,12 +560,17 @@
 							<xsl:otherwise>save</xsl:otherwise>
 						</xsl:choose>
 					</xsl:attribute>
+					<xsl:if test="@class">
+						<xsl:attribute name="class"><xsl:value-of select="@class" /></xsl:attribute>
+					</xsl:if>
 					<xsl:value-of select="@value|@label" />
 				</button>
 			</span>
+
+			<xsl:apply-templates select="text()|*[name() != 'k:hidden']" />
 		</div>
 	</xsl:template>
-	
+
 	<!--
 		Special templates to allow normal (X)HTML elements to be mixed in with
 		k:form and it's related elements.
