@@ -108,19 +108,31 @@ class File {
 	 * @param string $to Path to new location.
 	 * @return bool      <code>TRUE</code> on success, <code>FALSE</code> on failure.
 	 */
-	public function move ($to) {
+	public function move ($to, $keepOriginal = false) {
 		if (is_dir($to)) {
 			$to = $this->appendFilenameToPath($to, basename($this->filename));
 		}
+		$method = ($keepOriginal === true ? 'copy' : 'rename');
 		
 		// Update current filename (path) if the move was successful
-		if ($status = rename($this->filename, $to)) {
+		if ($status = $method($this->filename, $to)) {
 			$this->filename = $to;
 		}
 
 		return $status;
 	}
-	
+
+	/**
+	 * Attempts to copy this file from its current location to another. Works like
+	 * File::move() except it retains the original file at its current location as well.
+	 *
+	 * @param string $to Path to new location.
+	 * @return bool      <code>TRUE</code> on success, <code>FALSE</code> on failure.
+	 */
+	public function copy ($to) {
+		return $this->move($to, true);
+	}
+
 	/**
 	 * Appends <code>$file</code> onto the full <code>$path</code>, taking care to make sure
 	 * the path ends with a slash before appending the file name.
