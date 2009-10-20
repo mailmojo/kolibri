@@ -42,8 +42,8 @@ abstract class Models {
 			return new ModelProxy($model);
 		}
 
-		// Unsupported object type, return null
-		return null;
+		// Unsupported object type, so we simply return the plain instance as-is
+		return $model;
 	}
 }
 ?>

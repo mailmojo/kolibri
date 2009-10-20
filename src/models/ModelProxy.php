@@ -283,6 +283,13 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 	 * @param object $model The model to set on this proxy.
 	 */
 	public function setModel ($model) {
+		/*
+		 * Create a reference to the DAO proxy on the actual model instance, in order for it
+		 * to be able to call DAO methods internally.
+		 */
+		if ($this->objects !== null) {
+			$model->objects = $this->objects;
+		}
 		$this->models = array($model);
 		$this->current = $this->models[0];
 	}
@@ -406,7 +413,7 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 				 */
 				if (is_array($innerModel) || is_object($innerModel)) {
 					$proxy = Models::getModel($innerModel);
-					if ($proxy !== null) {
+					if ($proxy instanceof ModelProxy) {
 						$innerModel = $proxy;
 						// Recurse to proxify even more deeply nested models
 						$innerModel->proxifyInnerModels();
