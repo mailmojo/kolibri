@@ -22,7 +22,11 @@ class RedirectResponse extends Response {
 	 * Sends the redirect to the client.
 	 */
 	public function render ($request) {
-		$this->setHeader('Location', Config::get('webRoot') . $this->location);
+		// Prepend webroot if redirect location doesn't include scheme (http, https etc.)
+		if (parse_url($this->location, PHP_URL_SCHEME) === null) {
+			$this->location = Config::get('webRoot') . $this->location;
+		}
+		$this->setHeader('Location', $this->location);
 		$this->sendHeaders();
 		exit;
 	}
