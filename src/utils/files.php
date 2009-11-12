@@ -1,16 +1,14 @@
 <?php
 	/**
 	 * Helper functions related to handling of files and executables.
-	 *
-	 * @version		$Id: files.php 1499 2008-06-02 10:51:46Z anders $
 	 */
 
 	/**
-	 * Returns a list of the files in directory <code>$dir</code>. The pseudo-files . and .. are excluded
+	 * Returns a list of the files in directory $dir. The pseudo-files . and .. are excluded
 	 * from the list.
 	 *
 	 * @param string $dir	Path to the directory to list.
-	 * @return array		Containing the files in <code>$dir</code>.
+	 * @return array		Containing the files in $dir.
 	 */
 	function ls ($dir) {
 		$files = array();
@@ -30,13 +28,15 @@
 	/**
 	 * Recursively copies one directory to another.
 	 *
-	 * If not <code>$to_dir</code> exists, the directory is created. Hidden directories and files are
+	 * If not $to_dir exists, the directory is created. Hidden directories and files are
 	 * not included by default.
 	 * 
 	 * @param string $from_dir	Source directory to copy.
 	 * @param string $to_dir	Target directory.
-	 * @param bool $hidden		TRUE if hidden files and directories should be copied. Defaults to FALSE.
-	 * @param int $mode			Attributes of the target files and directories. Defaults to 0644.
+	 * @param bool $hidden		TRUE if hidden files and directories should be copied. Defaults
+	 *							to FALSE.
+	 * @param int $mode			Attributes of the target files and directories. Defaults to
+	 *							0644.
 	 */
 	function copy_dir ($from_dir, $to_dir, $hidden = false, $mode = 0644) {
 		if (!file_exists($from_dir)) return;
@@ -76,22 +76,21 @@
 	}
 	
 	/**
-	 * Sletter en mappe og dens innhold rekursivt, iom. at man ikke kan slette en mappe som ikke er tom.
-	 * Støtter også å slette en enkelt fil.
+	 * Deletes a directory and its contents recursively. Also supports deleting a single file.
 	 *
-	 * @param string $dirname	Mappen som skal slettes.
-	 * @return boo				<code>TRUE</code> om sletting var vellykket, <code>FALSE</code> hvis ikke.
+	 * @param string $dirname	Directory to delete.
+	 * @return bool				TRUE if the delete was successful, FALSE if not.
 	 */
 	function remove_dir ($dirname) {
 		if (is_file($dirname)) return unlink($dirname);
 
-		// Løp gjennom mappens innhold og slett rekursivt.
+		// Traverse directories content and delete recursively
 		$dir = dir($dirname);
 		while (false !== ($entry = $dir->read())) {
-			// Hopp over *nix sine . og ..-filer.
+			// Skip *nix pseudo-files . and ..
 			if ($entry == '.' || $entry == '..') continue;
 	
-			// Traverser mappen rekursivt om nødvendig
+			// Traverse directory recursively if needed
 			if (is_dir("$dirname/$entry")) {
 				remove_dir("$dirname/$entry");
 			}
@@ -105,41 +104,53 @@
 	}
 
 	/**
-	 * Eksekverer et PHP-skript i PHP CLI, og returnerer resultatet av skriptet.
+	 * Executes a PHP script through the shell. If it's not started as a background process,
+	 * the output is returned.
 	 *
-	 * @param string $script	Sti til PHP-skriptet som skal eksekveres.
-	 * @param array $arguments	Array med argumenter som skal sendes til skriptet.
-	 * @param mixed $output		Støtter å ta i mot en array for å lagre utdata fra skriptet.
-	 * @param bool $background	TRUE om skriptet skal eksekveres som en bakgrunnsprosess og denne
-	 *							funksjonen skal returnere umiddelbart, FALSE om vi skal vente på
-	 *							skriptets fullføring.
-	 * @return					<code>TRUE</code> om skriptet eksekverte uten problemer,
-	 * 							<code>FALSE</code> ved feil.
+	 * @param string $script	Path to PHP script to execute.
+	 * @param array $arguments	Array with arguments to supply to the script.
+	 * @param bool $background	Whether or not the script should be executed as a background
+	 *							process, whereby this method will return without waiting for the
+	 *							script to complete.
+	 * @param string $output	If non-null, designates the path to a file to redirect script
+	 *							output to. Only used if $background is TRUE.
+	 * @return mixed			TRUE or FALSE indicating success and failure if the script is
+	 *							run as a background process, otherwise the script output.
 	 */
-	function execute_php_cli ($script, $arguments, &$output, $background = true) {
-		// Gå gjennom argumentene, og gjør de trygge for shellet
+	function exec_php_cli ($script, $arguments, $background = true, $output = null) {
+		// Escape arguments for safe use in shell
 		if (is_array($arguments) && count($arguments) > 0) {
 			$arguments = array_map("escapeshellarg", $arguments);
 			$arguments = implode(' ', $arguments);
 		}
-		else $arguments = '';
+		else {
+			$arguments = '';
+		}
 		
-		if ($background !== false) {
-			// Start en bakgrunnsprosess
+		if ($background) {
+			// Start background process
 			if (strpos(php_uname('s'), 'Windows') !== false) {
 				$result = popen('start "php_cli" /B php.exe -f ' . $script . ' -- ' . $arguments . ' > NUL', 'r');
-				if ($result !== false) pclose($result);
+				if ($result !== false) {
+					pclose($result);
+				}
 			}
 			else {
-				$result = exec(sprintf('%s -f %s %s >> %s &', _PHP_CLI_, $script, $arguments, _CLI_LOG_FILE_));
+				if ($output) {
+					$result = exec(sprintf('php -f %s %s >> %s &', $script, $arguments, $output));
+				}
+				else {
+					$result = exec(sprintf('php -f %s %s &', $script, $arguments));
+				}
 			}
+
 			return ($result !== false ? true : false);
 		}
-		else {
-			// Bare kjør skriptet og lagre utdata fra skriptet i angitt array.
-			exec(sprintf('%s -f %s %s >> %s', _PHP_CLI_, $script, $arguments, _CLI_LOG_FILE_), $output, $result);
-		}
-		
-		return ($result == 0 ? true : false);
+
+		// Run script waiting for completion, and save output for return value
+		$output = '';
+		exec(sprintf('php -f %s %s', $script, $arguments), $output, $result);
+
+		return ($result == 0 ? $output : false);
 	}
 ?>
