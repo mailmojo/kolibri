@@ -82,12 +82,16 @@ class File {
 	public function getType () {
 		if (class_exists('finfo', false)) {
 			$finfo = new finfo(FILEINFO_MIME);
-			return $finfo->file($this->filename);
+			$mime = $finfo->file($this->filename);
 		}
 		else if (strtoupper(substr(PHP_OS, 0, 3)) != 'WIN') {
-			return trim(exec('file --brief --mime ' . escapeshellarg($this->filename)));
+			$mime = trim(exec('file --brief --mime ' . escapeshellarg($this->filename)));
 		}
 
+		if ($mime !== false) {
+			$parts = explode(';', $mime);
+			return $parts[0];
+		}
 		return false;
 	}
 	
