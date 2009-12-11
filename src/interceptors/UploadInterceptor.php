@@ -18,11 +18,11 @@ class UploadInterceptor extends AbstractInterceptor {
 			$action = $dispatcher->getAction();
 
 			// Determine where we are to set the files
-			if ($action instanceof ModelAware && is_object($action->model)) {
-				$setOn = $action->model;
-			}
-			else if ($action instanceof UploadAware) {
+			if ($action instanceof UploadAware) {
 				$setOn = $action;
+			}
+			else if ($action instanceof ModelAware && is_object($action->model)) {
+				$setOn = $action->model;
 			}
 
 			foreach ($_FILES as $param => $file) {
@@ -37,7 +37,7 @@ class UploadInterceptor extends AbstractInterceptor {
 									$file['error'][$i]);
 						}
 					}
-					if (isset($files)) {
+					if (isset($files) && property_exists($setOn, $param)) {
 						$setOn->$param = $files;
 					}
 				}
