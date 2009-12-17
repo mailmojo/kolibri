@@ -152,6 +152,16 @@ class Config {
 		$incPath = ROOT . '/lib';
 		if (file_exists(APP_PATH . '/lib')) {
 			$incPath .= PATH_SEPARATOR . APP_PATH . '/lib';
+
+			// Adds all directories inside /lib recursively
+			$dirIterator = new RecursiveDirectoryIterator(APP_PATH . '/lib');
+			$recIterator = new RecursiveIteratorIterator($dirIterator,
+					RecursiveIteratorIterator::SELF_FIRST);
+			foreach ($recIterator as $path) {
+				if ($path->isDir()) {
+					$incPath .= PATH_SEPARATOR . $path->getPathname();
+				}
+			}
 		}
 		if (isset($this->config['includePath'])) {
 			$paths = (array) $this->config['includePath'];
