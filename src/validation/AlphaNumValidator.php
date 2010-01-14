@@ -1,4 +1,8 @@
 <?php
+/**
+ * Validates a given string to only contain letters a-z (case insensitive), digits 0-9 or
+ * underscore and normal hyphen characters.
+ */
 class AlphaNumValidator {
 	private $model;
 
@@ -11,7 +15,7 @@ class AlphaNumValidator {
 			return true;
 		}
 
-		if (preg_match('/^[\x30-\x39\x41-\x5A\x61-\x7A]*$/', $this->model->$property) != 1) {
+		if (preg_match('/^[0-9a-zA-Z_-]*$/', $this->model->$property) != 1) {
 			return array('alphanum' => $rules['name']);
 		}
 
