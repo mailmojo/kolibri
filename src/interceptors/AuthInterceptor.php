@@ -48,7 +48,7 @@ class AuthInterceptor extends AbstractInterceptor {
 							the page you requested.', false);
 				}
 
-				return $this->denyAccess($request, $request->getUri());
+				return $this->denyAccess($request, true);
 			}
 
 			if ($action instanceof AuthAware) {
@@ -89,19 +89,22 @@ class AuthInterceptor extends AbstractInterceptor {
 	/**
 	 * Denies access by redirecting to the configured login URI.
 	 *
-	 * @param Request $request The HTTP request.
-	 * @param string $target   Optional target of the request; the resource where access was
-	 *                         denied.
+	 * @param Request $request      The HTTP request.
+	 * @param string $includeTarget Do we want to include a target parameter indicating the URL
+	 *								that was the original target of the request?
 	 */
-	private function denyAccess ($request, $target = null) {
+	private function denyAccess ($request, $includeTarget = false) {
 		$redirectTo = $this->loginUri;
 
 		/*
 		 * Adds a target-parameter with the originally requested URI, so the login action can
-		 * redirect to the requested page after login. However, only do this for GET-requests
-		 * as redirect themselves are always GET.
+		 * redirect to the requested page after login. However, only do this if requested and
+		 * only for GET-requests as redirect themselves are always GET.
 		 */
-		if (!empty($target) && $request->getMethod() === 'GET') {
+		if ($includeTarget && $request->getMethod() === 'GET') {
+			$queryString = $request->getQueryString();
+			$target = $request->getUri()
+					. urlencode((!empty($queryString) ? "?{$queryString}" : ''));
 			$paramSeparator = (strpos($redirectTo, '?') === false ? '?' : '&');
 			$redirectTo .= "{$paramSeparator}target={$target}";
 		}

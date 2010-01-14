@@ -154,6 +154,15 @@ class Request implements ArrayAccess {
 	public function getMethod () {
 		return $this->method;
 	}
+
+	/**
+	 * Returns the query string, as defined in $_SERVER.
+	 *
+	 * @return string	Query string.
+	 */
+	public function getQueryString () {
+		return $_SERVER['QUERY_STRING'];
+	}
 	
 	/**
 	 * Checks whether this request has a session associated with it.
