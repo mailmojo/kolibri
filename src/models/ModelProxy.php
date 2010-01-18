@@ -55,17 +55,19 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 	 * @param object $model Model to proxy.
 	 */
 	public function __construct ($model) {
-		if (is_object($model)) {
-			$this->setModel($model);
-		}
-		else { // Is array
+		if (!is_object($model)) {
 			$this->setModels($model);
 			// Set $model to one of the contained models so we can init the correct DAO proxy
 			$model = current($this->models);
 		}
+		else $isObject = true;
 
-		$this->isInnerProxied = false;
 		$this->initDaoProxy($model);
+		$this->isInnerProxied = false;
+
+		if (isset($isObject)) {
+			$this->setModel($model);
+		}
 	}
 	
 	/**
