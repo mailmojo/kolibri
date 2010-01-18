@@ -124,7 +124,7 @@ abstract class DatabaseConnection {
 		$result = $this->query($query, $params);
 		if ($result->valid()) {
 			$row = $result->current();
-			return !$column ? current($row) : $row[$column];
+			return $result->convertType(!$column ? current($row) : $row[$column]);
 		}
 		return null;
 	}
