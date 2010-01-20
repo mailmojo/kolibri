@@ -105,8 +105,10 @@ class AuthInterceptor extends AbstractInterceptor {
 			$queryString = $request->getQueryString();
 			$target = $request->getUri()
 					. urlencode((!empty($queryString) ? "?{$queryString}" : ''));
-			$paramSeparator = (strpos($redirectTo, '?') === false ? '?' : '&');
-			$redirectTo .= "{$paramSeparator}target={$target}";
+			if (!empty($target)) {
+				$paramSeparator = (strpos($redirectTo, '?') === false ? '?' : '&');
+				$redirectTo .= "{$paramSeparator}target={$target}";
+			}
 		}
 
 		return new RedirectResponse($redirectTo);
