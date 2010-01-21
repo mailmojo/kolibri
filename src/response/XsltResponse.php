@@ -44,6 +44,9 @@ class XsltResponse extends Response {
 			}
 		}
 
+		// Expose Kolibri mode (production, development or test
+		$transformer->addParameter('kolibriMode', Config::getMode());
+
 		echo $transformer->process($xmlGenerator->getDom());
 	}
 }
