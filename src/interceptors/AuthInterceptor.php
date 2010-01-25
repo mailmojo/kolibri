@@ -42,15 +42,6 @@ class AuthInterceptor extends AbstractInterceptor {
 		if ($request->hasSession()) {
 			$user = $request->session[$this->userKey];
 
-			if (!$this->isUserAuthenticated($user)) {
-				if ($action instanceof MessageAware) {
-					$action->msg->setMessage('You must log in to access
-							the page you requested.', false);
-				}
-
-				return $this->denyAccess($request, true);
-			}
-
 			if ($action instanceof AuthAware) {
 				if (method_exists($action, 'allowedAccess')) {
 					if (!$action->allowedAccess($user)) {
@@ -61,6 +52,15 @@ class AuthInterceptor extends AbstractInterceptor {
 						return $this->denyAccess($request);
 					}
 				}
+			}
+
+			if (!$this->isUserAuthenticated($user)) {
+				if ($action instanceof MessageAware) {
+					$action->msg->setMessage('You must log in to access
+							the page you requested.', false);
+				}
+
+				return $this->denyAccess($request, true);
 			}
 		}
 		return $dispatcher->invoke();
