@@ -137,8 +137,10 @@ class Session implements ArrayAccess, IteratorAggregate {
 	 * Invalidates this session. Any data in the session is destroyed.
 	 */
 	public function invalidate () {
-		session_unset();
-		session_destroy();
+		if ($this->started) {
+			session_unset();
+			session_destroy();
+		}
 	}
 
 	/**
