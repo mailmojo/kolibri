@@ -16,9 +16,18 @@ class XslTransformer {
 			throw new Exception("XSL stylesheet does not exist: $xsl");
 		}
 		
-		$this->stylesheet = new DOMDocument();
-		$this->stylesheet->load($xsl);
-		$this->processor = new XSLTProcessor();
+        /*
+         * Use the XSLT Cache extension (http://code.nytimes.com/projects/xslcache)
+         * if available for up to about 2.5x boost in performance.
+         */
+        if (class_exists('xsltCache', false)) {
+            $this->stylesheet = $xsl;
+            $this->processor = new xsltCache();
+        }
+        else {
+    		$this->stylesheet = DOMDocument::load($xsl);
+		    $this->processor = new XSLTProcessor();
+        }
 	}
 
 	/**
