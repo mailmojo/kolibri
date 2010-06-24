@@ -106,6 +106,14 @@ class PostgreSqlConnection extends DatabaseConnection {
 	 * Rolls back the active transaction.
 	 */
 	public function rollback () {
+		$status = pg_transaction_status($this->connection);
+
+		if (!$status
+				|| $status === PGSQL_TRANSACTION_UNKNOWN
+				|| $status === PGSQL_TRANSACTION_IDLE
+				|| $this->autocommit)
+			return;
+
 		if (!$this->autocommit) {
 			pg_query($this->connection, 'ROLLBACK');
 		}
