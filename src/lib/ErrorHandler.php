@@ -110,14 +110,20 @@ TXT
 	 * Returns textual representation of the values in the passed array/object.
 	 *
 	 * @param mixed $vars Array or object to return values of.
+	 * @param int $indent Indentation level. Used to indent properly in recursion.
 	 * @return string
 	 */
-	private function getVars ($vars) {
+	private function getVars ($vars, $indent = 0) {
 		$txt = '';
 		foreach ($vars as $var => $value) {
-			$txt .= $var . ': ';
-			$txt .= print_r($value, true);
-			if (!isset($value) || is_scalar($value)) $txt .= "\n";
+			$txt .= str_repeat('    ', $indent) . $var . ': ';
+			if ($value === null || is_scalar($value)) {
+				$txt .= ($value !== null ? $value : 'NULL') . "\n";
+			}
+			else {
+				$txt .= (is_object($value) ? get_class($value) : gettype($value)) . " {\n";
+				$txt .= $this->getVars($value, $indent + 1) . str_repeat('    ', $indent) . "}\n";
+			}
 		}
 		return $txt;
 	}
