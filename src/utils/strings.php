@@ -1,7 +1,7 @@
 <?php
 /**
  * Helper functions related to strings.
- * @version 	$Id: strings.php 1532 2008-07-31 16:20:51Z frode $
+ * @version		$Id: strings.php 1532 2008-07-31 16:20:51Z frode $
  */
 
 /**
@@ -140,6 +140,79 @@ function convert_encoding ($string, $to = 'UTF-8', $from = null) {
 }
 
 /**
+ * Wraps a string to ensure that each line has no longer than $chars characters.
+ *
+ * Linebreaks uses \n, and keeps existing line breaks. This function is multi-byte aware
+ * (which PHPs built-in wordwrap() is not).
+ *
+ * @param string $text Text to wrap.
+ * @param int $chars   Max number of characters on each line.
+ * @return string	   The text word wrapped.
+ */
+function wrap_text ($text, $chars = 72) {
+	$words = explode(' ', $text);
+	
+	$text = ''; // To hold completed processed text
+	$line = ''; // To hold currently processing line
+	
+	foreach ($words as $word) {
+		if (strpos($word, "\n") !== false) {
+			$parts = explode("\n", $word);
+
+			// Iterate through line fragments between existing line breaks, except the last
+			for ($i = 0; $i < (count($parts) - 1); $i++) {
+				$part = $parts[$i];
+
+				// Check if fragment fits in current line
+				if ((mb_strlen($line) + mb_strlen($part)) < $chars) {
+					if (mb_strlen($line) > 0) {
+						$line .= ' ' . $part . "\n";
+					}
+					else {
+						$line .= $part . "\n";
+					}
+
+					$text .= $line;
+				}
+				else { // Fragment doesn't fit on current line
+					// Start new line, add fragment and another line break
+					$line .= "\n" . $part . "\n";
+					$text .= $line;
+				}
+
+				$line = '';
+			}
+			
+			/*
+			 * Last fragment doesn't have line break, so set as regular word for it to be
+			 * picked up by the processing done below.
+			 */
+			if (mb_strlen($parts[count($parts) - 1]) > 0) {
+				$word = $parts[count($parts) - 1];
+			}
+			else continue; // Fragment is blank, no need to process
+		}
+		
+		// Check if word fits on current line
+		if ((mb_strlen($line) + mb_strlen($word)) < $chars) {
+			if (mb_strlen($line) > 0) {
+				$line .= ' ' . $word;
+			}
+			else {
+				$line .= $word;
+			}
+		}
+		else { // Word doesn't fit on current line
+			// Add word on a new line
+			$text .= $line . "\n";
+			$line = $word;
+		}
+	}
+	
+	return $text . $line; // Return word wrap text, including the last line
+}
+
+/**
  * Checks if a string is valid UTF-8.
  *
  * @param string $string	The string to check.
@@ -165,9 +238,9 @@ function is_utf8 ($string) {
 
 /**
  * Creates a random string composed of the following ASCII characters:
- *     48-57  = '0' - '9'
- *     65-90  = 'A' - 'Z'
- *     97-122 = 'a' - 'z'
+ *	   48-57  = '0' - '9'
+ *	   65-90  = 'A' - 'Z'
+ *	   97-122 = 'a' - 'z'
  *
  * @param int $length	Length of the string to generate. Defaults to 6 chars.
  * @return string
