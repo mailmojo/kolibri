@@ -9,14 +9,18 @@ require("class.phpmailer.php");
  *
  *   from.email
  *   from.name
- *   smtp.auth
  *   smtp.host
+ *   smtp.port
+ *   smtp.auth
  *   smtp.username
  *   smtp.password
  * 
  * The from.* configs will only be used if specific e-mail messages don't specify their from
- * address. smtp.host can be left empty if you want to use PHPs built-in mail() function as
- * opposed to regular SMTP.
+ * address. smtp.host can be left empty if you specify an different configuration key to look
+ * up email server settings for, for which the key will be used as the host. An example of
+ * this is a [mail.example.com] section, where the associated smtp.port, smtp.auth,
+ * smtp.username and smtp.password settings configure the connection details to the mail
+ * server at mail.example.com.
  *
  * This service is designed to be used in conjunction with the Email class. An instance of that
  * class represents a complete e-mail message, which can then be sent by passing it to this
@@ -28,31 +32,31 @@ class MailService extends PHPMailer {
 	 * Creates an instance of the mail service, set up using the values of the mail
 	 * configuration settings.
 	 *
-	 * @param bool $exceptions Whether or not to throw external exceptions. We default to
-	 *                         true even though PHPMailer defaults to false.
-	 * @param bool $persistent Whether or not to keep the connection to the SMTP server alive
-	 *                         after sending a mail. Useful if sending multiple messages. Only
-	 *                         applies if SMTP sending is used.
+	 * @param bool $exceptions   Whether or not to throw external exceptions. We default to
+	 *                           true even though PHPMailer defaults to false.
+	 * @param bool $persistent   Whether or not to keep the connection to the SMTP server
+	 *                           alive after sending a mail. Useful if sending multiple
+	 *                           messages.
+	 * @param string $serverConf Configuration key to look up server information from.
 	 */
-	public function __construct ($exceptions = true, $persistent = false) {
+	public function __construct ($exceptions = true, $persistent = false,
+								 $serverConf = 'mail') {
 		parent::__construct($exceptions);
-		$conf = Config::get('mail');
+		$conf = Config::get($serverConf);
+		
+		$this->IsSmtp();
+		$this->SMTPKeepAlive = $persistent;
 
-		if (!empty($conf['smtp.auth'])) {
-			$this->IsSmtp();
-			$this->SMTPAuth = ($conf['smtp.auth'] ? true : false);
-			$this->Host = $conf['smtp.host'];
+		// Use smtp.host value as host if exists, else the server config key itself
+		$this->Host = !empty($conf['smtp.host']) ? $conf['smtp.host'] : $serverConf;
+		$this->SMTPAuth = $conf['smtp.auth'] ? true : false;
 
-			if ($this->SMTPAuth) {
-				$this->Username = $conf['smtp.username'];
-				$this->Password = $conf['smtp.password'];
-			}
-
-			if (isset($conf['smtp.port'])) {
-				$this->Port = $conf['smtp.port'];
-			}
-
-			$this->SMTPKeepAlive = $persistent;
+		if ($this->SMTPAuth) {
+			$this->Username = $conf['smtp.username'];
+			$this->Password = $conf['smtp.password'];
+		}
+		if (isset($conf['smtp.port'])) {
+			$this->Port = $conf['smtp.port'];
 		}
 
 		$this->CharSet  = 'utf-8';
