@@ -182,18 +182,35 @@ class PostgreSqlConnection extends DatabaseConnection {
 	/**
 	 * Inserts records into $table from $rows, using the PostgreSQL specific COPY FROM feature.
 	 *
-	 * This method is an abstraction of pg_copy_from(), and its behaviour and arguments are
-	 * thus alike.
+	 * $rows must be an array, where each element can either be a string or array. With string
+	 * elements, each element represents a row where columns are separated by the $delimiter.
+	 * No escaping are done on the data in this case, and thus this functions as a wrapper
+	 * around pg_copy_from.
+	 *
+	 * When each value in $rows is an array, each elements represents a column value. Escaping
+	 * and translation of nulls is here done.
 	 *
 	 * @param string $table     Name of table to insert rows into.
-	 * @param array $rows       Array of data, where columns must be delimited by $delimiter.
-	 * @param string $delimiter Token for delimiting columns in $rows. Defaults to \t (TAB).
-	 * @param string $nulls     How SQL NULL values are represented in $rows. Defaults to
-	 *                          \\N (for correct escaping).
+	 * @param array $rows       Array with data.
+	 * @param string $delimiter Token for delimiting columns. Defaults to \t (TAB).
+	 * @param string $nulls     How SQL NULL values are represented. Defaults to
+	 *                          \\N (for correct escaping, equals \N).
 	 */
-	public function copyFrom ($table, $rows, $delimiter = "\t", $nulls = "\\N") {
+	public function copyFrom ($table, $rows, $delimiter = "\t", $null = "\\N") {
 		$this->prepareConnection();
-		return pg_copy_from($this->connection, $table, $rows, $delimiter, $nulls);
+
+		if (is_array($rows) && ($first = current($rows)) !== false && is_array($first)) {
+			$delims = array_fill(0, count($first), $delimiter);
+			$nulls = array_fill(0, count($first), $null);
+
+			foreach ($rows as $row) {
+				$r = array_map(array($this, 'escapeCopyValue'), $row, $delims, $nulls);
+				$escapedRows[] = implode($delimiter, $r);
+			}
+
+			$rows = $escapedRows;
+		}
+		return pg_copy_from($this->connection, $table, $escapedRows, $delimiter, $null);
 	}
 
 	/**
@@ -206,7 +223,7 @@ class PostgreSqlConnection extends DatabaseConnection {
 	 * @return string      The value prepared for insertion into a SQL query.
 	 */
 	protected function escapeValue ($value) {
-		if ($value === NULL) {
+		if ($value === null) {
 			return 'NULL';
 		}
 		if (is_bool($value)) {
@@ -225,6 +242,35 @@ class PostgreSqlConnection extends DatabaseConnection {
 			$value = stripslashes($value);
 		}
 		return "'" . pg_escape_string($value) . "'";
+	}
+
+	/**
+	 * Escapes a value for insertion into an SQL COPY string.
+	 *
+	 * This is special compared to escapeValue(), as SQL COPY has its own escaping rules.
+	 */
+	private function escapeCopyValue ($value, $delimiterChar, $nullValue) {
+		if ($value === null) {
+			return $nullValue;
+		}
+		if (is_bool($value)) {
+			return ($value ? 'true' : 'false');
+		}
+		if (is_array($value)) {
+			return '{' . implode(', ',
+				array_map(
+					array($this, 'escapeCopyValue'),
+					$value, array($delimiterChar), array($nullValue))
+			) . '}';
+		}
+		if (get_magic_quotes_gpc()) {
+			$value = stripslashes($value);
+		}
+		return strtr($value, array(
+			'}' => '\\\}',
+			'{' => '\\\{',
+			'"' => '\\\"',
+			$delimiterChar => '\\'.$delimiterChar));
 	}
 
 	/**
