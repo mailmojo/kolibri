@@ -202,6 +202,7 @@ class PostgreSqlConnection extends DatabaseConnection {
 		if (is_array($rows) && ($first = current($rows)) !== false && is_array($first)) {
 			$delims = array_fill(0, count($first), $delimiter);
 			$nulls = array_fill(0, count($first), $null);
+			$escapedRows = array();
 
 			foreach ($rows as $row) {
 				$r = array_map(array($this, 'escapeCopyValue'), $row, $delims, $nulls);
@@ -210,7 +211,7 @@ class PostgreSqlConnection extends DatabaseConnection {
 
 			$rows = $escapedRows;
 		}
-		return pg_copy_from($this->connection, $table, $escapedRows, $delimiter, $null);
+		return pg_copy_from($this->connection, $table, $rows, $delimiter, $null);
 	}
 
 	/**
@@ -257,10 +258,12 @@ class PostgreSqlConnection extends DatabaseConnection {
 			return ($value ? 'true' : 'false');
 		}
 		if (is_array($value)) {
+			$innerDelims = array_fill(0, count($value), $delimiterChar);
+			$innerNulls = array_fill(0, count($value), $nullValue);
+
 			return '{' . implode(', ',
 				array_map(
-					array($this, 'escapeCopyValue'),
-					$value, array($delimiterChar), array($nullValue))
+					array($this, 'escapeCopyValue'), $value, $innerDelims, $innerNulls)
 			) . '}';
 		}
 		if (get_magic_quotes_gpc()) {
