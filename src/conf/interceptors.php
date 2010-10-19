@@ -24,7 +24,8 @@ $interceptors = array(
 $interceptorSettings = array(
 	'error' => array(
 		'response' => 'PhpResponse',
-		'view'   => '/error'
+		'view'   => '/error',
+		'contentType' => 'text/html'
 	),
 	'auth'  => array(
 		'userModel' => 'AuthUser',

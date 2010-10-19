@@ -2,14 +2,15 @@
 /**
  * This class defines our custom error- and exception handling methods. If debug is disabled the
  * error is logged and an email sent to the defined admin address, else the error should be
- * displayed in full. How exactly the error is displayed depends on the result configured and
+ * displayed in full. How exactly the error is displayed depends on the response configured and
  * the error view used.
  */
 class ErrorHandler {
 	private $action;
 	private $request;
-	private $result;
+	private $response;
 	private $view;
+	private $contentType;
 	private $handlingError;
 	
 	/**
@@ -17,14 +18,16 @@ class ErrorHandler {
 	 *
 	 * @param object $action   The action that is the target of the current request.
 	 * @param Request $request The request object.
-	 * @param string $result   Class name of the result to use when displaying an error.
-	 * @param string $view     File name of the view to render with the $result.
+	 * @param string $response Class name of the response to use when displaying an error.
+	 * @param string $view     File name of the view to render with the $response.
+	 * @param string $contentType Content type of the response to render.
 	 */
-	public function __construct ($action, $request, $result, $view) {
-		$this->action  = $action;
-		$this->request = $request;
-		$this->result  = $result;
-		$this->view    = $view;
+	public function __construct ($action, $request, $response, $view, $contentType) {
+		$this->action        = $action;
+		$this->request       = $request;
+		$this->response      = $response;
+		$this->view          = $view;
+		$this->contentType   = $contentType;
 		$this->handlingError = false;
 	}
 	
@@ -76,8 +79,8 @@ class ErrorHandler {
 
 		// Try/catch this to avoid infinite loop in case the view doesn't exist
 		try {
-			$result = new $this->result($data, $this->view);
-			$result->render($this->request);
+			$response = new $this->response($data, $this->view, 500);
+			$response->render($this->request);
 		} catch (Exception $e) {
 			echo '<strong>' . $e->getMessage() . '</strong><br />';
 			echo 'Please configure the ErrorInterceptor to use an existing template';

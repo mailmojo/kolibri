@@ -22,12 +22,17 @@ class ErrorInterceptor extends AbstractInterceptor {
 	protected $view;
 
 	/**
+	 * Content type to specify for the response when rendering an error.
+	 */
+	protected $contentType;
+
+	/**
 	 * Intercepts the request to add handlers. The error handler we set is implemented by
 	 * the <code>ErrorHandler</code> class.
 	 */
 	public function intercept ($dispatcher) {
 		$errorHandler = new ErrorHandler($dispatcher->getAction(), $dispatcher->getRequest(),
-				$this->response, $this->view);
+				$this->response, $this->view, $this->contentType);
 		set_exception_handler(array($errorHandler, 'handleException'));
 		set_error_handler(array($errorHandler, 'handleError'));
 
