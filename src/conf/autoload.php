@@ -43,6 +43,7 @@ $autoloadClasses = array(
 		'Response'                  => '/response/Response.php',
 		'SeeOtherResponse'          => '/response/SeeOtherResponse.php',
 		'SmartyResponse'            => '/response/SmartyResponse.php',
+		'XmlResponse'               => '/response/XmlResponse.php',
 		'XsltResponse'              => '/response/XsltResponse.php',
 		'Utils'                     => '/utils/Utils.php',
 		'Validator'                 => '/validation/Validator.php',
