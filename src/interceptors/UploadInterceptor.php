@@ -37,7 +37,7 @@ class UploadInterceptor extends AbstractInterceptor {
 									$file['error'][$i]);
 						}
 					}
-					if (isset($files) && property_exists($setOn, $param)) {
+					if (isset($files)) {
 						$setOn->$param = $files;
 					}
 				}
