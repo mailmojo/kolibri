@@ -125,6 +125,8 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 			if (!empty($key)) {
 				if (isset($this->models[$key])) {
 					$numAffected = $this->objects->delete($this->models[$key]);
+					if (method_exists($this->models[$key], 'postDelete'))
+						$this->models[$key]->postDelete();
 					unset($this->models[$key]);
 				}
 				else throw new Exception("Model with key $key does not exist.");
@@ -133,6 +135,7 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 				foreach ($this->models as $idx => $model) {
 					if (!empty($model->original)) {
 						$numAffected += $this->objects->delete($model);
+						if (method_exists($model, 'postDelete')) $model->postDelete();
 					}
 					unset($this->models[$idx]);
 				}
