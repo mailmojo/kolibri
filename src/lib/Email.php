@@ -100,6 +100,27 @@ class Email {
 	}
 
 	/**
+	 * Sets body text as plain text if no HTML is supplied, otherwise sets HTML as body text
+	 * and the plain text as alternative body text.
+	 *
+	 * This method, if used, should be used instead of setBody() and setAltBody().
+	 *
+	 * @param string $plain The plain content to set.
+	 * @param string $html  The HTML content to set, if relevant.
+	 */
+	public function setContent ($mail, $plain, $html = null) {
+		$plain = trim($plain);
+
+		if (!empty($html)) {
+			$this->setBody(trim($html));
+			$this->setAltBody($plain);
+		}
+		else {
+			$this->setBody($plain);
+		}
+	}
+
+	/**
 	 * Performs string translation of the body text using the replacement pairs supplied.
 	 *
 	 * @param mixed $replacePairs Replacement pairs as an array or object.
