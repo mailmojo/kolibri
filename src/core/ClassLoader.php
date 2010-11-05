@@ -45,13 +45,14 @@ class ClassLoader {
 				require(MODELS_PATH . "/dao/{$className}.php");
 			}
 			/*
-			 * If it's not a core, model or DAO class we simply try the include_path. This
-			 * used @include(...) previously, but this supresses errors within the included
-			 * file. But was there a specific reason why we originally wanted include()
-			 * and/or supressing?
+			 * If it's not a core, model or DAO class we simply try the include_path.
+			 * Addendum: If using PHPSpec, errors should be supressed by @include() to
+			 * fix issues where equal() tests attempt to include the value no matter
+			 * what, which breaks the include when the value isn't a file. When
+			 * PHPSpec is gone from our apps for good, this comment can be removed.
 			 */
 			else {
-				@include($className . '.php');
+				include($className . '.php');
 			}
 			self::$loaded[$className] = true;
 		}
