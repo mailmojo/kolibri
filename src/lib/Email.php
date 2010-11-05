@@ -108,7 +108,7 @@ class Email {
 	 * @param string $plain The plain content to set.
 	 * @param string $html  The HTML content to set, if relevant.
 	 */
-	public function setContent ($mail, $plain, $html = null) {
+	public function setContent ($plain, $html = null) {
 		$plain = trim($plain);
 
 		if (!empty($html)) {
