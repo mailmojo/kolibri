@@ -16,24 +16,25 @@ class XslTransformer {
 			throw new Exception("XSL stylesheet does not exist: $xsl");
 		}
 		
-        /*
-         * Use the XSLT Cache extension (http://code.nytimes.com/projects/xslcache)
-         * if available for up to about 2.5x boost in performance.
-         */
-        if (class_exists('xsltCache', false)) {
-            $this->stylesheet = $xsl;
-            $this->processor = new xsltCache();
-        }
-        else {
-    		$this->stylesheet = DOMDocument::load($xsl);
-		    $this->processor = new XSLTProcessor();
-        }
+		/*
+		 * Use the XSLT Cache extension (http://code.nytimes.com/projects/xslcache)
+		 * if available for up to about 2.5x boost in performance.
+		 */
+		if (class_exists('xsltCache', false)) {
+			$this->stylesheet = $xsl;
+			$this->processor = new xsltCache();
+		}
+		else {
+			$this->stylesheet = new DOMDocument();
+			$this->stylesheet->load($xsl);
+			$this->processor = new XSLTProcessor();
+		}
 	}
 
 	/**
 	 * Adds a parameter to the XSLT processor.
 	 *
-	 * @param string $name  Name of the parameter to add.
+	 * @param string $name	Name of the parameter to add.
 	 * @param string $value Value of the parameter to add.
 	 */
 	public function addParameter ($name, $value) {
