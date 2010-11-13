@@ -52,6 +52,10 @@ class ClassLoader {
 			 * PHPSpec is gone from our apps for good, this comment can be removed.
 			 */
 			else {
+				// Expand _ in class names to / directory separators
+				if (strpos($className, '_') > 0) {
+					$className = str_replace('_', '/', $className);
+				}
 				include($className . '.php');
 			}
 			self::$loaded[$className] = true;

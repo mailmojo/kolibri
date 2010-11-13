@@ -1,5 +1,5 @@
 <?php
-require("class.phpmailer.php");
+require_once("class.phpmailer.php");
 
 /**
  * This class provides an interface to send e-mail messages, using the PHPMailer library which
