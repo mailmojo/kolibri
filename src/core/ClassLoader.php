@@ -8,14 +8,14 @@ class ClassLoader {
 	 * @var array
 	 */
 	private static $classes = array();
-	
+
 	/**
 	 * Cache table with names of classes that have been loaded.
 	 * Only used for classes not in the autoload class mapping.
 	 * @var array
 	 */
 	private static $loaded = array();
-	
+
 	/**
 	 * Initializes the ClassLoader with a mapping of class names to files,
 	 * and registers the autoload function with the PHP runtime.
@@ -24,7 +24,7 @@ class ClassLoader {
 		self::$classes = $config;
 		spl_autoload_register(array('ClassLoader', 'load'));
 	}
-	
+
 	/**
 	 * Kolibris autoload function. Handles autoloading of core framework classes
 	 * through a lookup mapping defined in conf/autoload.php. It also handles autoloading
@@ -52,10 +52,12 @@ class ClassLoader {
 			 * PHPSpec is gone from our apps for good, this comment can be removed.
 			 */
 			else {
-				// Expand _ in class names to / directory separators
-				if (strpos($className, '_') > 0) {
-					$className = str_replace('_', '/', $className);
-				}
+				/*
+				 * Expand _ in class names to / directory separators. We only expand when the
+				 * letter following the underscore is a capital letter, as that is the normal
+				 * convension for class names with underscores in a directory hierarchy.
+				 */
+				$className = preg_replace("/_(?=[A-Z])/", "/", $className);
 				include($className . '.php');
 			}
 			self::$loaded[$className] = true;
