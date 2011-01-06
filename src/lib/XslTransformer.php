@@ -51,7 +51,12 @@ class XslTransformer {
 			throw new Exception('Data to transform is not a DOMDocument.');
 		}
 		
-		$this->processor->importStyleSheet($this->stylesheet);
+		if ($this->processor instanceof XSLTProcessor) {
+			$this->processor->importStyleSheet($this->stylesheet);
+		}
+		else {
+			$this->processor->importStyleSheet($this->stylesheet, Config::getMode() == Config::PRODUCTION);
+		}
 		return $this->processor->transformToXML($dom);
 	}
 }

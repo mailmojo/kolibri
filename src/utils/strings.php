@@ -64,7 +64,7 @@ function convert_linebreaks ($string, $to = "\n") {
 		$linebreak_translations = array(
 			"\r\n"	=> "\n",
 			"\r"	=> "\n"
-		);			
+		);
 	}
 	else if ($to == "\r") {
 		$linebreak_translations = array(
@@ -94,7 +94,7 @@ function convert_linebreaks ($string, $to = "\n") {
  * @param string $from		Encoding to convert from. If not defined, try to detect it.
  * @return string	Text converted to correct encoding.
  */
-function convert_encoding ($string, $to = 'UTF-8', $from = null) {		
+function convert_encoding ($string, $to = 'UTF-8', $from = null) {
 	// Do we have to detect source encoding?
 	if ($from === null) {
 		if (!is_utf8($string)) {
@@ -233,7 +233,7 @@ function is_utf8 ($string) {
 
 	// Possible improvement of the regex, that does not allow UTF-8 conformant sequences not allowed
 	// in the Unicode-standard:
-	// return (preg_match('/[\xC0\xC1\xF5-\xFF]/u', $value) == 0);
+	// return (preg_match('/[\xC0\xC1\xF5-\xFF]/u', $string) == 0);
 }
 
 /**
