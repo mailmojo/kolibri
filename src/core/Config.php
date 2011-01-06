@@ -167,7 +167,7 @@ class Config {
 			$paths = (array) $this->config['includePath'];
 			$incPath .= PATH_SEPARATOR . implode(PATH_SEPARATOR, $paths);
 		}
-		ini_set('include_path', ini_get('include_path') . PATH_SEPARATOR . $incPath);
+		ini_set('include_path', $incPath . PATH_SEPARATOR . ini_get('include_path'));
 
 		/*
 		 * Sets the current locale for date formatting et cetera

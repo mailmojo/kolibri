@@ -130,7 +130,9 @@ class Session implements ArrayAccess, IteratorAggregate {
 	 * @param string $key	Key associated with the value to remove.
 	 */
 	public function remove ($key) {
-		unset($_SESSION[$key]);
+		if ($this->started) {
+			unset($_SESSION[$key]);
+		}
 	}
 	
 	/**
