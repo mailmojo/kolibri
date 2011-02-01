@@ -20,6 +20,12 @@ class Config {
 	const DEVELOPMENT = 'development';
 	const TEST = 'test';
 
+	/*
+	 * Default charset. Can be overridden application configuration.
+	 * @var string
+	 */
+	const CHARSET = 'utf-8';
+
 	/**
 	 * Current environment mode.
 	 * @var string
@@ -180,6 +186,11 @@ class Config {
 			setlocale(LC_ALL, $this->config['locale']);
 			setlocale(LC_NUMERIC, $envLocale);
 		}
+
+		// Set default character set for all multibyte functions.
+		if (function_exists('mb_internal_encoding')) {
+			mb_internal_encoding(self::getCharset());
+		}
 	}
 
 	/**
@@ -226,6 +237,18 @@ class Config {
 
 		$instance = Config::getInstance();
 		return $instance->mode;
+	}
+
+	/**
+	 * Returns the charset, either the one from the config file if exists or default charset
+	 * defined as const CHARSET.
+	 *
+	 * @return string
+	 */
+	public static function getCharset () {
+		$instance = self::getInstance();
+		return isset($instance->config['charset']) ?
+				$instance->config['charset'] : self::CHARSET;
 	}
 
 	/**

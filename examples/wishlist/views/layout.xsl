@@ -16,6 +16,9 @@
 	<!-- We receive values config setting with the corresponding keys. -->
 	<xsl:param name="staticRoot" />
 	<xsl:param name="debug" />
+	<xsl:param name="charset" />
+
+	<xsl:param name="kolibriMode" />
 
 	<!-- Include Kolibri snippets, helpers for forms and status messages. -->
 	<xsl:include href="snippets/kolibri.xsl" />
@@ -23,7 +26,7 @@
 	<xsl:template match="/result">
 		<html>
 		<head>
-			<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+			<meta http-equiv="content-type" content="text/html; charset={$charset}" />
 			<meta http-equiv="imagetoolbar" content="no" />
 			<title><xsl:value-of select="$title" /> ~ Wishlist Kolibri Demo App</title>
 

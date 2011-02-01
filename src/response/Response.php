@@ -9,7 +9,7 @@ class Response {
 	protected $contentType;
 	protected $charset;
 	protected $headerCache = array();
-	
+
 	/**
 	 * Initializes this response with the supplied response data and meta data. When using this
 	 * class explicitly, <code>$data</code> must be a string with the response body, or added
@@ -22,11 +22,11 @@ class Response {
 	 * @param string $charset     Charset of the response. Defaults to utf-8.
 	 */
 	public function __construct ($data = '', $status = 200, $contentType = 'text/html',
-			$charset = 'utf-8') {
+			$charset = null) {
 		$this->data        = $data;
 		$this->status      = $status;
 		$this->contentType = $contentType;
-		$this->charset     = $charset;
+		$this->charset     = $charset === null ? Config::getCharset() : $charset;
 		$this->setHeader('Content-Type', "$contentType; charset=$charset");
 	}
 

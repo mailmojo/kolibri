@@ -16,8 +16,8 @@ class XsltResponse extends Response {
 	 * @param string $contentType Content type of the response. Defaults to text/html.
 	 */
 	public function __construct ($data, $stylesheet, $status = 200,
-			$contentType = 'text/html') {
-		parent::__construct($data, $status, $contentType);
+			$contentType = 'text/html', $charset = null) {
+		parent::__construct($data, $status, $contentType, $charset);
 		$this->stylesheet = $stylesheet;
 	}
 
@@ -26,7 +26,7 @@ class XsltResponse extends Response {
 	 */
 	public function render ($request) {
 		$this->sendHeaders();
-		
+
 		$stylesheetFile = VIEW_PATH . $this->stylesheet . '.xsl';
 		$xmlGenerator = new XmlGenerator();
 
