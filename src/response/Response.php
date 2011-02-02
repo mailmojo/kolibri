@@ -27,7 +27,7 @@ class Response {
 		$this->status      = $status;
 		$this->contentType = $contentType;
 		$this->charset     = $charset === null ? Config::getCharset() : $charset;
-		$this->setHeader('Content-Type', "$contentType; charset=$charset");
+		$this->setHeader('Content-Type', "$contentType; charset={$this->charset}");
 	}
 
 	/**
