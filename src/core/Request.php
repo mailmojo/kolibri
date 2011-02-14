@@ -16,7 +16,7 @@ class Request implements ArrayAccess {
 	 * @var array
 	 */
 	public $params;
-	
+
 	/**
 	 * HTTP method for this request.
 	 * @var string
@@ -28,20 +28,19 @@ class Request implements ArrayAccess {
 	 * @var Session
 	 */
 	public $session;
-	
+
 	/**
 	 * Creates an instance of this class. GET and POST parameters are merged. If any parameter
 	 * keys conflicts, POST parameters override GET parameters.
-	 * 
+	 *
 	 * @param array $getParams  GET parameters for this request.
 	 * @param array $postParams POST parameters for this request.
 	 * @param string $uri       URI of this request. Leave empty to use the actual request URI
 	 *                          from the client.
 	 */
 	public function __construct ($getParams, $postParams, $uri = null) {
-		$this->params = array_merge($getParams, $postParams);
+		$this->params = array_merge($this->sanitizeParams($getParams), $postParams);
 		$this->method = $_SERVER['REQUEST_METHOD'];
-		
 		// If $uri is empty initialize this request with the URI from the client request
 		if (empty($uri)) {
 			/*
@@ -62,14 +61,14 @@ class Request implements ArrayAccess {
 				$uri = substr($uri, 0, $paramPos);
 			}
 
-            // Strip ending / to ensure URIs with or without are handles alike
-		    $uri = rtrim($uri, '/');
+			// Strip ending / to ensure URIs with or without are handles alike
+			$uri = rtrim($uri, '/');
 		}
-		
+
 		// We use rawurldecode() instead of urldecode() to preserve + in URI
 		$this->uri = rawurldecode($uri);
 	}
-	
+
 	/**
 	 * Checks if a specific request parameter exists.
 	 *
@@ -117,7 +116,7 @@ class Request implements ArrayAccess {
 	/**
 	 * Returns the value of the parameter with the specified key, or <code>null</code> if the
 	 * parameter is not found.
-	 * 
+	 *
 	 * @param string $key	Key to the parameter to return.
 	 * @return string		Value of the parameter, or <code>null</code>.
 	 */
@@ -163,7 +162,7 @@ class Request implements ArrayAccess {
 	public function getQueryString () {
 		return $_SERVER['QUERY_STRING'];
 	}
-	
+
 	/**
 	 * Checks whether this request has a session associated with it.
 	 *
@@ -172,7 +171,7 @@ class Request implements ArrayAccess {
 	public function hasSession () {
 		return isset($this->session);
 	}
-	
+
 	/**
 	 * Puts all the supplied parameters into the parameters for this request. Should only be
 	 * used internally by the framework.
@@ -182,5 +181,21 @@ class Request implements ArrayAccess {
 	public function putAll ($params) {
 		$this->params = array_merge($this->params, $params);
 	}
+
+	/**
+	 * Removes parameters that contains invalid characters.
+	 *
+	 * Valid parameters only contain characters: A-Z, underscode (_), plus (+) and hyphen (-).
+	 *
+	 * @param array $params
+	 * @return array
+	 */
+	private function sanitizeParams ($params) {
+		foreach ($params as $key => $value) {
+			if (preg_match('/^[a-zA-Z_+-]*$/i', $key) === 0) {
+				unset($params[$key]);
+			}
+		}
+		return $params;
+	}
 }
-?>
