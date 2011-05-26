@@ -17,6 +17,12 @@ class ClassLoader {
 	private static $loaded = array();
 
 	/**
+	 * A list of prioritized paths to search for class files,
+	 * initialized from PHP's include_path when needed and cached.
+	 */
+	private static $includePaths = null;
+
+	/**
 	 * Initializes the ClassLoader with a mapping of class names to files,
 	 * and registers the autoload function with the PHP runtime.
 	 */
@@ -58,10 +64,35 @@ class ClassLoader {
 				 * convension for class names with underscores in a directory hierarchy.
 				 */
 				$className = preg_replace("/_(?=[A-Z])/", "/", $className);
-				include($className . '.php');
+				if (($file = self::findFile($className)) !== null) {
+					include($file);
+				}
 			}
 			self::$loaded[$className] = true;
 		}
+	}
+
+	/**
+	 * Internal method for searching PHP's include path as a last resort for
+	 * including a class.
+	 * @param string $className Name of the class to search for.
+	 * @return string The path of the file if found, NULL otherwise.
+	 */
+	private static function findFile ($className) {
+		if (self::$includePaths === null) {
+			self::$includePaths = explode(PATH_SEPARATOR, get_include_path());
+			foreach (self::$includePaths as $i => $path) {
+				self::$includePaths[$i] = realpath($path);
+			}
+		}
+
+		foreach (self::$includePaths as $path) {
+			$file = $path . DIRECTORY_SEPARATOR . $className . '.php';
+			if (file_exists($file)) {
+				return $file;
+			}
+		}
+		return null;
 	}
 }
 ?>

@@ -26,8 +26,16 @@ class Response {
 		$this->data        = $data;
 		$this->status      = $status;
 		$this->contentType = $contentType;
-		$this->charset     = $charset === null ? Config::getCharset() : $charset;
-		$this->setHeader('Content-Type', "$contentType; charset={$this->charset}");
+		$this->charset     = $charset;
+		// Set default charset for text content
+		if ($this->charset === null && substr($this->contentType, 0, 4) == 'text') {
+			$this->charset = Config::getCharset();
+		}
+		// Only add charset when set, might not be for binary content types
+		if ($this->charset !== null) {
+			$contentType .= "; charset=$charset";
+		}
+		$this->setHeader('Content-Type', $contentType);
 	}
 
 	/**
