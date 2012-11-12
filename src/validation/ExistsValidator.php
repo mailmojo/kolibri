@@ -12,6 +12,17 @@ class ExistsValidator {
 					|| $this->model->$property === array()) {
 				return array('exists' => $rules['name']);
 			}
+			/*
+			 * Checks if any of the values inside an array is empty.
+			 * TODO: Though this does not work with a condition.
+			 */
+			if (is_array($this->model->$property) && !empty($this->model->$property)) {
+				foreach ($this->model->$property as $value) {
+					if (empty($value)) {
+						return array('exists' => $rules['name']);
+					}
+				}
+			}
 		}
 		else if (is_array($rules['condition'])) {
 			foreach ($rules['condition'] as $qualifier => $qualifierValue) {

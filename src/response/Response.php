@@ -33,7 +33,7 @@ class Response {
 		}
 		// Only add charset when set, might not be for binary content types
 		if ($this->charset !== null) {
-			$contentType .= "; charset=$charset";
+			$contentType .= "; charset={$this->charset}";
 		}
 		$this->setHeader('Content-Type', $contentType);
 	}

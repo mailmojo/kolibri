@@ -179,7 +179,9 @@ class Request implements ArrayAccess {
 	 * @param array $params		An associated array with parameters.
 	 */
 	public function putAll ($params) {
-		$this->params = array_merge($this->params, $params);
+		foreach ($params as $key => $value) {
+			$this->params[$key] = $value;
+		}
 	}
 
 	/**
