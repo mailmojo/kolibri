@@ -119,6 +119,10 @@ class XmlGenerator {
 		// Prepare the containing element if necessary
 		if (!$container instanceof DOMNode) {
 			$container = $this->createElement($container, is_scalar($data));
+			// Handle failed element creation gracefully
+			if ($container === null) {
+				return null;
+			}
 		}
 
 		if (is_scalar($data)) {
@@ -229,6 +233,14 @@ class XmlGenerator {
 	private function createElement ($name, $forScalar) {
 		if (!is_string($name)) {
 			$name = ($forScalar ? self::SCALAR_ELEMENT_NAME : self::COMPLEX_ELEMENT_NAME);
+		}
+		/*
+		 * Ignore obviously invalid element names (starts with numbers) without throwing
+		 * an exception. Returning with NULL will result in the data value being skipped,
+		 * which is better behaviour than trying to fix the element name.
+		 */
+		else if (preg_match('/^[0-9]/', $name) == 1) {
+			return null;
 		}
 		
 		try {
