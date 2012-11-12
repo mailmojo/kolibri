@@ -56,8 +56,8 @@ class AuthInterceptor extends AbstractInterceptor {
 
 			if (!$this->isUserAuthenticated($user)) {
 				if ($action instanceof MessageAware) {
-					$action->msg->setMessage('You must log in to access
-							the page you requested.', false);
+					$action->msg->setMessage('Du må logge inn for å komme til
+							siden du etterspurte.', false);
 				}
 
 				return $this->denyAccess($request, true);
