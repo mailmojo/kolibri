@@ -53,7 +53,7 @@ class ValidateableModelProxy extends ModelProxy {
 			foreach ($model as $property) {
 				if ($property instanceof ValidateableModelProxy) {
 					// Recurse to validate inner models
-					$property->validate();
+					$isValid = $property->validate() && $isValid;
 				}
 			}
 		}
