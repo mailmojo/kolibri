@@ -138,8 +138,7 @@ class PostgreSqlConnection extends DatabaseConnection {
 		// Interpolate any parameters into query
 		$preparedQuery = $this->prepareQuery($query, $params);
 
-		if (pg_send_query($this->connection, $preparedQuery)) {
-			$resultResource = pg_get_result($this->connection);
+		if (($resultResource = pg_query($this->connection, $preparedQuery)) !== false) {
 			$resultStatus = pg_result_status($resultResource);
 
 			if ($resultStatus !== PGSQL_FATAL_ERROR) {
@@ -154,7 +153,7 @@ class PostgreSqlConnection extends DatabaseConnection {
 
 		throw new DatabaseException('Query could not be sent to the database. Connection lost?');
 	}
-	
+
 	/**
 	 * Sends several queries (separated by semicolons) to the database, and returns the number
 	 * of rows affected.
@@ -216,7 +215,7 @@ class PostgreSqlConnection extends DatabaseConnection {
 
 	/**
 	 * Escapes a value to make it safe for use in SQL queries.
-	 * 
+	 *
 	 * Converts null to SQL NULL string, boolean values to accepted string representations, and
 	 * escapes necessary characters in strings. Pure numeric values are simply returned as is.
 	 *
