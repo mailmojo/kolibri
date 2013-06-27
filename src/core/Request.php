@@ -160,7 +160,7 @@ class Request implements ArrayAccess {
 	 * @return string	Query string.
 	 */
 	public function getQueryString () {
-		return $_SERVER['QUERY_STRING'];
+		return !empty($_SERVER['QUERY_STRING']) ? $_SERVER['QUERY_STRING'] : '';
 	}
 
 	/**
