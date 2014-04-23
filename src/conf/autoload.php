@@ -34,6 +34,7 @@ $autoloadClasses = array(
 		'Proxy'                     => '/models/Proxy.php',
 		'Validateable'              => '/models/Validateable.php',
 		'ValidateableModelProxy'    => '/models/ValidateableModelProxy.php',
+		'EmptyResponse'              => '/response/EmptyResponse.php',
 		'FileResponse'              => '/response/FileResponse.php',
 		'JsonResponse'              => '/response/JsonResponse.php',
 		'NotFoundResponse'          => '/response/NotFoundResponse.php',

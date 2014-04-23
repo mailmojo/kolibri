@@ -3,7 +3,7 @@
  * This class encapsulates information about the mapping to an action.
  * 
  * The mapping to an action consists of the name of the action class and the action method
- * within that class.
+ * within that class or a callable function.
  */
 class ActionMapping {
 	/**
@@ -30,7 +30,7 @@ class ActionMapping {
 	 * callable.
 	 *
 	 * @param string $actionPath	Full path to the action class.
-	 * @param string $actionMethod	Name of the action method in the action class.
+	 * @param string $actionMethod	Name of the action method in the action class, or an actual callable.
 	 */
 	public function __construct ($actionPath, $actionMethod) {
 		require($actionPath);
@@ -38,7 +38,7 @@ class ActionMapping {
 		$this->actionClass	= basename($actionPath, '.php');
 		$this->actionMethod	= $actionMethod;
 
-		if (!method_exists($this->actionClass, $actionMethod)) {
+		if (!is_callable($actionMethod) && !method_exists($this->actionClass, $actionMethod)) {
 			throw new Exception("No callable action method $actionMethod found in $actionPath");
 		}
 	}
