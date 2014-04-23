@@ -76,7 +76,9 @@ class DefaultActionMapper {
 	}
 
 	/**
-	 * Maps the request method to an action method. We currently only support GET and POST.
+	 * Maps the request method to an action method. We currently only support GET and POST,
+	 * and a very simple OPTIONS request that simply responds with GET and POST being allowed
+	 * even if the actual action might not support both.
 	 *
 	 * @param string $method	Request method.
 	 * @return string			Action method to use.
@@ -89,9 +91,15 @@ class DefaultActionMapper {
 		else if ($method == 'POST') {
 			return 'doPost';
 		}
-		else {
-			throw new Exception("Request method $method is not supported");
+		else if ($method == 'OPTIONS') {
+			return function ($request) {
+				return new EmptyResponse(array('Allow' => 'GET, POST'));
+			};
 		}
+
+		return function ($request) {
+			return new EmptyResponse(array('Allow' => 'GET, POST'), 405);
+		};
 	}
 
 	/**
