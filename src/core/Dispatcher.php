@@ -100,6 +100,12 @@ class Dispatcher {
 				return $result;
 			}
 		}
+
+		if (is_callable($this->actionMethod)) {
+			$fn = $this->actionMethod;
+			return $fn($this->getRequest());
+		}
+
 		return $this->action->{$this->actionMethod}($this->getRequest());
 	}
 
