@@ -137,6 +137,13 @@ class Request implements ArrayAccess {
 	}
 
 	/**
+	 * Returns the parameters.
+	 */
+	public function getParams () {
+		return $this->params;
+	}
+
+	/**
 	 * Returns the URI of the request.
 	 *
 	 * @return string	Request URI.
