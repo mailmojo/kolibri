@@ -10,6 +10,7 @@ require(ROOT . '/database/PostgreSqlResultSet.php');
  *   [database]
  *   type = "PostgreSql"
  *   host = ""			; Hostname of database server, omit to use local Unix domain socket
+ *   port = ""			; Port, omit to use default of 5432
  *   name = ""			; Name of database to connect to
  *   username = ""		; PostgreSQL username
  *   password = ""		; Password of PostgreSQL user
@@ -25,6 +26,7 @@ require(ROOT . '/database/PostgreSqlResultSet.php');
  */
 class PostgreSqlConnection extends DatabaseConnection {
 	private $host;
+	private $port;
 	private $username;
 	private $password;
 	private $database;
@@ -38,6 +40,7 @@ class PostgreSqlConnection extends DatabaseConnection {
 	 */
 	public function __construct ($conf) {
 		$this->host       = isset($conf['host']) ? $conf['host'] : null;
+		$this->port       = isset($conf['port']) ? $conf['port'] : null;
 		$this->username   = $conf['username'];
 		$this->password   = $conf['password'];
 		$this->database   = $conf['name'];
@@ -50,7 +53,8 @@ class PostgreSqlConnection extends DatabaseConnection {
 	 */
 	public function connect () {
 		$host = $this->host === null ? '' : 'host=' . $this->host;
-		$connectionString = "$host dbname={$this->database} user={$this->username} "
+		$port = $this->port === null ? '' : 'port=' . $this->port;
+		$connectionString = "$host $port dbname={$this->database} user={$this->username} "
 				. "password={$this->password}";
 		$this->connection = pg_connect($connectionString);
 		return true;
@@ -154,7 +158,7 @@ class PostgreSqlConnection extends DatabaseConnection {
 
 		throw new DatabaseException('Query could not be sent to the database. Connection lost?');
 	}
-	
+
 	/**
 	 * Sends several queries (separated by semicolons) to the database, and returns the number
 	 * of rows affected.
@@ -216,7 +220,7 @@ class PostgreSqlConnection extends DatabaseConnection {
 
 	/**
 	 * Escapes a value to make it safe for use in SQL queries.
-	 * 
+	 *
 	 * Converts null to SQL NULL string, boolean values to accepted string representations, and
 	 * escapes necessary characters in strings. Pure numeric values are simply returned as is.
 	 *
