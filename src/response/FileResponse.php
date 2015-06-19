@@ -2,14 +2,14 @@
 /**
  * Response implementation where a file is returned to the client. The contents may come
  * from an actual file or data passed to this class.
- */	
+ */
 class FileResponse extends Response {
 	private $outputName;
 	private $dataIsFile;
-	
+
 	/**
 	 * Initialize this response.
-	 * 
+	 *
 	 * @param mixed $data        File data to return or a file name of the file.
 	 * @param string $mime       MIME-type of the file.
 	 * @param string $charset    Charset of the file.
@@ -59,7 +59,7 @@ class FileResponse extends Response {
 			readfile($this->data);
 		}
 		else {
-			$this->setHeader('Content-Length', mb_strlen($this->data));
+			$this->setHeader('Content-Length', strlen($this->data));
 			$this->sendHeaders();
 			echo $this->data;
 		}
