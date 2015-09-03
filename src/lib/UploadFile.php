@@ -66,7 +66,7 @@ class UploadFile extends File {
 	 * @param string $to	File name or path to move to.
 	 * @return bool			<code>TRUE</code> on success, <code>FALSE</code> on failure.
 	 */
-	public function move ($to) {
+	public function move ($to, $keepOriginal = false) {
 		if ($this->isTemp) {
 			if (is_dir($to)) {
 				$to = $this->appendFilenameToPath($to, $this->getOriginalName());
@@ -78,7 +78,7 @@ class UploadFile extends File {
 			}
 		}
 		else {
-			$status = parent::move($to);
+			$status = parent::move($to, $keepOriginal);
 		}
 
 		return $status;
