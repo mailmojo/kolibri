@@ -20,7 +20,7 @@ require(ROOT . '/models/DataAccessProxy.php');
  * not rely on for access to a specific model unless you know only one model instance is held. What
  * this means is that any methods that works on the <em>current model</em> should only be called
  * when you have only instantiated or retrieved a single model instance.
- * 
+ *
  * This class also implements <code>ArrayAccess</code> and <code>IteratorAggregates</code> which
  * makes it possible to treat the collection of models in the proxy as if it was a regular array.
  */
@@ -42,7 +42,7 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 	 * @var object
 	 */
 	protected $current;
-	
+
 	/**
 	 * Flag to indicate whether we have proxified inner models.
 	 * @var bool
@@ -69,7 +69,14 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 			$this->setModel($model);
 		}
 	}
-	
+
+	/**
+	 * Proxy the current model's __toString().
+	 */
+	public function __toString () {
+		return (string) $this->current;
+	}
+
 	/**
 	 * Iterates the contained models and updates dirty models or inserts new models. The number of
 	 * actually saved rows in the database is returned.
@@ -83,20 +90,20 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 			// XXX: Do we want to post-pone this for saveModel, ie if inner models could be DP?
 			return 0;
 		}
-		
+
 		$this->proxifyInnerModels();
 		$numAffected = 0;
-		
+
 		foreach ($this->models as $model) {
 			// Checks if this model is approved for processing to continue
 			if (!$this->preSaveModel($model)) {
 				// XXX: Should we return false, or make more noise with an exception?
 				return false;
 			}
-			
+
 			// Process this model (save and/or validate)
 			$numAffected += $this->saveModel($model);
-			
+
 			foreach ($model as $property) {
 				if ($property instanceof ModelProxy) {
 					// Propagate primary key of $model into $property and recurse save
@@ -105,7 +112,7 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 				}
 			}
 		}
-		
+
 		return $numAffected;
 	}
 
@@ -144,7 +151,7 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 
 		return $numAffected;
 	}
-	
+
 	/**
 	 * Checks if the specified property on the current model is empty.
 	 *
@@ -324,7 +331,7 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 		}
 		return $this->models;
 	}
-	
+
 	/**
 	 * Flag the model as dirty, as changes have been made to its state.
 	 *
@@ -335,17 +342,17 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 	 */
 	protected function modelChanged ($model, $newValue = null) {
 		$model->isDirty = true;
-		
+
 		if ($newValue === null || is_array($newValue) || is_object($newValue)) {
 			$this->isInnerProxied = false;
 		}
 	}
-	
+
 	/**
 	 * Calls any existing <code>preSave()</code> method on the supplied model before
 	 * <code>saveModel()</code> is invoked. This makes it possible for the model itself to hook
 	 * into the save process.
-	 *  
+	 *
 	 * @param object $model	The model to invoke any preSave() on.
 	 * @return bool			<code>true</code> if we should call saveModel() next,
 	 * 						<code>false</code> if we should stop the saving.
@@ -357,7 +364,7 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 		}
 		return true;
 	}
-	
+
 	/**
 	 * Saves the supplied model by calling the <code>update()</code> DAO method if the model
 	 * isn't new and changes have been made on its data, or the <code>insert()</code> DAO
@@ -368,7 +375,7 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 	 */
 	protected function saveModel ($model) {
 		$numAffected = 0;
-		
+
 		if (!empty($model->original)) {
 			/*
 			 * We assume the model is dirty unless explicitly flagged as non-dirty. This is a
@@ -384,11 +391,11 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 		else {
 			$numAffected = $this->objects->insert($model);
 		}
-		
+
 		$model->isDirty = false;
 		return $numAffected;
 	}
-	
+
 	/**
 	 * Initializes a proxy to the data access object of the model, if it is <code>DataProvided</code>.
 	 *
@@ -399,7 +406,7 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 			$this->objects = new DataAccessProxy($this, get_class($model));
 		}
 	}
-	
+
 	/**
 	 * Iterates over the contained models and their properties, and proxifies any inner models.
 	 * This makes it possible for us to automatically validate and save them along with the
@@ -409,7 +416,7 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 		if ($this->isInnerProxied) {
 			return;
 		}
-		
+
 		foreach ($this->models as $model) {
 			foreach ($model as &$innerModel) {
 				/*
@@ -426,10 +433,10 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 				}
 			}
 		}
-		
+
 		$this->isInnerProxied = true;
 	}
-	
+
 	/**
 	 * Checks every model object in a ModelProxy for the existance of a foreign key to the supplied
 	 * model and updates it's value if it's empty.
