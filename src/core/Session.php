@@ -2,7 +2,7 @@
 /**
  * This class encapsulates information about a HTTP session. The session data is not stored
  * within an instance itself, but the global <code>$_SESSION</code> array is abstracted.
- * 
+ *
  * The <code>SessionInterceptor</code> should generally be used when using sessions, as it
  * takes care of instantiating this class and injecting it into the request.
  */
@@ -14,13 +14,20 @@ class Session implements ArrayAccess, IteratorAggregate {
 	private $started;
 
 	// TODO: Add session settings etc. here
-	
+
 	/**
 	 * Creates an instance of this class. We support lazy-loading of the session, which means
 	 * that we don't start the session here unless the user is already in an active session
 	 * (determined by a session cookie).
 	 */
 	public function __construct () {
+		$settings = Config::get('session');
+		session_set_cookie_params(
+			$settings['cookie.lifetime'], $settings['cookie.path'],
+			$settings['cookie.domain'], $settings['cookie.secure'],
+			$settings['cookie.httponly']
+		);
+
 		if (isset($_COOKIE['PHPSESSID'])) {
 			$this->start();
 		}
@@ -43,7 +50,7 @@ class Session implements ArrayAccess, IteratorAggregate {
 		}
 		$this->started = true;
 	}
-	
+
 	/**
 	 * Checks if a specific session parameter exists.
 	 *
@@ -56,7 +63,7 @@ class Session implements ArrayAccess, IteratorAggregate {
 
 	/**
 	 * Returns the value of the session data with the specified key.
-	 * 
+	 *
 	 * @param string $key	Key to the value to return.
 	 * @return string		Value of the data, or <code>null</code> if not found.
 	 */
@@ -94,23 +101,23 @@ class Session implements ArrayAccess, IteratorAggregate {
 
 	/**
 	 * Returns the value of the session data with the specified key.
-	 * 
+	 *
 	 * @param string $key	Key to the value to return.
 	 * @return string		Value of the data, or <code>null</code> if not found.
 	 */
 	public function get ($key) {
 		return (isset($_SESSION[$key]) ? $_SESSION[$key] : null);
 	}
-	
+
 	/**
 	 * Returns a reference to all data in this session.
-	 * 
+	 *
 	 * @return array	The session data.
 	 */
 	public function &getAll () {
 		return $_SESSION;
 	}
-	
+
 	/**
 	 * Puts a key/value pair into the session.
 	 *
@@ -123,7 +130,7 @@ class Session implements ArrayAccess, IteratorAggregate {
 		}
 		$_SESSION[$key] = $value;
 	}
-	
+
 	/**
 	 * Removes the value associated with the specified key from the session.
 	 *
@@ -134,7 +141,7 @@ class Session implements ArrayAccess, IteratorAggregate {
 			unset($_SESSION[$key]);
 		}
 	}
-	
+
 	/**
 	 * Invalidates this session. Any data in the session is destroyed.
 	 */
