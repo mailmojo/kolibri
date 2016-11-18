@@ -8,8 +8,7 @@ class EmailValidator {
 
 	public function validate ($property, $rules) {
 		if (!empty($this->model->$property)) {
-			if (preg_match('/^\A[a-z0-9_+\-]+(\.[a-z0-9_+\-]+)*@((((([a-z0-9]{1}[a-z0-9\-]{0,62}[a-z0-9]{1})|[a-z])\.)+[a-z]{2,6})|(\d{1,3}\.){3}\d{1,3}(\:\d{1,5})?)$/ui',
-					$this->model->$property) != 1) {
+			if (preg_match('/^\A[^@]+@[^.@][^@]*\.[^@]+$/ui', $this->model->$property) != 1) {
 				return array('email' => $rules['name']);
 			}
 		}
