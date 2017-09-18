@@ -17,6 +17,7 @@ define('IS_DATETIME', 1024);
 define('IS_HEX', 2048);
 define('IS_FILE', 4096);
 define('IN_DB', 8192);
+define('IS_PHONE', 16384);
 
 /*
  * Maps validation rules to validator classes used to perform the validation.
@@ -35,7 +36,8 @@ $validators = array(
 	IS_DATETIME	=> 'DateTimeValidator',
 	IS_HEX      => 'HexValidator',
 	IS_FILE     => 'FileValidator',
-	IN_DB       => 'InDbValidator'
+	IN_DB       => 'InDbValidator',
+	IS_PHONE    => 'PhoneValidator',
 );
 
 /*
@@ -63,6 +65,7 @@ $validationMessages = array(
 	'file_ini_size' => '%s overstiger maksimal tillatt filstørrelse.',
 	'file_partial'  => '%s ble ikke fullestendig opplastet. Vennligst prøv igjen.',
 	'type'          => '%s må være en av følgende filtyper: %s',
-	'in_db'         => '%s «%s» eksisterer ikke.'
+	'in_db'         => '%s «%s» eksisterer ikke.',
+	'phone'         => '%s må være et gyldig telefonnummer.',
 );
 ?>
