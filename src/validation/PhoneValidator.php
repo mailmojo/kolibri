@@ -7,6 +7,10 @@ class PhoneValidator {
 	}
 
 	public function validate ($property, $rules) {
+		if (empty($this->model->$property)) {
+			return true;
+		}
+
 		try {
 			$phoneNumberUtil = \libphonenumber\PhoneNumberUtil::getInstance();
 			$region = !empty($rules['region']) ? $rules['region'] : null;
