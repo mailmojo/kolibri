@@ -258,9 +258,11 @@ class PostgreSqlConnection extends DatabaseConnection {
 		if ($value === null) {
 			return $nullValue;
 		}
+
 		if (is_bool($value)) {
 			return ($value ? 'true' : 'false');
 		}
+
 		if (is_array($value)) {
 			$innerDelims = array_fill(0, count($value), $delimiterChar);
 			$innerNulls = array_fill(0, count($value), $nullValue);
@@ -270,13 +272,14 @@ class PostgreSqlConnection extends DatabaseConnection {
 					array($this, 'escapeCopyValue'), $value, $innerDelims, $innerNulls)
 			) . '}';
 		}
-		if (get_magic_quotes_gpc()) {
-			$value = stripslashes($value);
-		}
+
 		return strtr($value, array(
-			'}' => '\\\}',
-			'{' => '\\\{',
-			'"' => '\\\"',
+			"\n" => '\\\n',
+			"\r" => '\\\r',
+			'}' => '\\}',
+			'{' => '\\{',
+			'"' => '\\"',
+			'\\' => '\\\\',
 			$delimiterChar => '\\'.$delimiterChar));
 	}
 
