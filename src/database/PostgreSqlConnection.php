@@ -215,7 +215,18 @@ class PostgreSqlConnection extends DatabaseConnection {
 
 			$rows = $escapedRows;
 		}
-		return pg_copy_from($this->connection, $table, $rows, $delimiter, $null);
+
+		$result = pg_copy_from($this->connection, $table, $rows, $delimiter, $null);
+
+		if (!$result) {
+			$lastError = pg_last_error();
+			$this->rollback();
+
+			$query = "COPY $table FROM \n" . implode("\n", $rows);
+			throw new SqlException($lastError, $query);
+		}
+
+		return $result;
 	}
 
 	/**
