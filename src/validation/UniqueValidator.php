@@ -61,7 +61,7 @@ class UniqueValidator {
 			}
 
 			$query = "SELECT 1 FROM $relation WHERE "
-				. ($sensitive ? "$property = $valuePlaceholder " : "lower($property) = lower($valuePlaceholder) ")
+				. ($sensitive ? "$property = $valuePlaceholder " : "lower($property) = lower($valuePlaceholder::text) ")
 				. $whereString;
 			if ($db->getColumn($query, $whereValues)) {
 				// The query found a row -- it's not unique
