@@ -298,7 +298,7 @@ class PostgreSqlConnection extends DatabaseConnection {
 	 * Prepares the connection before a query is sent.
 	 */
 	private function prepareConnection () {
-		if (!$this->connection) {
+		if (!$this->connection || pg_ping($this->connection) === false) {
 			$this->connect();
 		}
 
