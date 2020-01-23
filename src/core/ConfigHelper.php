@@ -260,7 +260,7 @@ class ConfigHelper {
 				 * If the interceptor or stack name is prefixed by an exclamation mark it
 				 * means the interceptor(s) should not be active for the current URI.
 				 */
-				if ($exclude = ($name{0} == '!')) {
+				if ($exclude = (substr($name, 0, 1) == '!')) {
 					$name = substr($name, 1);
 				}
 				$prefix = ($exclude ? '!' : '');

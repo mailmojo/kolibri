@@ -254,9 +254,6 @@ class PostgreSqlConnection extends DatabaseConnection {
 				. ']';
 		}
 
-		if (get_magic_quotes_gpc()) {
-			$value = stripslashes($value);
-		}
 		return "'" . pg_escape_string($value) . "'";
 	}
 

@@ -16,7 +16,7 @@ require(ROOT . '/database/ObjectBuilder.php');
  * object, you map placeholders to properties in the object as the following example shows:
  *
  *	 SELECT username, name FROM users WHERE username = :username AND password = :password
- * 
+ *
  * Methods accepting class names to specify object nesting conforms to the rules of
  * <code>ObjectBuilder</code>. See its class documentation for details and examples.
  */
@@ -101,7 +101,7 @@ abstract class DatabaseConnection {
 
 	/**
 	 * Escapes a value to make it safe for use in SQL queries. Only used internally.
-	 * 
+	 *
 	 * Specific implementations can choose to convert types as needed as well, such as booleans for
 	 * databases having native boolean support.
 	 *
@@ -201,7 +201,7 @@ abstract class DatabaseConnection {
 			/*
 			 * Regexp to match placeholders according to the rules of PHP variables, and excluding
 			 * double colons :: which indicates a cast in SQL and is thus not a placeholder.
-			 * We also include the first character after the placeholder, 
+			 * We also include the first character after the placeholder,
 			 */
 			$allowedChars = '/[^:]:([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)(\W?)/';
 			$matches = array();
@@ -221,7 +221,7 @@ abstract class DatabaseConnection {
 				if (property_exists($params, $propertyName)) {
 					$search[] = $match;
 					// The first character in the regexp match should not be replaced, so we prepend it
-					$replace[] = $match{0} . $this->escapeValue($params->$propertyName) . $matches[2][$idx];
+					$replace[] = substr($match, 0, 1) . $this->escapeValue($params->$propertyName) . $matches[2][$idx];
 				}
 				else {
 					throw new SqlException('No property in parameter object ' . get_class($params)
