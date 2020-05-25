@@ -2,7 +2,7 @@
 /**
  * Provides the implementation of a response using a PHP file as a template for creating
  * the actual output.
- */	
+ */
 class PhpResponse extends Response {
 	private $phpTemplate;
 
@@ -33,7 +33,7 @@ class PhpResponse extends Response {
 	 */
 	public function render ($request) {
 		$this->sendHeaders();
-		
+
 		$data = array();
 		foreach ($this->data as $key => $value) {
 			$data[$key] = $value;
@@ -43,7 +43,10 @@ class PhpResponse extends Response {
 		 * Create a sandbox function which extracts all data to it's local scope, instead of
 		 * letting the view template run inside the PhpResult object scope.
 		 */
-		$sandbox = create_function('$request, $config, $_d, $_t', 'extract($_d); include($_t);');
+		$sandbox = function ($request, $config, $_d, $_t) {
+			extract($_d);
+			include($_t);
+		};
 		$sandbox($request, Config::get(), $data, $this->phpTemplate);
 	}
 }
