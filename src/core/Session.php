@@ -22,11 +22,14 @@ class Session implements ArrayAccess, IteratorAggregate {
 	 */
 	public function __construct () {
 		$settings = Config::get('session');
-		session_set_cookie_params(
-			$settings['cookie.lifetime'], $settings['cookie.path'],
-			$settings['cookie.domain'], $settings['cookie.secure'],
-			$settings['cookie.httponly']
-		);
+		session_set_cookie_params([
+			'lifetime' => $settings['cookie.lifetime'],
+			'path' => $settings['cookie.path'],
+			'domain' => $settings['cookie.domain'],
+			'secure' => $settings['cookie.secure'],
+			'httponly' => $settings['cookie.httponly'],
+			'samesite' => $settings['cookie.samesite'],
+		]);
 
 		if (isset($_COOKIE['PHPSESSID'])) {
 			$this->start();
