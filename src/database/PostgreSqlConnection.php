@@ -249,9 +249,16 @@ class PostgreSqlConnection extends DatabaseConnection {
 			return $value;
 		}
 		if (is_array($value)) {
-			return 'ARRAY['
-				. implode(', ', array_map(array($this, 'escapeValue'), $value))
-				. ']';
+			// Check if regular sequential array
+			if (array_keys($value) === range(0, count($value) - 1)) {
+				return 'ARRAY['
+					. implode(', ', array_map(array($this, 'escapeValue'), $value))
+					. ']';
+			}
+			// Else it's an associative array we should rather JSON encode to PostgreSQL
+			else {
+				return "'" . json_encode($value) . "'";
+			}
 		}
 
 		return "'" . pg_escape_string($value) . "'";
