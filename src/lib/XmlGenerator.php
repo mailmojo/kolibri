@@ -31,9 +31,9 @@ class XmlGenerator {
 	// Default element names for scalar and complex data
 	const SCALAR_ELEMENT_NAME = 'value';
 	const COMPLEX_ELEMENT_NAME = 'data';
-	
+
 	private $document;
-	
+
 	/**
 	 * Creates a new XML generator. An XML document is immediately created with a root element.
 	 *
@@ -50,7 +50,7 @@ class XmlGenerator {
 			throw new Exception("Invalid name for the XML document's root element: $rootElement");
 		}
 	}
-	
+
 	/**
 	 * Returns the DOMDocument for the generated XML structure.
 	 *
@@ -59,7 +59,7 @@ class XmlGenerator {
 	public function getDom () {
 		return $this->document;
 	}
-	
+
 	/**
 	 * Returns the generated XML as a string.
 	 *
@@ -68,7 +68,7 @@ class XmlGenerator {
 	public function getXml () {
 		return $this->document->saveXML();
 	}
-	
+
 	/**
 	 * Adds more data to the XML document. If you specify a container name, the data will be
 	 * wrapped in an XML element of that name, otherwise the data will be appended directly
@@ -84,7 +84,7 @@ class XmlGenerator {
 	 */
 	public function append ($data, $container = null) {
 		if ($data === null) return;
-		
+
 		// If no container element name is specified, append directly to the root element
 		if ($container === null) {
 			$container = $this->document->documentElement;
@@ -92,9 +92,9 @@ class XmlGenerator {
 		else if (!is_string($container)) {
 			throw new Exception('Containing element name must be a string.');
 		}
-		
+
 		$resultNode = $this->build($data, $container);
-		
+
 		// When a container element is specified we need to append it to the root element after it's created
 		if ($resultNode !== null && $resultNode !== $container) {
 			$this->document->documentElement->appendChild($resultNode);
@@ -136,7 +136,7 @@ class XmlGenerator {
 
 			$element = $this->buildComplex($data, $container);
 		}
-		
+
 		return $element;
 	}
 
@@ -153,16 +153,20 @@ class XmlGenerator {
 	 */
 	private function buildComplex ($data, $container) {
 		static $emptyArray = array();
-		
+
 		$dataIsObject = is_object($data);
-		
+
+		if (is_object($data) && method_exists($data, 'extractModelProperties')) {
+			$data = $data->extractModelProperties();
+		}
+
 		// Iterate through the array values or object properties
 		foreach ($data as $key => $value) {
 			// Skip NULL values, empty strings and empty arrays
 			if ($value === null || $value === '' || $value === $emptyArray) continue;
 
 			$elementName = null;
-			
+
 			/*
 			 * When $data is an object we always use the property names as element names,
 			 * since property names are always safe element names, and strongly
@@ -181,15 +185,15 @@ class XmlGenerator {
 			}
 
 			$element = $this->build($value, $elementName);
-			
+
 			if ($element !== null) {
 				$container->appendChild($element);
 			}
 		}
-		
+
 		return ($container->hasChildNodes() ? $container : null);
 	}
-	
+
 	/**
 	 * Builds an XML representation of a scalar variable (number, boolean or string).
 	 *
@@ -214,11 +218,11 @@ class XmlGenerator {
 
 			$child = $this->document->createTextNode($value);
 		}
-		
+
 		$container->appendChild($child);
 		return $container;
 	}
-	
+
 	/**
 	 * Wrapper for creating a DOM element and catching any exceptions for invalid characters in
 	 * element name etc.
@@ -242,14 +246,14 @@ class XmlGenerator {
 		else if (preg_match('/^[0-9]/', $name) == 1) {
 			return null;
 		}
-		
+
 		try {
 			$element = $this->document->createElement($name);
 		}
 		catch (DOMException $e) {
 			throw new Exception("Invalid character in XML element name: $name");
 		}
-		
+
 		return $element;
 	}
 }
