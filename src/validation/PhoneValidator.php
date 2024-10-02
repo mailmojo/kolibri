@@ -15,15 +15,18 @@ class PhoneValidator {
 			$phoneNumberUtil = \libphonenumber\PhoneNumberUtil::getInstance();
 			$region = !empty($rules['region']) ? $rules['region'] : null;
 			$phoneNumber = $phoneNumberUtil->parse($this->model->$property, $region);
-
 			if (!empty($rules['type'])) {
 				$type = $this->mapType($rules['type']);
-				$result = $phoneNumberUtil->isPossibleNumberForTypeWithReason(
-					$phoneNumber, $type
-				) === \libphonenumber\ValidationResult::IS_POSSIBLE;
+				$result = $phoneNumberUtil->getNumberType($phoneNumber) === $type;
 			}
 			else {
 				$result = true;
+			}
+
+			if ($result === true && !empty($rules['format'])) {
+				$format = $this->mapFormat($rules['format']);
+				$this->model->$property = $phoneNumberUtil->format(
+					$phoneNumber, $format);
 			}
 		}
 		catch (\libphonenumber\NumberParseException $e) {
@@ -31,6 +34,15 @@ class PhoneValidator {
 		}
 
 		return $result === true ? true : array('phone' => $rules['name']);
+	}
+
+	private function mapFormat ($format) {
+		switch ($format) {
+			case 'E614':
+				return \libphonenumber\PhoneNumberFormat::E164;
+			default:
+				return \libphonenumber\PhoneNumberFormat::NATIONAL;
+		}
 	}
 
 	private function mapType ($type) {
