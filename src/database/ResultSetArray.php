@@ -28,6 +28,7 @@ abstract class ResultSetArray implements ResultSet, ArrayAccess, Countable {
 	 * @param mixed $offset Row number to check.
 	 * @return bool         <code>TRUE</code> if the row exists, <code>FALSE</code> if not.
 	 */
+	#[\ReturnTypeWillChange]
 	public function offsetExists ($offset) {
 		return $offset > -1 && $offset < $this->count() ? true : false;
 	}
@@ -35,6 +36,7 @@ abstract class ResultSetArray implements ResultSet, ArrayAccess, Countable {
 	/**
 	 * Denies access to set rows into this result set.
 	 */
+	#[\ReturnTypeWillChange]
 	public function offsetSet ($offset, $value) {
 		throw new DatabaseException('This result set is read-only.');
 	}
@@ -42,6 +44,7 @@ abstract class ResultSetArray implements ResultSet, ArrayAccess, Countable {
 	/**
 	 * Denies access to unset rows in this result set.
 	 */
+	#[\ReturnTypeWillChange]
 	public function offsetUnset ($offset) {
 		throw new DatabaseException('This result set is read-only.');
 	}
@@ -51,6 +54,7 @@ abstract class ResultSetArray implements ResultSet, ArrayAccess, Countable {
 	 *
 	 * @return array Current row.
 	 */
+	#[\ReturnTypeWillChange]
 	public function current () {
 		return $this->offsetGet($this->position);
 	}
@@ -60,6 +64,7 @@ abstract class ResultSetArray implements ResultSet, ArrayAccess, Countable {
 	 *
 	 * @return int Current positon.
 	 */
+	#[\ReturnTypeWillChange]
 	public function key () {
 		return $this->position;
 	}
@@ -67,6 +72,7 @@ abstract class ResultSetArray implements ResultSet, ArrayAccess, Countable {
 	/**
 	 * Advances the current row position.
 	 */
+	#[\ReturnTypeWillChange]
 	public function next () {
 		$this->position++;
 	}
@@ -74,6 +80,7 @@ abstract class ResultSetArray implements ResultSet, ArrayAccess, Countable {
 	/**
 	 * Rewinds the current row position to the beginning.
 	 */
+	#[\ReturnTypeWillChange]
 	public function rewind () {
 		$this->position = 0;
 	}
@@ -83,6 +90,7 @@ abstract class ResultSetArray implements ResultSet, ArrayAccess, Countable {
 	 *
 	 * @return bool
 	 */
+	#[\ReturnTypeWillChange]
 	public function valid () {
 		return $this->offsetExists($this->position);
 	}

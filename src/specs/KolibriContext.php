@@ -190,7 +190,7 @@ class KolibriContext extends PHPSpec_Context {
 	 * data are passed along to the request. This provides access to the <code>$request</code>,
 	 * <code>$response</code> and <code>$action</code> for the specs.
 	 */
-	public function get ($uri, array $params = null, array $session = null) {
+	public function get ($uri, ?array $params = null, ?array $session = null) {
 		if ($this->validActionClass('get')) {
 			$this->prepareEnvironment('GET', $uri, $session);
 			$this->request = new Request($params !== null ? $params : array(), array());
@@ -203,7 +203,7 @@ class KolibriContext extends PHPSpec_Context {
 	 * data are passed along to the request. This provides access to the <code>$request</code>,
 	 * <code>$response</code> and <code>$action</code> for the specs.
 	 */
-	public function post ($uri, array $params = null, array $session = null) {
+	public function post ($uri, ?array $params = null, ?array $session = null) {
 		if ($this->validActionClass('post')) {
 			$this->prepareEnvironment('POST', $uri, $session);
 			$this->request = new Request(array(), $params !== null ? $params : array());

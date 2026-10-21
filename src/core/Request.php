@@ -75,6 +75,7 @@ class Request implements ArrayAccess {
 	 * @param mixed $key		Request parameter to check.
 	 * @return bool				TRUE of the parameter is set, FALSE if not.
 	 */
+	#[\ReturnTypeWillChange]
 	public function offsetExists ($key) {
 		return isset($this->params[$key]);
 	}
@@ -85,6 +86,7 @@ class Request implements ArrayAccess {
 	 * @param mixed $key		Request parameter to retrieve.
 	 * @return mixed			The request parameter, or NULL if not set.
 	 */
+	#[\ReturnTypeWillChange]
 	public function offsetGet ($key) {
 		return $this->get($key);
 	}
@@ -92,6 +94,7 @@ class Request implements ArrayAccess {
 	/**
 	 * Modifying request parameters is disallowed.
 	 */
+	#[\ReturnTypeWillChange]
 	public function offsetSet ($key, $value) {
 		throw new Exception('Modifying request parameters not allowed.');
 	}
@@ -99,6 +102,7 @@ class Request implements ArrayAccess {
 	/**
 	 * Unsetting request parameters is disallowed.
 	 */
+	#[\ReturnTypeWillChange]
 	public function offsetUnset ($offset) {
 		throw new Exception('Unsetting request parameters not allowed.');
 	}

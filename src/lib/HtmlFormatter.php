@@ -12,7 +12,7 @@ class HtmlFormatter {
 	 */
 	var $disabled = array();
 
-	function HtmlFormatter ($text) {
+	function __construct ($text) {
 		$this->text = $text;
 		$this->formatted_text = '';
 	}
@@ -101,7 +101,7 @@ class TextBlock {
 	var $text;
 	var $formatter;
 
-	function TextBlock (&$formatter, $text) {
+	function __construct (&$formatter, $text) {
 		$this->formatter =& $formatter;
 		$this->text = $text;
 	}
@@ -369,7 +369,7 @@ class TextBlock {
 class HtmlBlock {
 	var $html;
 
-	function HtmlBlock ($html) {
+	function __construct ($html) {
 		$this->html = $html;
 	}
 

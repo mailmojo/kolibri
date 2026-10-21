@@ -53,15 +53,19 @@ class Fixtures implements ArrayAccess {
 	//
 	// Methods needed for ArrayAccess
 	//
+	#[\ReturnTypeWillChange]
 	public function offsetSet ($offset, $value) {
 		$this->fixtures[$offset] = $value;
 	}
+	#[\ReturnTypeWillChange]
 	public function offsetExists ($offset) {
 		return isset($this->fixtures[$offset]);
 	}
+	#[\ReturnTypeWillChange]
 	public function offsetUnset ($offset) {
 		unset($this->fixtures[$offset]);
 	}
+	#[\ReturnTypeWillChange]
 	public function offsetGet ($offset) {
 		return isset($this->fixtures[$offset]) ? $this->fixtures[$offset] : null;
 	}
