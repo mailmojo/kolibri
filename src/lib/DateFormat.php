@@ -105,18 +105,29 @@ class DateFormat {
 			if ($value === null) {
 				return $match[0];
 			}
-			return self::applyFlag($match[1], $value);
+			return self::applyFlag($match[1], $match[2], $value);
 		}, $this->formatString);
 	}
 
 	/**
 	 * Applies a glibc strftime() flag to a formatted value.
 	 *
-	 * @param string $flag	The flag character, or an empty string for none.
-	 * @param string $value	The formatted value.
-	 * @return string		The value with the flag applied.
+	 * @param string $flag		The flag character, or an empty string for none.
+	 * @param string $specifier	The specifier the value was formatted from.
+	 * @param string $value		The formatted value.
+	 * @return string			The value with the flag applied.
 	 */
-	private static function applyFlag ($flag, $value) {
+	private static function applyFlag ($flag, $specifier, $value) {
+		// Like glibc, only uppercasing applies to composite representations
+		if ($flag != '^' && strpos('cDFrRTxX', $specifier) !== false) {
+			return $value;
+		}
+		// The numeric offset of %z is padded and trimmed after its sign
+		if ($specifier == 'z' && ($flag == '-' || $flag == '_')) {
+			$offset = ltrim(substr($value, 1), '0') ?: '0';
+			return $value[0] . ($flag == '-' ? $offset : str_pad($offset, 4, ' ', STR_PAD_LEFT));
+		}
+
 		switch ($flag) {
 			case '-':
 				return is_numeric($value) ? (ltrim($value, '0 ') ?: '0') : $value;

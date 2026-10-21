@@ -23,9 +23,14 @@ function urlify ($string) {
 	);
 	
 	/*
-	 * Since PHP 8.2 strtolower() only lowercases ASCII, so it is safe on UTF-8 input and the
-	 * former round trip through ISO-8859-1 is no longer needed.
+	 * Drop characters outside ISO-8859-1, as the former round trip through that encoding did,
+	 * and invalid UTF-8 bytes. Since PHP 8.2 strtolower() only lowercases ASCII, so it is safe
+	 * on the remaining UTF-8 input.
 	 */
-	return strtr(strtolower($string), $translations);
+	$latin1 = preg_replace('/[^\x{00}-\x{FF}]/u', '', $string);
+	if ($latin1 === null) {
+		$latin1 = preg_replace('/[\x80-\xFF]/', '', $string);
+	}
+	return strtr(strtolower($latin1), $translations);
 }
 ?>
