@@ -95,9 +95,9 @@ class DateFormat {
 		/*
 		 * strftime() is deprecated since PHP 8.1, so its conversion specifiers are translated
 		 * here. Names and the preferred date/time representations follow the LC_TIME locale
-		 * through IntlDateFormatter, and match strftime() in the C locale otherwise. The '-'
-		 * flag removes padding, E and O modifiers are ignored, and unknown specifiers are
-		 * left as-is.
+		 * through IntlDateFormatter, and match strftime() in the C locale otherwise. The glibc
+		 * flags are supported (- no padding, _ pad with spaces, 0 pad with zeros, ^ uppercase,
+		 * # swap case), E and O modifiers are ignored, and unknown specifiers are left as-is.
 		 */
 		return preg_replace_callback('/%([-_0^#]?)[EO]?([a-zA-Z%])/',
 				function ($match) use ($time, $locale) {
@@ -105,11 +105,45 @@ class DateFormat {
 			if ($value === null) {
 				return $match[0];
 			}
-			if ($match[1] == '-' && is_numeric($value)) {
-				$value = ltrim($value, '0 ') ?: '0';
-			}
-			return $value;
+			return self::applyFlag($match[1], $value);
 		}, $this->formatString);
+	}
+
+	/**
+	 * Applies a glibc strftime() flag to a formatted value.
+	 *
+	 * @param string $flag	The flag character, or an empty string for none.
+	 * @param string $value	The formatted value.
+	 * @return string		The value with the flag applied.
+	 */
+	private static function applyFlag ($flag, $value) {
+		switch ($flag) {
+			case '-':
+				return is_numeric($value) ? (ltrim($value, '0 ') ?: '0') : $value;
+			case '_':
+				return preg_replace_callback('/^0+(?=\d)/', function ($zeros) {
+					return str_repeat(' ', strlen($zeros[0]));
+				}, $value);
+			case '0':
+				return preg_replace_callback('/^ +(?=\d)/', function ($spaces) {
+					return str_repeat('0', strlen($spaces[0]));
+				}, $value);
+			case '^':
+				return self::changeCase($value, true);
+			case '#':
+				return self::changeCase($value, $value !== self::changeCase($value, true));
+		}
+		return $value;
+	}
+
+	/**
+	 * Converts a string to upper or lower case, multibyte-safe when mbstring is available.
+	 */
+	private static function changeCase ($value, $upper) {
+		if (function_exists('mb_strtoupper')) {
+			return $upper ? mb_strtoupper($value) : mb_strtolower($value);
+		}
+		return $upper ? strtoupper($value) : strtolower($value);
 	}
 
 	/**
@@ -140,8 +174,8 @@ class DateFormat {
 						$styles[$specifier][1]);
 			}
 			if ($specifier == 'P') {
-				return mb_strtolower(self::intlFormat($locale, $time, IntlDateFormatter::NONE,
-						IntlDateFormatter::NONE, 'a'));
+				return self::changeCase(self::intlFormat($locale, $time, IntlDateFormatter::NONE,
+						IntlDateFormatter::NONE, 'a'), false);
 			}
 		}
 
