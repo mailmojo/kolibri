@@ -250,7 +250,13 @@ abstract class DatabaseConnection {
 		 * to simply use vsprintf().
 		 */
 		$transformedQuery = str_replace('?', '%s', $query);
-		$preparedQuery = @vsprintf($transformedQuery, $escapedParams);
+		try {
+			$preparedQuery = @vsprintf($transformedQuery, $escapedParams);
+		}
+		catch (ValueError $e) {
+			// Since PHP 8.0 vsprintf() throws on too few arguments instead of returning false
+			$preparedQuery = false;
+		}
 
 		if (!$preparedQuery) {
 			$numReplacements = substr_count($transformedQuery, '%s');

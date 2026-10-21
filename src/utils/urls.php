@@ -9,7 +9,6 @@
  * doesn't encode non-ASCII characters as %dd but translates them into simpler ASCII characters.
  */
 function urlify ($string) {
-    $iso_8859_1 = utf8_decode($string);
 	$translations = array(
 		' & '	=> '+',
 		' - '	=> '+',
@@ -23,6 +22,15 @@ function urlify ($string) {
 		'%' 	=> ''
 	);
 	
-	return utf8_encode(strtr(strtolower($iso_8859_1), $translations));
+	/*
+	 * Drop characters outside ISO-8859-1, as the former round trip through that encoding did,
+	 * and invalid UTF-8 bytes. Since PHP 8.2 strtolower() only lowercases ASCII, so it is safe
+	 * on the remaining UTF-8 input.
+	 */
+	$latin1 = preg_replace('/[^\x{00}-\x{FF}]/u', '', $string);
+	if ($latin1 === null) {
+		$latin1 = preg_replace('/[\x80-\xFF]/', '', $string);
+	}
+	return strtr(strtolower($latin1), $translations);
 }
 ?>

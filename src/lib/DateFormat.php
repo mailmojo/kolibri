@@ -89,7 +89,164 @@ class DateFormat {
 	 * @return string		Formatted date/time string.
 	 */
 	public function format ($date) {
-		return strftime($this->formatString, $date->getTime());
+		$time = $date->getTime();
+		$locale = self::getTimeLocale();
+
+		/*
+		 * strftime() is deprecated since PHP 8.1, so its conversion specifiers are translated
+		 * here. Names and the preferred date/time representations follow the LC_TIME locale
+		 * through IntlDateFormatter, and match strftime() in the C locale otherwise. The glibc
+		 * flags are supported (- no padding, _ pad with spaces, 0 pad with zeros, ^ uppercase,
+		 * # swap case), E and O modifiers are ignored, and unknown specifiers are left as-is.
+		 */
+		return preg_replace_callback('/%([-_0^#]?)[EO]?([a-zA-Z%])/',
+				function ($match) use ($time, $locale) {
+			$value = self::formatSpecifier($match[2], $time, $locale);
+			if ($value === null) {
+				return $match[0];
+			}
+			return self::applyFlag($match[1], $match[2], $value);
+		}, $this->formatString);
+	}
+
+	/**
+	 * Applies a glibc strftime() flag to a formatted value.
+	 *
+	 * @param string $flag		The flag character, or an empty string for none.
+	 * @param string $specifier	The specifier the value was formatted from.
+	 * @param string $value		The formatted value.
+	 * @return string			The value with the flag applied.
+	 */
+	private static function applyFlag ($flag, $specifier, $value) {
+		// Like glibc, only uppercasing applies to composite representations
+		if ($flag != '^' && strpos('cDFrRTxX', $specifier) !== false) {
+			return $value;
+		}
+		// The numeric offset of %z is padded and trimmed after its sign
+		if ($specifier == 'z' && ($flag == '-' || $flag == '_')) {
+			$offset = ltrim(substr($value, 1), '0') ?: '0';
+			return $value[0] . ($flag == '-' ? $offset : str_pad($offset, 4, ' ', STR_PAD_LEFT));
+		}
+
+		switch ($flag) {
+			case '-':
+				return is_numeric($value) ? (ltrim($value, '0 ') ?: '0') : $value;
+			case '_':
+				return preg_replace_callback('/^0+(?=\d)/', function ($zeros) {
+					return str_repeat(' ', strlen($zeros[0]));
+				}, $value);
+			case '0':
+				return preg_replace_callback('/^ +(?=\d)/', function ($spaces) {
+					return str_repeat('0', strlen($spaces[0]));
+				}, $value);
+			case '^':
+				return self::changeCase($value, true);
+			case '#':
+				return self::changeCase($value, $value !== self::changeCase($value, true));
+		}
+		return $value;
+	}
+
+	/**
+	 * Converts a string to upper or lower case, multibyte-safe when mbstring is available.
+	 */
+	private static function changeCase ($value, $upper) {
+		if (function_exists('mb_strtoupper')) {
+			return $upper ? mb_strtoupper($value) : mb_strtolower($value);
+		}
+		return $upper ? strtoupper($value) : strtolower($value);
+	}
+
+	/**
+	 * Formats a single strftime() conversion specifier.
+	 *
+	 * @param string $specifier	Specifier character, without the leading %.
+	 * @param int $time			Timestamp to format.
+	 * @param string $locale	ICU locale for names, or NULL for the C locale.
+	 * @return string			The formatted value, or NULL if the specifier is unknown.
+	 */
+	private static function formatSpecifier ($specifier, $time, $locale) {
+		if ($locale !== null) {
+			$patterns = array(
+				'a' => 'EEE', 'A' => 'EEEE', 'b' => 'MMM', 'h' => 'MMM', 'B' => 'MMMM',
+				'p' => 'a', 'r' => 'hh:mm:ss a',
+			);
+			$styles = array(
+				'c' => array(IntlDateFormatter::MEDIUM, IntlDateFormatter::MEDIUM),
+				'x' => array(IntlDateFormatter::SHORT, IntlDateFormatter::NONE),
+				'X' => array(IntlDateFormatter::NONE, IntlDateFormatter::MEDIUM),
+			);
+			if (isset($patterns[$specifier])) {
+				return self::intlFormat($locale, $time, IntlDateFormatter::NONE,
+						IntlDateFormatter::NONE, $patterns[$specifier]);
+			}
+			if (isset($styles[$specifier])) {
+				return self::intlFormat($locale, $time, $styles[$specifier][0],
+						$styles[$specifier][1]);
+			}
+			if ($specifier == 'P') {
+				return self::changeCase(self::intlFormat($locale, $time, IntlDateFormatter::NONE,
+						IntlDateFormatter::NONE, 'a'), false);
+			}
+		}
+
+		switch ($specifier) {
+			case '%': return '%';
+			case 'n': return "\n";
+			case 't': return "\t";
+			case 'e': return sprintf('%2d', date('j', $time));
+			case 'k': return sprintf('%2d', date('G', $time));
+			case 'l': return sprintf('%2d', date('g', $time));
+			case 'j': return sprintf('%03d', date('z', $time) + 1);
+			case 'C': return sprintf('%02d', intdiv((int) date('Y', $time), 100));
+			case 'g': return substr(date('o', $time), -2);
+			case 'U':
+				$weekday = (int) date('w', $time);
+				return sprintf('%02d', intdiv((int) date('z', $time) + 7 - $weekday, 7));
+			case 'W':
+				$weekday = ((int) date('w', $time) + 6) % 7;
+				return sprintf('%02d', intdiv((int) date('z', $time) + 7 - $weekday, 7));
+		}
+
+		$formats = array(
+			'a' => 'D', 'A' => 'l', 'b' => 'M', 'h' => 'M', 'B' => 'F', 'd' => 'd', 'm' => 'm',
+			'y' => 'y', 'Y' => 'Y', 'G' => 'o', 'H' => 'H', 'I' => 'h', 'M' => 'i', 'S' => 's',
+			'p' => 'A', 'P' => 'a', 'z' => 'O', 'Z' => 'T', 's' => 'U', 'u' => 'N', 'w' => 'w',
+			'V' => 'W', 'D' => 'm/d/y', 'F' => 'Y-m-d', 'R' => 'H:i', 'T' => 'H:i:s',
+			'r' => 'h:i:s A', 'x' => 'm/d/y', 'X' => 'H:i:s', 'c' => 'D M j H:i:s Y',
+		);
+		if (!isset($formats[$specifier])) {
+			return null;
+		}
+		if ($specifier == 'c') {
+			// strftime() pads the day of the month with a space in this representation
+			return str_replace(' ' . date('j', $time) . ' ',
+					sprintf(' %2d ', date('j', $time)), date($formats[$specifier], $time));
+		}
+		return date($formats[$specifier], $time);
+	}
+
+	/**
+	 * Formats a timestamp with IntlDateFormatter, using the default timezone.
+	 */
+	private static function intlFormat ($locale, $time, $dateType, $timeType, $pattern = null) {
+		$formatter = IntlDateFormatter::create($locale, $dateType, $timeType,
+				date_default_timezone_get(), null, $pattern);
+		return $formatter->format($time);
+	}
+
+	/**
+	 * Returns the ICU locale for the current LC_TIME locale, or NULL when that is the C or
+	 * POSIX locale or the intl extension is unavailable.
+	 *
+	 * @return string
+	 */
+	private static function getTimeLocale () {
+		if (!class_exists('IntlDateFormatter', false)) {
+			return null;
+		}
+		$locale = preg_replace('/[.@].*$/', '', (string) setlocale(LC_TIME, 0));
+		return ($locale === '' || $locale == 'C' || $locale == 'POSIX') ? null : $locale;
 	}
 }
 

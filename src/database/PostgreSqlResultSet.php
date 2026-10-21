@@ -27,6 +27,7 @@ class PostgreSqlResultSet extends ResultSetArray {
 	 * @param int $offset Row to retrieve.
 	 * @return array      The row found.
 	 */
+	#[\ReturnTypeWillChange]
 	public function offsetGet ($offset) {
 		return pg_fetch_assoc($this->result, $offset);
 	}
@@ -37,6 +38,7 @@ class PostgreSqlResultSet extends ResultSetArray {
 	 * @throws Exception If an error occured while retrieving the row count.
 	 * @return int       Number of rows.
 	 */
+	#[\ReturnTypeWillChange]
 	public function count () {
 		if (!isset($this->numRows)) {
 			if (($this->numRows = pg_num_rows($this->result)) == -1) {

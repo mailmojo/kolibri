@@ -226,6 +226,7 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 	 * @param mixed $offset Array offset to check.
 	 * @return bool         <code>TRUE</code> of the offset is set, <code>FALSE</code> if not.
 	 */
+	#[\ReturnTypeWillChange]
 	public function offsetExists ($offset) {
 		return isset($this->models[$offset]);
 	}
@@ -236,6 +237,7 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 	 * @param mixed $offset Array offset to retrieve model from.
 	 * @return mixed        A model if found at $offset, else <code>NULL</code>.
 	 */
+	#[\ReturnTypeWillChange]
 	public function offsetGet ($offset) {
 		return (isset($this->models[$offset]) ? $this->models[$offset] : null);
 	}
@@ -247,6 +249,7 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 	 * @param mixed $offset Array offset to set.
 	 * @param mixed $value  Value to set at the array offset.
 	 */
+	#[\ReturnTypeWillChange]
 	public function offsetSet ($offset, $value) {
 		if (is_object($value)) {
 			if ($offset !== null) {
@@ -264,6 +267,7 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 	 *
 	 * @param mixed $offset Array offset to unset.
 	 */
+	#[\ReturnTypeWillChange]
 	public function offsetUnset ($offset) {
 		if (isset($this->models[$offset])) {
 			unset($this->models[$offset]);
@@ -275,6 +279,7 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 	 *
 	 * @return ArrayIterator
 	 */
+	#[\ReturnTypeWillChange]
 	public function getIterator () {
 		return new ArrayIterator($this->models);
 	}
@@ -284,6 +289,7 @@ class ModelProxy implements ArrayAccess, IteratorAggregate, Countable, Proxy {
 	 *
 	 * @return int
 	 */
+	#[\ReturnTypeWillChange]
 	public function count () {
 		return count($this->models);
 	}
