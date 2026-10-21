@@ -60,6 +60,7 @@ class Session implements ArrayAccess, IteratorAggregate {
 	 * @param mixed $key	Session parameter to check.
 	 * @return bool			TRUE of the parameter is set, FALSE if not.
 	 */
+	#[\ReturnTypeWillChange]
 	public function offsetExists ($key) {
 		return isset($_SESSION[$key]);
 	}
@@ -70,6 +71,7 @@ class Session implements ArrayAccess, IteratorAggregate {
 	 * @param string $key	Key to the value to return.
 	 * @return string		Value of the data, or <code>null</code> if not found.
 	 */
+	#[\ReturnTypeWillChange]
 	public function offsetGet ($key) {
 		return $this->get($key);
 	}
@@ -80,6 +82,7 @@ class Session implements ArrayAccess, IteratorAggregate {
 	 * @param string $key	Key to associate the value with.
 	 * @param mixed $value	Value to store in the session.
 	 */
+	#[\ReturnTypeWillChange]
 	public function offsetSet ($key, $value) {
 		$this->put($key, $value);
 	}
@@ -89,6 +92,7 @@ class Session implements ArrayAccess, IteratorAggregate {
 	 *
 	 * @param string $key	Key associated with the value to remove.
 	 */
+	#[\ReturnTypeWillChange]
 	public function offsetUnset ($key) {
 		$this->remove($key);
 	}
@@ -98,6 +102,7 @@ class Session implements ArrayAccess, IteratorAggregate {
 	 *
 	 * @return ArrayIterator
 	 */
+	#[\ReturnTypeWillChange]
 	public function getIterator () {
 		return new ArrayIterator($this->started ? $_SESSION : array());
 	}

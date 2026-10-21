@@ -9,7 +9,7 @@
  * doesn't encode non-ASCII characters as %dd but translates them into simpler ASCII characters.
  */
 function urlify ($string) {
-    $iso_8859_1 = utf8_decode($string);
+    $iso_8859_1 = mb_convert_encoding($string, 'ISO-8859-1', 'UTF-8');
 	$translations = array(
 		' & '	=> '+',
 		' - '	=> '+',
@@ -23,6 +23,6 @@ function urlify ($string) {
 		'%' 	=> ''
 	);
 	
-	return utf8_encode(strtr(strtolower($iso_8859_1), $translations));
+	return mb_convert_encoding(strtr(strtolower($iso_8859_1), $translations), 'UTF-8', 'ISO-8859-1');
 }
 ?>

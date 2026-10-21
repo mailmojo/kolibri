@@ -89,7 +89,30 @@ class DateFormat {
 	 * @return string		Formatted date/time string.
 	 */
 	public function format ($date) {
-		return strftime($this->formatString, $date->getTime());
+		$time = $date->getTime();
+
+		/*
+		 * strftime() is deprecated since PHP 8.1, so its conversion specifiers are translated
+		 * to date() formats. Output matches strftime() in the C locale; unsupported
+		 * specifiers are left as-is.
+		 */
+		return preg_replace_callback('/%([a-zA-Z%])/', function ($match) use ($time) {
+			switch ($match[1]) {
+				case '%': return '%';
+				case 'e': return sprintf('%2d', date('j', $time));
+				case 'j': return sprintf('%03d', date('z', $time) + 1);
+				case 'n': return "\n";
+				case 't': return "\t";
+			}
+			$formats = array(
+				'a' => 'D', 'A' => 'l', 'b' => 'M', 'h' => 'M', 'B' => 'F', 'd' => 'd',
+				'm' => 'm', 'y' => 'y', 'Y' => 'Y', 'H' => 'H', 'I' => 'h', 'M' => 'i',
+				'S' => 's', 'p' => 'A', 'P' => 'a', 'z' => 'O', 'Z' => 'T', 's' => 'U',
+				'u' => 'N', 'w' => 'w', 'F' => 'Y-m-d', 'R' => 'H:i', 'T' => 'H:i:s',
+				'D' => 'm/d/y', 'x' => 'm/d/y', 'X' => 'H:i:s', 'G' => 'o', 'V' => 'W',
+			);
+			return isset($formats[$match[1]]) ? date($formats[$match[1]], $time) : $match[0];
+		}, $this->formatString);
 	}
 }
 
