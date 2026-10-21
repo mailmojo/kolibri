@@ -90,29 +90,118 @@ class DateFormat {
 	 */
 	public function format ($date) {
 		$time = $date->getTime();
+		$locale = self::getTimeLocale();
 
 		/*
 		 * strftime() is deprecated since PHP 8.1, so its conversion specifiers are translated
-		 * to date() formats. Output matches strftime() in the C locale; unsupported
-		 * specifiers are left as-is.
+		 * here. Names and the preferred date/time representations follow the LC_TIME locale
+		 * through IntlDateFormatter, and match strftime() in the C locale otherwise. The '-'
+		 * flag removes padding, E and O modifiers are ignored, and unknown specifiers are
+		 * left as-is.
 		 */
-		return preg_replace_callback('/%([a-zA-Z%])/', function ($match) use ($time) {
-			switch ($match[1]) {
-				case '%': return '%';
-				case 'e': return sprintf('%2d', date('j', $time));
-				case 'j': return sprintf('%03d', date('z', $time) + 1);
-				case 'n': return "\n";
-				case 't': return "\t";
+		return preg_replace_callback('/%([-_0^#]?)[EO]?([a-zA-Z%])/',
+				function ($match) use ($time, $locale) {
+			$value = self::formatSpecifier($match[2], $time, $locale);
+			if ($value === null) {
+				return $match[0];
 			}
-			$formats = array(
-				'a' => 'D', 'A' => 'l', 'b' => 'M', 'h' => 'M', 'B' => 'F', 'd' => 'd',
-				'm' => 'm', 'y' => 'y', 'Y' => 'Y', 'H' => 'H', 'I' => 'h', 'M' => 'i',
-				'S' => 's', 'p' => 'A', 'P' => 'a', 'z' => 'O', 'Z' => 'T', 's' => 'U',
-				'u' => 'N', 'w' => 'w', 'F' => 'Y-m-d', 'R' => 'H:i', 'T' => 'H:i:s',
-				'D' => 'm/d/y', 'x' => 'm/d/y', 'X' => 'H:i:s', 'G' => 'o', 'V' => 'W',
-			);
-			return isset($formats[$match[1]]) ? date($formats[$match[1]], $time) : $match[0];
+			if ($match[1] == '-' && is_numeric($value)) {
+				$value = ltrim($value, '0 ') ?: '0';
+			}
+			return $value;
 		}, $this->formatString);
+	}
+
+	/**
+	 * Formats a single strftime() conversion specifier.
+	 *
+	 * @param string $specifier	Specifier character, without the leading %.
+	 * @param int $time			Timestamp to format.
+	 * @param string $locale	ICU locale for names, or NULL for the C locale.
+	 * @return string			The formatted value, or NULL if the specifier is unknown.
+	 */
+	private static function formatSpecifier ($specifier, $time, $locale) {
+		if ($locale !== null) {
+			$patterns = array(
+				'a' => 'EEE', 'A' => 'EEEE', 'b' => 'MMM', 'h' => 'MMM', 'B' => 'MMMM',
+				'p' => 'a', 'r' => 'hh:mm:ss a',
+			);
+			$styles = array(
+				'c' => array(IntlDateFormatter::MEDIUM, IntlDateFormatter::MEDIUM),
+				'x' => array(IntlDateFormatter::SHORT, IntlDateFormatter::NONE),
+				'X' => array(IntlDateFormatter::NONE, IntlDateFormatter::MEDIUM),
+			);
+			if (isset($patterns[$specifier])) {
+				return self::intlFormat($locale, $time, IntlDateFormatter::NONE,
+						IntlDateFormatter::NONE, $patterns[$specifier]);
+			}
+			if (isset($styles[$specifier])) {
+				return self::intlFormat($locale, $time, $styles[$specifier][0],
+						$styles[$specifier][1]);
+			}
+			if ($specifier == 'P') {
+				return mb_strtolower(self::intlFormat($locale, $time, IntlDateFormatter::NONE,
+						IntlDateFormatter::NONE, 'a'));
+			}
+		}
+
+		switch ($specifier) {
+			case '%': return '%';
+			case 'n': return "\n";
+			case 't': return "\t";
+			case 'e': return sprintf('%2d', date('j', $time));
+			case 'k': return sprintf('%2d', date('G', $time));
+			case 'l': return sprintf('%2d', date('g', $time));
+			case 'j': return sprintf('%03d', date('z', $time) + 1);
+			case 'C': return sprintf('%02d', intdiv((int) date('Y', $time), 100));
+			case 'g': return substr(date('o', $time), -2);
+			case 'U':
+				$weekday = (int) date('w', $time);
+				return sprintf('%02d', intdiv((int) date('z', $time) + 7 - $weekday, 7));
+			case 'W':
+				$weekday = ((int) date('w', $time) + 6) % 7;
+				return sprintf('%02d', intdiv((int) date('z', $time) + 7 - $weekday, 7));
+		}
+
+		$formats = array(
+			'a' => 'D', 'A' => 'l', 'b' => 'M', 'h' => 'M', 'B' => 'F', 'd' => 'd', 'm' => 'm',
+			'y' => 'y', 'Y' => 'Y', 'G' => 'o', 'H' => 'H', 'I' => 'h', 'M' => 'i', 'S' => 's',
+			'p' => 'A', 'P' => 'a', 'z' => 'O', 'Z' => 'T', 's' => 'U', 'u' => 'N', 'w' => 'w',
+			'V' => 'W', 'D' => 'm/d/y', 'F' => 'Y-m-d', 'R' => 'H:i', 'T' => 'H:i:s',
+			'r' => 'h:i:s A', 'x' => 'm/d/y', 'X' => 'H:i:s', 'c' => 'D M j H:i:s Y',
+		);
+		if (!isset($formats[$specifier])) {
+			return null;
+		}
+		if ($specifier == 'c') {
+			// strftime() pads the day of the month with a space in this representation
+			return str_replace(' ' . date('j', $time) . ' ',
+					sprintf(' %2d ', date('j', $time)), date($formats[$specifier], $time));
+		}
+		return date($formats[$specifier], $time);
+	}
+
+	/**
+	 * Formats a timestamp with IntlDateFormatter, using the default timezone.
+	 */
+	private static function intlFormat ($locale, $time, $dateType, $timeType, $pattern = null) {
+		$formatter = IntlDateFormatter::create($locale, $dateType, $timeType,
+				date_default_timezone_get(), null, $pattern);
+		return $formatter->format($time);
+	}
+
+	/**
+	 * Returns the ICU locale for the current LC_TIME locale, or NULL when that is the C or
+	 * POSIX locale or the intl extension is unavailable.
+	 *
+	 * @return string
+	 */
+	private static function getTimeLocale () {
+		if (!class_exists('IntlDateFormatter', false)) {
+			return null;
+		}
+		$locale = preg_replace('/[.@].*$/', '', (string) setlocale(LC_TIME, 0));
+		return ($locale === '' || $locale == 'C' || $locale == 'POSIX') ? null : $locale;
 	}
 }
 
